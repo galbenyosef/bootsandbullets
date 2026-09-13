@@ -1,0 +1,56 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 32" shape-rendering="crispEdges">
+  <!--
+    The icon: the tab favicon, and the home screen icon for an installed PWA.
+
+    A medal, on the owner's word (740-qa 019, Q1, 6 September 2026): a ribbon
+    in the game's two greens with a brass clasp, and a gold disc with the star
+    on it, the star being what the level select and the result panel already
+    teach as "earned". It replaced a helmet drawn on 1 September.
+
+    Drawn on the same 32px grid and out of the same palette as everything else,
+    with no anti-aliasing, because an icon that reads as a modern app beside a
+    game that refuses to is the wrong first impression.
+
+    WATCH THE PROSE IN HERE. This file is XML, not HTML, and a double hyphen
+    inside a comment is a parse error rather than a warning: the browser drops
+    the whole document and every img that points at it becomes a broken glyph.
+    The house em dash is exactly that character pair, so it cannot be used in
+    this file. Written down because it cost a round to find.
+
+    Why every edge sits on an even coordinate with an even size. The size that
+    matters is the browser tab, and that is 16 device pixels on a 1x display.
+    At 16px the browser folds each 2x2 block into one pixel, and a feature that
+    straddles the fold is averaged into mud; on even boundaries the halving is
+    exact, so the icon at 16px is the icon at 32px with the detail removed
+    rather than smeared. The star is the one thing that is not even: it is a
+    plus with its corners knocked back, the roundel in sprites/icons.ts, and
+    at 16px it folds to a two by two gold dot on the disc, which is all a star
+    can be at that size.
+  -->
+  <rect width="32" height="32" fill="#10150a"/>
+
+  <!-- the ribbon: two stripes, the darker one on the right where the light is not -->
+  <rect x="10" y="0"  width="6"  height="14" fill="#8fa03f"/>
+  <rect x="16" y="0"  width="6"  height="14" fill="#5f6a2a"/>
+  <!-- the fold at the top, a shade darker: cloth going over a bar -->
+  <rect x="10" y="0"  width="12" height="2"  fill="#7a8a35"/>
+
+  <!-- the clasp, brass, wider than the ribbon -->
+  <rect x="8"  y="14" width="16" height="2"  fill="#f0d878"/>
+  <rect x="8"  y="16" width="16" height="2"  fill="#a88a3a"/>
+
+  <!-- the disc: a stepped circle, lit at the top left -->
+  <rect x="12" y="18" width="8"  height="2"  fill="#f0d878"/>
+  <rect x="10" y="20" width="12" height="2"  fill="#f0d878"/>
+  <rect x="8"  y="22" width="16" height="6"  fill="#e0c060"/>
+  <rect x="10" y="28" width="12" height="2"  fill="#a88a3a"/>
+  <rect x="12" y="30" width="8"  height="2"  fill="#a88a3a"/>
+  <!-- the rim's lit edge, top left only -->
+  <rect x="10" y="20" width="2"  height="2"  fill="#fff2b4"/>
+  <rect x="12" y="18" width="4"  height="2"  fill="#fff2b4"/>
+
+  <!-- the star: a plus with the corners knocked back, in the shadow tone -->
+  <rect x="15" y="21" width="2"  height="8"  fill="#7d5a10"/>
+  <rect x="12" y="24" width="8"  height="2"  fill="#7d5a10"/>
+  <rect x="14" y="23" width="4"  height="4"  fill="#7d5a10"/>
+</svg>

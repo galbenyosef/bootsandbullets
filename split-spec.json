@@ -1,0 +1,128 @@
+{
+  "defaultFile": "bundle.js",
+  "source": "bundle.js -> readable/bundle.pretty.js (23979 lines). The bundle is javascript-obfuscator protected (string array + decoder `b` + rotator IIFE, aliases of `cX`); tools/deobfuscate.mjs runs the array in a VM and inlines all 20736 encoded-string calls into readable/bundle.deob.pretty.js. All app slices below are cut from the deobfuscated view so every string reads literally.",
+  "sourceFile": "readable/bundle.deob.pretty.js",
+  "note": "Line numbers index readable/bundle.deob.pretty.js. The first 3746 lines are the obfuscator runtime + game data tables (changelog, weapons, palettes, maps); the string-array function `a` (L15643) is data, not logic, and is indexed by the data-tables slice range it sits in.",
+  "sections": [
+    {
+      "file": "00-obfuscator-runtime.js",
+      "title": "Obfuscator runtime & bootstrapping",
+      "desc": "String array, decoder `b`, rotator IIFE, and the first defines (Object.defineProperty helpers). Kept because the mirror's bundle still depends on it at load.",
+      "startLine": 1,
+      "endLine": 13,
+      "sourceFile": "readable/bundle.deob.pretty.js"
+    },
+    {
+      "file": "01-changelog.js",
+      "title": "Changelog data",
+      "desc": "Version history (`x`): releases, dates, FEATURE/FIX entries — version 0.3.0, 2026-09-12.",
+      "startLine": 14,
+      "endLine": 843,
+      "sourceFile": "readable/bundle.deob.pretty.js"
+    },
+    {
+      "file": "02-advisor-strings.js",
+      "title": "Advisor/comms lines & key labels",
+      "desc": "Loading-screen quips (`il`), key-name mapping, input label helpers.",
+      "startLine": 844,
+      "endLine": 2093,
+      "sourceFile": "readable/bundle.deob.pretty.js"
+    },
+    {
+      "file": "03-audio.js",
+      "title": "Audio engine",
+      "desc": "AudioContext setup, ambience/music/sfx playback, oscillator-based effects, volume settings.",
+      "startLine": 2094,
+      "endLine": 2510,
+      "sourceFile": "readable/bundle.deob.pretty.js"
+    },
+    {
+      "file": "04-value-noise.js",
+      "title": "Value noise (terrain generation)",
+      "desc": "`hs` class: seeded permutation table + smooth 2-D value noise + fBm octaves — drives map terrain generation.",
+      "startLine": 2511,
+      "endLine": 2830,
+      "sourceFile": "readable/bundle.deob.pretty.js"
+    },
+    {
+      "file": "05-unit-palettes.js",
+      "title": "Sprite palettes & colour tables",
+      "desc": "Per-faction/per-unit colour definitions (helmet, face, kit, boots…), terrain and canvas palettes.",
+      "startLine": 2831,
+      "endLine": 3746,
+      "sourceFile": "readable/bundle.deob.pretty.js"
+    },
+    {
+      "file": "06-asset-loading.js",
+      "title": "Asset loading & boot sequence",
+      "desc": "`Ss` boot stages (boot/sprites/missions/ready), font/image loading, sprite atlas decode (`m1`).",
+      "startLine": 3747,
+      "endLine": 5524,
+      "sourceFile": "readable/bundle.deob.pretty.js"
+    },
+    {
+      "file": "07-ui-widgets.js",
+      "title": "DOM UI framework",
+      "desc": "Widget builder (`w`), modals, confirm dialogs, changelog renderer, briefing/mission-select screens, HUD panels, leaderboard UI.",
+      "startLine": 5525,
+      "endLine": 11345,
+      "sourceFile": "readable/bundle.deob.pretty.js"
+    },
+    {
+      "file": "08-multiplayer-net.js",
+      "title": "Multiplayer networking",
+      "desc": "`ii` WebSocket client class: dial/retry, greeting, lobby join codes, message queue; `wy` ws URL builder. Live-only — the offline mirror stubs the /ws endpoint.",
+      "startLine": 11346,
+      "endLine": 12195,
+      "sourceFile": "readable/bundle.deob.pretty.js"
+    },
+    {
+      "file": "09-lobby.js",
+      "title": "Lobby & leaderboard screens",
+      "desc": "Public/private room listing, join codes, multiplayer stats (`mp-stats`), leaderboard feed rendering.",
+      "startLine": 12196,
+      "endLine": 13830,
+      "sourceFile": "readable/bundle.deob.pretty.js"
+    },
+    {
+      "file": "10-sprite-renderer.js",
+      "title": "Sprite atlas & canvas renderer",
+      "desc": "Atlas-backed canvas layers: terrain canvas, decal layer (`yi`), fog mask, pixel-smoothed blitting — the 2-D rendering core.",
+      "startLine": 13831,
+      "endLine": 15640,
+      "sourceFile": "readable/bundle.deob.pretty.js"
+    },
+    {
+      "file": "11-map-data.js",
+      "title": "String-array data (maps & mission text)",
+      "desc": "The obfuscator string array `a()` lives here in the deob view: ASCII mission maps (terrain glyphs #,~,T,%,E,P…), soldier surnames (OAKES, BENNET, KANE…), briefing lines, UI labels. Pure data.",
+      "startLine": 15641,
+      "endLine": 16705,
+      "sourceFile": "readable/bundle.deob.pretty.js"
+    },
+    {
+      "file": "12-soldier-model.js",
+      "title": "Soldier model & spawn factory",
+      "desc": "Soldier state template (screamTimer, stagger, sliding…), `WW` soldier spawn factory, faction helpers (`eW`, `Mr`), squad filtering.",
+      "startLine": 16706,
+      "endLine": 20935,
+      "sourceFile": "readable/bundle.deob.pretty.js"
+    },
+    {
+      "file": "13-simulation.js",
+      "title": "Simulation: combat, AI, orders",
+      "desc": "Firing, grenades, call-ins (airstrike), enemy AI think/flank/patrol, objectives (hold position, assassinate), effects (`Effects`), terrain interaction (deep water, quicksand, ice).",
+      "startLine": 20936,
+      "endLine": 22275,
+      "sourceFile": "readable/bundle.deob.pretty.js"
+    },
+    {
+      "file": "14-hud-loop.js",
+      "title": "HUD state & main loop",
+      "desc": "Loadout HUD binding, mission timer/results, `T5` summary builder, end-of-mission screens and the final bootstrap lines.",
+      "startLine": 22276,
+      "endLine": 23979,
+      "sourceFile": "readable/bundle.deob.pretty.js"
+    }
+  ]
+}

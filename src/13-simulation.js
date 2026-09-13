@@ -1,0 +1,1342 @@
+// Simulation: combat, AI, orders
+// Firing, grenades, call-ins (airstrike), enemy AI think/flank/patrol, objectives (hold position, assassinate), effects (`Effects`), terrain interaction (deep water, quicksand, ice).
+            c && (c["classList"]["remove"]("flash"), c["offsetWidth"], c["classList"]["add"]("flash"));
+        } ["updateLoadout"](c) {
+            const IL = cX;
+            let d = c["squadThrowable"],
+                g = [c["squadWeapon"], d, c["grenadesHeld"], c["squadCallIn"], c["callInsLeft"], this["armed"]]["join"]('|');
+            if (g === this["loadoutKey"]) return;
+            this["loadoutKey"] = g;
+            let j = (p, q, v, y = '') => {
+                const IM = IL;
+                let A = document[IM(0xae0)](y ? IM(0x14ab) : IM(0x3df));
+                A[IM(0x824)] = (IM(0x12e4) + y)[IM(0xaca)](), A instanceof HTMLButtonElement && (A[IM(0xb42)] = IM(0x14ab));
+                let C = document[IM(0xae0)](IM(0x12a0));
+                C[IM(0x824)] = IM(0xbd0);
+                let E = $f(p ?? '');
+                E && C[IM(0xa20)](eT(E, 0x1)), A[IM(0xa20)](C);
+                let F = document[IM(0xae0)](IM(0x12a0));
+                F[IM(0x824)] = IM(0xc57);
+                let H = document[IM(0xae0)]('b');
+                H[IM(0x824)] = IM(0xa6f), H[IM(0x1338)] = q, F[IM(0xa20)](H);
+                let I = document[IM(0xae0)](IM(0x12a0));
+                return I[IM(0x824)] = IM(0x3d6), I[IM(0x1338)] = v, A[IM(0x66b)](F, I), A;
+            };
+            if (De(this["loadout"], j(c["squadWeapon"], ci[c["squadWeapon"]] ?? c["squadWeapon"], ''), j(d === "flash" ? "flashbang" : d, S6[d] ?? d, 'x' + c["grenadesHeld"])), c["squadCallIn"] !== "none") {
+                let l = c["callInsLeft"] <= 0x0,
+                    m = j(c["squadCallIn"], di[c["squadCallIn"]] ?? c["squadCallIn"], 'x' + c["callInsLeft"], "hud-kit-callin" + (this["armed"] ? " on" : '') + (l ? " off" : ''));
+                m instanceof HTMLButtonElement && (l && m["setAttribute"]("aria-disabled", "true"), m["addEventListener"]("click", () => this["onCallInPress"]?.(m))), this["loadout"]["appendChild"](m);
+            }
+        } ["update"](c) {
+            const IN = cX;
+            if (c["skirmish"] ? this["clock"]["hide"]() : this["clock"]["update"](c), this["matchPanel"]["update"](c), c["phase"] !== 0x0) {
+                let {
+                    hold: m,
+                    fade: p
+                } = f["banner"];
+                MW(Math["max"](0x0, Math["min"](0x1, (c["phaseTime"] - (m - p)) / p)));
+            }
+            let d = c["map"]["name"] + '/' + c["difficulty"];
+            d !== this["lastMission"] && (this["lastMission"] = d, De(this["mission"], Object["assign"](document["createElement"]('b'), {
+                'textContent': c["map"]["name"]
+            })), c["skirmish"] || this["mission"]["appendChild"](Object["assign"](document["createElement"]("span"), {
+                'className': "hud-diff diff-" + c["difficulty"],
+                'textContent': QW[c["difficulty"]]["name"]
+            })), this["goal"]["textContent"] = _t(c["map"]), this["plates"] = [], this["lastPhase"] = null), this["ensureRoster"](c);
+            let g = this["mine"](c);
+            for (let q = 0x0; q < this["plates"]["length"]; q++) {
+                let s = g[q]["alive"];
+                s !== this["plates"][q]["alive"] && (this["plates"][q]["alive"] = s, this["plates"][q]["root"]["classList"]["toggle"]("dead", !s));
+            }
+            if (this["updateLoadout"](c), c["grenadesHeld"] !== this["lastGrenades"] && (this["lastGrenades"] >= 0x0 && this["flashLoadout"](), this["lastGrenades"] = c["grenadesHeld"]), c["status"] !== this["lastStatus"]) {
+                this["lastStatus"] = c["status"], this["objective"]["textContent"] = '';
+                let u = c["status"]["split"](" · ");
+                this["objective"]["appendChild"](Object["assign"](document["createElement"]('b'), {
+                    'className': "hud-objective-lead",
+                    'textContent': u[0x0]
+                }));
+                for (let v of u["slice"](0x1)) this["objective"]["appendChild"](Object["assign"](document["createElement"]("span"), {
+                    'className': "hud-objective-note",
+                    'textContent': v
+                }));
+            }
+            this["objective"]["classList"]["toggle"]("stalled", c["map"]["objective"] === "hold" && !c["inZone"] && c["phase"] === 0x0);
+            let j = c["skirmish"] ? c["skirmish"]["endsAt"] : 0x0,
+                l = c["map"]["timeLimit"] > 0x0 ? c["map"]["timeLimit"] : c["map"]["objective"] === "survive" ? c["map"]["duration"] : j;
+            if (l > 0x0) {
+                this["timer"]["root"]["hidden"] = !0x1;
+                let y = this["timer"]["root"]["querySelector"](".ui-meter-label");
+                y && (y["textContent"] = c["skirmish"] || c["map"]["timeLimit"] > 0x0 ? "time left" : "hold");
+                let A = Math["max"](0x0, l - c["time"]);
+                this["timer"]["set"](0x1 - A / l, KW(Math["ceil"](A))), this["timer"]["root"]["classList"]["toggle"]("big", !!c["skirmish"]);
+            } else this["timer"]["root"]["hidden"] = !0x0;
+            if (!(this['ov']["briefingUp"] && c["phase"] === 0x0) && c["phase"] !== this["lastPhase"] && !(c["phase"] !== 0x0 && c["phaseTime"] < f["banner"]["hold"])) {
+                if (this["lastPhase"] = c["phase"], c["phase"] === 0x0) {
+                    this['ov']["conceal"]();
+                    return;
+                }
+                if (this["outcome"]["score"]) {
+                    this["scorePanel"]["show"](c, {
+                        'score': this["outcome"]["score"],
+                        'onRetry': this["setup"]["onRetry"],
+                        'onMissions': this["setup"]["onMissions"]
+                    });
+                    return;
+                }
+                this["resultPanel"]["show"](c, {
+                    'record': this["outcome"]["record"],
+                    'aftermath': this["outcome"]["aftermath"],
+                    'hasNext': this["setup"]["hasNext"],
+                    'missionNumber': this["setup"]["missionNumber"],
+                    'difficulties': this["setup"]["difficulties"],
+                    'onNext': this["setup"]["onNext"],
+                    'onRetry': this["setup"]["onRetry"],
+                    'onMissions': this["setup"]["onMissions"]
+                });
+            }
+        } ["hideOverlay"]() {
+            const IO = cX;
+            this["resultPanel"]["close"](), this['ov']["hide"](), this["lastPhase"] = null;
+        } ["showBriefing"](c) {
+            const IP = cX;
+            this["briefingPanel"]["show"](c, this["setup"]);
+        } ["showArena"](c, d = !0x1) {
+            const IQ = cX;
+            this["arena"]["show"](c, d);
+        } ["showScore"](c) {
+            const IR = cX;
+            this["arena"]["showScore"](c);
+        } ["hideArena"]() {
+            const IS = cX;
+            this["arena"]["hide"]();
+        } ["hideClock"]() {
+            const IU = cX;
+            this["clock"]["hide"]();
+        }
+    },
+    j3 = {
+        '\x20': ["........", "........", "........", "........", "........", "........", "........", "........", "........", "........", "........"],
+        'A': ["..####..", ".######.", "###..###", "###..###", "###..###", "########", "########", "###..###", "###..###", "###..###", "###..###"],
+        'B': ["#######.", "########", "###..###", "###..###", "#######.", "#######.", "###..###", "###..###", "###..###", "########", "#######."],
+        'C': ["..#####.", ".#######", "###..###", "###.....", "###.....", "###.....", "###.....", "###.....", "###..###", ".#######", "..#####."],
+        'D': ["######..", "#######.", "###..###", "###...##", "###...##", "###...##", "###...##", "###...##", "###..###", "#######.", "######.."],
+        'E': ["########", "########", "###.....", "###.....", "#######.", "#######.", "###.....", "###.....", "###.....", "########", "########"],
+        'F': ["########", "########", "###.....", "###.....", "#######.", "#######.", "###.....", "###.....", "###.....", "###.....", "###....."],
+        'G': ["..#####.", ".#######", "###..###", "###.....", "###.....", "###.####", "###.####", "###..###", "###..###", ".#######", "..#####."],
+        'H': ["###..###", "###..###", "###..###", "###..###", "########", "########", "###..###", "###..###", "###..###", "###..###", "###..###"],
+        'I': ["########", "########", "..###...", "..###...", "..###...", "..###...", "..###...", "..###...", "..###...", "########", "########"],
+        'J': [".....###", ".....###", ".....###", ".....###", ".....###", ".....###", ".....###", "###..###", "###..###", ".#######", "..#####."],
+        'K': ["###...##", "###..##.", "###.##..", "######..", "#####...", "#####...", "######..", "###.##..", "###..##.", "###...##", "###...##"],
+        'L': ["###.....", "###.....", "###.....", "###.....", "###.....", "###.....", "###.....", "###.....", "###.....", "########", "########"],
+        'M': ["##....##", "###..###", "###..###", "##.##.##", "##.##.##", "##.##.##", "##.##.##", "##....##", "##....##", "##....##", "##....##"],
+        'N': ["##....##", "###...##", "####..##", "####..##", "##.#..##", "##.##.##", "##..#.##", "##..####", "##..####", "##...###", "##....##"],
+        'O': ["..#####.", ".#######", "###..###", "##....##", "##....##", "##....##", "##....##", "##....##", "###..###", ".#######", "..#####."],
+        'P': ["#######.", "########", "###..###", "###..###", "###..###", "########", "#######.", "###.....", "###.....", "###.....", "###....."],
+        'Q': ["..#####.", ".#######", "###..###", "##....##", "##....##", "##....##", "##....##", "##....##", "###..###", ".######.", "..###.##"],
+        'R': ["#######.", "########", "###..###", "###..###", "###..###", "########", "#####...", "###.##..", "###..##.", "###...##", "###...##"],
+        'S': [".######.", "########", "##....##", "##......", ".######.", "..#####.", "......##", "##....##", "##....##", "########", ".######."],
+        'T': ["########", "########", "..###...", "..###...", "..###...", "..###...", "..###...", "..###...", "..###...", "..###...", "..###..."],
+        'U': ["##....##", "##....##", "##....##", "##....##", "##....##", "##....##", "##....##", "##....##", "###..###", ".#######", "..#####."],
+        'V': ["##....##", "##....##", "##....##", "##....##", "##....##", "##....##", ".##..##.", ".##..##.", "..####..", "..####..", "...##..."],
+        'W': ["##....##", "##....##", "##....##", "##....##", "##....##", "##.##.##", "##.##.##", "##.##.##", "########", "###..###", "##....##"],
+        'X': ["##....##", "###..###", ".##..##.", ".######.", "..####..", "..####..", "..####..", ".######.", ".##..##.", "###..###", "##....##"],
+        'Y': ["##....##", "###..###", ".##..##.", ".######.", "..####..", "...##...", "...##...", "...##...", "...##...", "...##...", "...##..."],
+        'Z': ["########", "########", ".....##.", "....##..", "...##...", "..##....", "..##....", ".##.....", "##......", "########", "########"],
+        0x0: ["..#####.", ".#######", "###..###", "##...###", "##..#.##", "##..#.##", "##.#..##", "##....##", "###..###", ".#######", "..#####."],
+        0x1: ["...###..", "..####..", ".#####..", "...###..", "...###..", "...###..", "...###..", "...###..", "...###..", "########", "########"],
+        0x2: [".######.", "########", "##....##", "......##", ".....##.", "...###..", "..###...", ".###....", "##......", "########", "########"],
+        0x3: [".######.", "########", "##....##", "......##", "..#####.", "..#####.", "......##", "##....##", "##....##", "########", ".######."],
+        0x4: ["....###.", "...####.", "..##.##.", ".##..##.", "##...##.", "########", "########", ".....##.", ".....##.", ".....##.", ".....##."],
+        0x5: ["########", "########", "##......", "##......", "#######.", "########", "......##", "##....##", "##....##", "########", ".######."],
+        0x6: ["..#####.", ".#######", "###.....", "##......", "#######.", "########", "##....##", "##....##", "###..###", ".#######", "..#####."],
+        0x7: ["########", "########", ".....##.", ".....##.", "....##..", "....##..", "...##...", "...##...", "..##....", "..##....", "..##...."],
+        0x8: ["..#####.", ".#######", "##....##", "##....##", ".######.", ".######.", "##....##", "##....##", "##....##", ".#######", "..#####."],
+        0x9: ["..#####.", ".#######", "###..###", "##....##", "##....##", "########", ".#######", "......##", ".....###", ".######.", "..#####."],
+        '.': ["........", "........", "........", "........", "........", "........", "........", "........", "........", "...##...", "...##..."],
+        ',': ["........", "........", "........", "........", "........", "........", "........", "........", "...##...", "...##...", "..##...."],
+        ':': ["........", "........", "...##...", "...##...", "........", "........", "........", "...##...", "...##...", "........", "........"],
+        '\x27': ["...##...", "...##...", "...##...", "........", "........", "........", "........", "........", "........", "........", "........"],
+        '-': ["........", "........", "........", "........", ".######.", ".######.", "........", "........", "........", "........", "........"],
+        '!': ["..###...", "..###...", "..###...", "..###...", "..###...", "..###...", "..###...", "..###...", "........", "..###...", "..###..."],
+        '?': [".######.", "########", "##....##", "......##", ".....##.", "...###..", "...##...", "...##...", "........", "...##...", "...##..."],
+        '/': [".....###", ".....##.", "....###.", "....##..", "...###..", "...##...", "..###...", "..##....", ".###....", ".##.....", "###....."],
+        '&': [".####...", "######..", "##..##..", "##..##..", ".####...", "#####.##", "####..##", "##..#.##", "##...###", "#######.", ".#####.#"]
+    };
+for (let [W, T] of Object["entries"](j3)) {
+    if (T["length"] !== 0xb) throw new Error("title glyph \"" + W + "\" has " + T["length"] + " rows, not 11");
+    for (let e of T)
+        if (e["length"] !== 0x8) throw new Error("title glyph \"" + W + "\" has a row of " + e["length"] + ", not 8: \"" + e + '\x22');
+}
+var E6 = Array["from"]({
+    'length': 0xb
+}, () => '.' ["repeat"](0x8));
+
+function I3(c) {
+    const IV = cX;
+    return j3[c["toUpperCase"]()] ?? E6;
+}
+var lW = 0x64,
+    R6 = 0x3e8,
+    _r = -0xc8,
+    xt = 0x20,
+    xr = 0x7e,
+    O3 = {
+        'family': "Boots & Bullets Pixel",
+        'postScript': "BootsAndBulletsPixel-Regular",
+        'w': 0x5,
+        'h': 0x7,
+        'advance': 0x6,
+        'rows': Rs
+    },
+    N3 = {
+        'family': "Boots & Bullets Title",
+        'postScript': "BootsAndBulletsTitle-Regular",
+        'w': 0x8,
+        'h': 0xb,
+        'advance': 0x9,
+        'rows': I3
+    },
+    vW = class {
+        ["bytes"] = [];
+        get["length"]() {
+            const IX = cX;
+            return this["bytes"]["length"];
+        } ['u8'](c) {
+            const IY = cX;
+            this["bytes"]["push"](c & 0xff);
+        } ["u16"](c) {
+            this['u8'](c >> 0x8), this['u8'](c);
+        } ["i16"](c) {
+            const IZ = cX;
+            this["u16"](c < 0x0 ? c + 0x10000 : c);
+        } ["u32"](c) {
+            const J4 = cX;
+            this["u16"](c >>> 0x10 & 0xffff), this["u16"](c & 0xffff);
+        } ["tag"](c) {
+            const J7 = cX;
+            for (let d of c) this['u8'](d["charCodeAt"](0x0));
+        } ["pad4"]() {
+            const J8 = cX;
+            for (; this["bytes"]["length"] % 0x4 !== 0x0;) this['u8'](0x0);
+        } ["bytesOut"]() {
+            const J9 = cX;
+            return this["bytes"];
+        }
+    };
+
+function j6(c, d) {
+    const Jj = cX;
+    let g = [];
+    for (let j = 0x0; j < d['h']; j++) {
+        let l = c[j] ?? '',
+            m = 0x0;
+        for (; m < d['w'];) {
+            if (l[m] !== '#') {
+                m++;
+                continue;
+            }
+            let p = m;
+            for (; p + 0x1 < d['w'] && l[p + 0x1] === '#';) p++;
+            g["push"]([m * lW, (d['h'] - 0x1 - j) * lW, (p + 0x1) * lW, (d['h'] - j) * lW]), m = p + 0x1;
+        }
+    }
+    return g;
+}
+
+function I6(c, d) {
+    const Jk = cX;
+    let g = j6(c, d);
+    if (g["length"] === 0x0) return [];
+    let j = new vW();
+    j["i16"](g["length"]), j["i16"](Math["min"](...g["map"](p => p[0x0]))), j["i16"](Math["min"](...g["map"](p => p[0x1]))), j["i16"](Math["max"](...g["map"](p => p[0x2]))), j["i16"](Math["max"](...g["map"](p => p[0x3])));
+    for (let p = 0x0; p < g["length"]; p++) j["u16"]((p + 0x1) * 0x4 - 0x1);
+    j["u16"](0x0);
+    let l = [];
+    for (let [q, u, v, y] of g) l["push"]([q, u], [q, y], [v, y], [v, u]);
+    for (let A = 0x0; A < l["length"]; A++) j['u8'](0x1);
+    let m = 0x0;
+    for (let [C] of l) j["i16"](C - m), m = C;
+    m = 0x0;
+    for (let [, E] of l) j["i16"](E - m), m = E;
+    return j["pad4"](), j["bytesOut"]();
+}
+
+function P6(q) {
+    const Jq = cX;
+    let F = xr - xt + 0x1 + 0x1,
+        H = q["advance"],
+        K = q['w'],
+        L = q['h'],
+        P = (L + 0x1) * lW,
+        Q = [
+            []
+        ];
+    for (let aH = xt; aH <= xr; aH++) Q["push"](I6(q["rows"](String["fromCharCode"](aH)), q));
+    let U = new vW(),
+        V = new vW(),
+        X = 0x0;
+    for (let aI of Q) {
+        V["u32"](X);
+        for (let aJ of aI) U['u8'](aJ);
+        X += aI["length"];
+    }
+    V["u32"](X);
+    let Y = new vW();
+    Y["u32"](0x10000), Y["u32"](0x10000), Y["u32"](0x0), Y["u32"](0x5f0f3cf5), Y["u16"](0xb), Y["u16"](R6);
+    for (let aK = 0x0; aK < 0x4; aK++) Y["u32"](0x0);
+    Y["i16"](0x0), Y["i16"](_r), Y["i16"](K * lW), Y["i16"](L * lW), Y["u16"](0x0), Y["u16"](0x7), Y["i16"](0x2), Y["i16"](0x1), Y["i16"](0x0);
+    let a7 = new vW();
+    a7["u32"](0x10000), a7["i16"](P), a7["i16"](_r), a7["i16"](0x0), a7["u16"](H * lW), a7["i16"](0x0), a7["i16"](0x0), a7["i16"](K * lW), a7["i16"](0x1), a7["i16"](0x0), a7["i16"](0x0);
+    for (let aL = 0x0; aL < 0x4; aL++) a7["i16"](0x0);
+    a7["i16"](0x0), a7["u16"](F);
+    let a8 = new vW();
+    for (let aM = 0x0; aM < F; aM++) a8["u16"](H * lW), a8["i16"](0x0);
+    let a9 = new vW();
+    a9["u32"](0x10000), a9["u16"](F), a9["u16"](K * L * 0x4), a9["u16"](K * L);
+    for (let aN = 0x0; aN < 0xb; aN++) a9["u16"](0x0);
+    a9["u16"](0x0), a9["u16"](0x0);
+    let aj = new vW();
+    aj["u16"](0x0), aj["u16"](0x1), aj["u16"](0x3), aj["u16"](0x1), aj["u32"](0xc), aj["u16"](0x4), aj["u16"](0x20), aj["u16"](0x0), aj["u16"](0x4), aj["u16"](0x4), aj["u16"](0x1), aj["u16"](0x0), aj["u16"](xr), aj["u16"](0xffff), aj["u16"](0x0), aj["u16"](xt), aj["u16"](0xffff), aj["u16"](0x1 - xt & 0xffff), aj["u16"](0x1), aj["u16"](0x0), aj["u16"](0x0);
+    let ak = new vW();
+    ak["u16"](0x4), ak["i16"](H * lW), ak["u16"](0x190), ak["u16"](0x5), ak["i16"](0x0);
+    for (let aO = 0x0; aO < 0x4; aO++) ak["i16"](0x0);
+    for (let aP = 0x0; aP < 0x4; aP++) ak["i16"](0x0);
+    ak["i16"](lW), ak["i16"](0x4 * lW), ak["i16"](0x0);
+    for (let aQ = 0x0; aQ < 0xa; aQ++) ak['u8'](0x0);
+    ak["u32"](0x3), ak["u32"](0x0), ak["u32"](0x0), ak["u32"](0x0), ak["tag"]("CFDR"), ak["u16"](0x40), ak["u16"](xt), ak["u16"](xr), ak["i16"](P), ak["i16"](_r), ak["i16"](0x0), ak["u16"](P), ak["u16"](-_r), ak["u32"](0x0), ak["u32"](0x0), ak["i16"](L * lW), ak["i16"](L * lW), ak["u16"](0x0), ak["u16"](xt), ak["u16"](0x2);
+    let aq = [q["family"], "Regular", q["postScript"], q["family"], "1.0", q["postScript"]],
+        aw = new vW();
+    aw["u16"](0x0), aw["u16"](aq["length"]), aw["u16"](0x6 + aq["length"] * 0xc);
+    let ax = 0x0,
+        az = [];
+    aq["forEach"]((aR, aS) => {
+        const Jw = Jq;
+        let aU = [];
+        for (let aV of aR) aU[Jw(0xc0f)](0x0, aV[Jw(0x1187)](0x0));
+        aw[Jw(0x1706)](0x3), aw[Jw(0x1706)](0x1), aw[Jw(0x1706)](0x409), aw[Jw(0x1706)](aS + 0x1), aw[Jw(0x1706)](aU[Jw(0x1e8)]), aw[Jw(0x1706)](ax), az[Jw(0xc0f)](...aU), ax += aU[Jw(0x1e8)];
+    });
+    for (let aR of az) aw['u8'](aR);
+    aw["pad4"]();
+    let aA = new vW();
+    aA["u32"](0x30000), aA["u32"](0x0), aA["i16"](0x0), aA["i16"](0x0), aA["u32"](0x1);
+    for (let aS = 0x0; aS < 0x4; aS++) aA["u32"](0x0);
+    let aB = [
+        ["OS/2", ak["bytesOut"]()],
+        ["cmap", aj["bytesOut"]()],
+        ["glyf", U["bytesOut"]()],
+        ["head", Y["bytesOut"]()],
+        ["hhea", a7["bytesOut"]()],
+        ["hmtx", a8["bytesOut"]()],
+        ["loca", V["bytesOut"]()],
+        ["maxp", a9["bytesOut"]()],
+        ["name", aw["bytesOut"]()],
+        ["post", aA["bytesOut"]()]
+    ];
+    aB["sort"]((aU, aV) => aU[0x0] < aV[0x0] ? -0x1 : 0x1);
+    let aC = aB["length"],
+        aD = 0x2 ** Math["floor"](Math["log2"](aC)),
+        aE = new vW();
+    aE["u32"](0x10000), aE["u16"](aC), aE["u16"](aD * 0x10), aE["u16"](Math["log2"](aD)), aE["u16"](aC * 0x10 - aD * 0x10);
+    let aF = 0xc + aC * 0x10,
+        aG = [];
+    for (let [aU, aV] of aB) aE["tag"](aU), aE["u32"](0x0), aE["u32"](aF), aE["u32"](aV["length"]), aG["push"](aF), aF += aV["length"] + (0x4 - aV["length"] % 0x4) % 0x4;
+    for (let [, aX] of aB) {
+        for (let aY of aX) aE['u8'](aY);
+        aE["pad4"]();
+    }
+    return Uint8Array["from"](aE["bytesOut"]());
+}
+var SV = O3["family"],
+    EV = N3["family"],
+    P3 = new Set();
+async function L3(c) {
+    const Jx = cX;
+    if (P3["has"](c["family"])) return !0x0;
+    if (typeof document > 'u') return !0x1;
+    let d;
+    try {
+        let i = P6(c),
+            j = '';
+        for (let l = 0x0; l < i["length"]; l++) j += String["fromCharCode"](i[l]);
+        d = btoa(j);
+    } catch {
+        return !0x1;
+    }
+    let g = document["createElement"]("style");
+    g["textContent"] = "@font-face{font-family:'" + c["family"] + "';src:url(data:font/ttf;base64," + d + ") format('truetype');font-weight:100 900;font-style:normal;font-display:block}", document["head"]["appendChild"](g), P3["add"](c["family"]);
+    try {
+        await document["fonts"]?.["load"]("20px '" + c["family"] + '\x27');
+    } catch {}
+    return !0x0;
+}
+async function D3() {
+    const Jz = cX;
+    let [c] = await Promise["all"]([L3(O3), L3(N3)]);
+    return c;
+}
+var L6 = "button, [role=\"button\"], .fx-btn, .fx-card, .fx-group",
+    F3 = !0x1;
+
+function B3() {
+    const JA = cX;
+    F3 || (F3 = !0x0, document["addEventListener"]("pointerdown", c => {
+        const JB = JA;
+        if (c[JB(0x14ab)] !== 0x0) return;
+        let d = c[JB(0x13eb)];
+        if (!(d instanceof Element)) return;
+        let g = d[JB(0x915)](L6);
+        g && (g[JB(0x915)](JB(0x1160)) || g[JB(0x110a)](JB(0x399)) || ls());
+    }, {
+        'capture': !0x0,
+        'passive': !0x0
+    }));
+}
+var R2 = "button, [role=\"button\"], .fx-btn, .fx-card, .fx-group",
+    G3 = "#overlay",
+    j2 = new WeakMap(),
+    H3 = !0x1;
+
+function O6(c, d) {
+    const JC = cX;
+    if (c instanceof Element) {
+        c["matches"](R2) && j2["set"](c, d);
+        for (let g of c["querySelectorAll"](R2)) j2["set"](g, d);
+    }
+}
+var N6 = c => !!c["closest"](G3);
+
+function V3() {
+    const JD = cX;
+    if (H3) return;
+    H3 = !0x0;
+    let c = document["querySelector"](G3);
+    if (c) {
+        new MutationObserver(d => {
+            const JE = JD;
+            let g = performance[JE(0xb30)]();
+            for (let i of d)
+                for (let j of i[JE(0x124e)]) O6(j, g);
+        })["observe"](c, {
+            'childList': !0x0,
+            'subtree': !0x0
+        });
+        for (let d of ["pointerdown", "click"]) document["addEventListener"](d, g => {
+            const JF = JD;
+            let i = g[JF(0x13eb)];
+            if (!(i instanceof Element)) return;
+            let j = i[JF(0x915)](R2);
+            if (!j || j[JF(0x915)](JF(0x1160)) || !N6(j)) return;
+            let l = j2[JF(0x30a)](j);
+            l === void 0x0 || performance[JF(0xb30)]() - l >= 0xfa || (g[JF(0x169c)](), g[JF(0xa6e)]());
+        }, {
+            'capture': !0x0
+        });
+    }
+}
+async function q3() {
+    const JG = cX;
+    Yl(), await D3(), Xl(), ll(), zs(), Jl(), await V1("boot"), wo(), B3(), V3(), Zu();
+    let c = document["getElementById"]("screen"),
+        d = c["getContext"]('2d', {
+            'alpha': !0x1
+        }),
+        g = new fi(),
+        j = new tr(d);
+    j["setBlood"](G()["blood"]), A1(u => j["setBlood"](u["blood"])), Ne(), await V1("sprites");
+    let l = new nr(c, d),
+        m = new rr(c, l),
+        p = new Ln(),
+        q = new sr(m, l);
+    return m["onFirstPress"](() => Zr()), l["onChange"](u => {
+        const JH = JG;
+        g[JH(0x78a)] = u[JH(0x1718)], g[JH(0x1650)](c[JH(0xf40)], c[JH(0xb54)]);
+    }), l["apply"](), window["addEventListener"]("resize", () => l["apply"]()), window["addEventListener"]("orientationchange", () => l["apply"]()), window["addEventListener"]("orientationchange", () => {
+        const JI = JG;
+        window[JI(0xb84)](() => l[JI(0x5fd)](), 0xfa);
+    }), m["onZoom"] = u => {
+        const JJ = JG;
+        let v = Math[JJ(0xbba)](-0x1, Math[JJ(0x220)](0x1, G()[JJ(0xc90)] + u));
+        v !== G()[JJ(0xc90)] && (mW({
+            'zoomBias': v
+        }), l[JJ(0x5fd)]());
+    }, {
+        'canvas': c,
+        'ctx': d,
+        'camera': g,
+        'renderer': j,
+        'layout': l,
+        'input': m,
+        'hud': p,
+        'controls': q
+    };
+}
+var kr = (c, d) => {
+    const JK = cX;
+    if (!d) return 0x0;
+    let g = c["viewW"] / 0x2;
+    return g <= 0x0 ? 0x0 : (d['x'] - (c['x'] + g)) / g;
+};
+
+function D6(c, d, g) {
+    const JL = cX;
+    if (!(c["side"] !== void 0x0 && c["side"] !== g)) switch (c["kind"]) {
+        case "shot":
+            return c['by'] === g ? Ts() : Jn();
+        case "enemyShot":
+            return Jn();
+        case "explosion":
+            return Zn();
+        case "airstrike":
+            return Ws();
+        case "collapse":
+            return is();
+        case "klaxon":
+            return ds();
+        case "plane":
+            return es();
+        case "smoke":
+            return ts();
+        case "flashbang":
+            return ns();
+        case "tinnitus":
+            return os(c["value"] ?? 0x0);
+        case "pickup":
+            return Ft();
+        case "wade":
+            return ss(!!c["value"]);
+        case "order":
+            return as();
+        case "denied":
+            return cs();
+        case "grunt":
+            return eo(kr(d, c['at']));
+        case "squawk":
+            return to(kr(d, c['at']));
+        case "win":
+            return us();
+        case "lose":
+            return ms();
+        default:
+            return c["kind"];
+    }
+}
+
+function xe(c, d) {
+    const JM = cX;
+    for (let g of c["screams"]) To(kr(d, g));
+    for (let i of c["deaths"]) Wo(kr(d, i));
+    for (let j of c["sounds"]) D6(j, d, c["viewSide"]);
+    c["screams"]["length"] = 0x0, c["deaths"]["length"] = 0x0, c["sounds"]["length"] = 0x0;
+}
+var F6 = 0x22,
+    I2 = class {
+        constructor(c) {
+            const JN = cX;
+            this["world"] = c;
+            let d = f["arena"]["influenceCell"];
+            this["cols"] = Math["max"](0x1, Math["ceil"](c["map"]["width"] / d)), this["rows"] = Math["max"](0x1, Math["ceil"](c["map"]["height"] / d));
+            let g = this["cols"] * this["rows"];
+            this["side"] = Array["from"]({
+                'length': c["sides"]
+            }, () => new Float32Array(g)), this["rebuild"]();
+        } ["cols"];
+        ["rows"];
+        ["side"];
+        ["timer"] = 0x0;
+        ["centreOf"](c) {
+            const JO = cX;
+            let d = this["world"]["map"]["tile"] * f["arena"]["influenceCell"];
+            return {
+                'x': (c % this["cols"] + 0.5) * d,
+                'y': (Math["floor"](c / this["cols"]) + 0.5) * d
+            };
+        } ["strengthOf"](c, d) {
+            const JP = cX;
+            return this["side"][c]?.[d] ?? 0x0;
+        } ["presence"](c) {
+            const JQ = cX;
+            let d = 0x0;
+            for (let g of this["side"]) d += g[c];
+            return d;
+        } ["contested"](c) {
+            const JR = cX;
+            let d = 0x0,
+                g = 0x0;
+            for (let i of this["side"]) d += i[c], i[c] > g && (g = i[c]);
+            return 0x2 * (d - g);
+        } ["holder"](c) {
+            const JS = cX;
+            let d = 0x0,
+                g = null,
+                j = !0x1;
+            for (let l = 0x0; l < this["side"]["length"]; l++) {
+                let m = this["side"][l][c];
+                m > d ? (d = m, g = l, j = !0x1) : m === d && (j = !0x0);
+            }
+            return d <= 0x0 || j ? null : g;
+        } ["fractionHeld"](c) {
+            const JU = cX;
+            let d = 0x0,
+                g = 0x0;
+            for (let i = 0x0; i < this["cols"] * this["rows"]; i++) this["presence"](i) <= 0.05 || (g++, this["holder"](i) === c && d++);
+            return g === 0x0 ? 0.5 : d / g;
+        } ["hottest"]() {
+            const JV = cX;
+            let c = 0x0,
+                d = 0x0;
+            for (let g = 0x0; g < this["cols"] * this["rows"]; g++) {
+                let i = this["contested"](g);
+                i > d && (d = i, c = g);
+            }
+            return {
+                'index': c,
+                'tension': d
+            };
+        } ["step"](c) {
+            const JX = cX;
+            this["timer"] -= c, !(this["timer"] > 0x0) && (this["timer"] = f["arena"]["influenceInterval"], this["rebuild"]());
+        } ["rebuild"]() {
+            const JY = cX;
+            for (let j of this["side"]) j["fill"](0x0);
+            let d = this["world"]["map"]["tile"] * f["arena"]["influenceCell"],
+                g = f["arena"]["influenceRadius"] * this["world"]["map"]["tile"];
+            for (let l of this["world"]["enemies"]) {
+                if (!l["alive"]) continue;
+                let m = this["side"][l["faction"]];
+                if (!m) continue;
+                let p = l["pos"]['x'] / d,
+                    q = l["pos"]['y'] / d,
+                    u = Math["ceil"](g / d);
+                for (let v = Math["floor"](q - u); v <= q + u; v++)
+                    for (let y = Math["floor"](p - u); y <= p + u; y++) {
+                        if (y < 0x0 || v < 0x0 || y >= this["cols"] || v >= this["rows"]) continue;
+                        let A = 0x1 - Math["hypot"]((y + 0.5 - p) * d, (v + 0.5 - q) * d) / g;
+                        A > 0x0 && (m[v * this["cols"] + y] += A);
+                    }
+            }
+        }
+    },
+    wr = class {
+        constructor(c, d, g, j, l) {
+            const JZ = cX;
+            this["world"] = c, this["side"] = d, this["influence"] = j, this["nextSquad"] = l;
+            let m = g["reduce"]((u, v) => u + v["centre"]['x'], 0x0) / g["length"],
+                p = g["reduce"]((u, v) => u + v["centre"]['y'], 0x0) / g["length"],
+                q = c["map"]["width"] * c["map"]["tile"] / 0x2;
+            this["muster"] = {
+                'x': m + (m < q ? 0x1 : -0x1) * c["map"]["tile"] * 0x4,
+                'y': p
+            };
+        } ["squads"] = [];
+        ["nextSquad"];
+        ["muster"];
+        ["strays"]() {
+            const K2 = cX;
+            return this["world"]["enemies"]["filter"](c => c["alive"] && c["faction"] === this["side"] && c["squad"] < 0x0);
+        } ["alive"]() {
+            const K4 = cX;
+            let c = 0x0;
+            for (let d of this["world"]["enemies"]) d["alive"] && d["faction"] === this["side"] && c++;
+            return c;
+        } ["step"](c) {
+            const K7 = cX;
+            let d = this["squads"]["find"](g => g["goal"] === null) ?? this["open"]();
+            for (let g of this["strays"]()) {
+                if (!g["traits"]["teamwork"]) {
+                    (g["state"] === 0x0 || !g["investigate"]) && this["sendAlone"](g);
+                    continue;
+                }
+                this["alive"]() > f["arena"]["maxAlive"] || (d["members"]["push"](g), g["squad"] = d['id'], g["state"] = 0x5);
+            }
+            for (let i of this["squads"]) {
+                if (i["members"] = i["members"]["filter"](j => j["alive"]), i["age"] += c, i["goal"] === null) {
+                    this["world"]["squadFields"][i['id']] || (this["world"]["squadFields"][i['id']] = yW(this["world"]["map"], i["rally"], !0x0)), (i["members"]["filter"](j => Math["hypot"](j["pos"]['x'] - i["rally"]['x'], j["pos"]['y'] - i["rally"]['y']) < F6)["length"] >= f["arena"]["squadSize"] || i["age"] > f["arena"]["musterTimeout"] && i["members"]["length"] > 0x0) && this["commit"](i);
+                    continue;
+                }
+                i["retarget"] -= c, i["retarget"] <= 0x0 && (i["retarget"] = f["arena"]["retargetInterval"], this["aim"](i));
+                for (let j of i["members"])(j["state"] === 0x0 || j["state"] === 0x1) && (j["state"] = 0x5);
+                i["members"]["length"] === 0x0 && this["retire"](i);
+            }
+        } ["open"]() {
+            const K8 = cX;
+            let c = {
+                'id': this["nextSquad"],
+                'side': this["side"],
+                'members': [],
+                'goal': null,
+                'rally': this["rallyFor"](this["nextSquad"]),
+                'age': 0x0,
+                'retarget': 0x0
+            };
+            return this["nextSquad"] += 0x2, this["squads"]["push"](c), c;
+        } ["rallyFor"](c) {
+            const K9 = cX;
+            let d = f["arena"]["musterSpread"];
+            if (d <= 0x0) return {
+                'x': this["muster"]['x'],
+                'y': this["muster"]['y']
+            };
+            let g = mT(c, 0xb) * Math['PI'] * 0x2,
+                i = d * Math["sqrt"](mT(c, 0xc));
+            return uT(this["world"]["map"], {
+                'x': this["muster"]['x'] + Math["cos"](g) * i,
+                'y': this["muster"]['y'] + Math["sin"](g) * i
+            });
+        } ["retire"](c) {
+            const Kd = cX;
+            this["world"]["squadFields"][c['id']] = null;
+            let d = this["squads"]["indexOf"](c);
+            d >= 0x0 && this["squads"]["splice"](d, 0x1);
+        } ["commit"](c) {
+            const Kj = cX;
+            c["goal"] = c["rally"], c["retarget"] = 0x0, this["aim"](c);
+            for (let d of c["members"]) d["state"] = 0x5;
+        } ["sendAlone"](c) {
+            const Kk = cX;
+            let d = null,
+                g = 0x1 / 0x0;
+            for (let l of this["world"]["buildings"]) {
+                if (l["owner"] === this["side"] || !l["standing"]) continue;
+                let m = Math["hypot"](l["centre"]['x'] - c["pos"]['x'], l["centre"]['y'] - c["pos"]['y']);
+                m < g && (g = m, d = l);
+            }
+            let j = d ? d["centre"] : this["muster"];
+            c["state"] = 0x4, c["investigate"] = FW(this["world"], j, c['id'], f["arena"]["loneSpread"]), c["memory"] = f["enemy"]["alertMemory"], c["searchTime"] = 0x0, c["path"]["length"] = 0x0;
+        } ["aim"](c) {
+            const Kp = cX;
+            let d = c["members"]["length"] > 0x0 ? {
+                    'x': c["members"]["reduce"]((l, m) => l + m["pos"]['x'], 0x0) / c["members"]["length"],
+                    'y': c["members"]["reduce"]((l, m) => l + m["pos"]['y'], 0x0) / c["members"]["length"]
+                } : this["muster"],
+                g = null,
+                j = f["arena"]["tensionThreshold"];
+            for (let l = 0x0; l < this["influence"]["cols"] * this["influence"]["rows"]; l++) {
+                let m = this["influence"]["contested"](l);
+                if (m < j) continue;
+                let p = this["influence"]["centreOf"](l),
+                    q = m - Math["hypot"](p['x'] - d['x'], p['y'] - d['y']) / (this["world"]["map"]["tile"] * 0x28);
+                q > j && (j = q, g = p);
+            }
+            if (!g) {
+                let u = null,
+                    v = 0x1 / 0x0;
+                for (let y of this["world"]["buildings"]) {
+                    if (y["owner"] === this["side"] || !y["standing"]) continue;
+                    let A = Math["hypot"](y["centre"]['x'] - d['x'], y["centre"]['y'] - d['y']);
+                    A < v && (v = A, u = y);
+                }
+                g = u ? u["centre"] : this["muster"];
+            }
+            c["goal"] = g, this["world"]["squadFields"][c['id']] = yW(this["world"]["map"], g, !0x0);
+        }
+    },
+    Sr = class {
+        constructor(c) {
+            const Kq = cX;
+            this["world"] = c, (c["playerSides"] = [], this["losses"] = new Array(c["sides"])["fill"](0x0), c["sideLevers"] = {
+                [D["Player"]]: Lt("veteran", "arena-green"),
+                [D["Enemy"]]: Lt("veteran", "arena-red")
+            }, this["influence"] = new I2(c));
+            let d = g => c["buildings"]["filter"](j => j["owner"] === g);
+            this["commanders"][D["Player"]] = new wr(c, D["Player"], d(D["Player"]), this["influence"], 0x0), this["commanders"][D["Enemy"]] = new wr(c, D["Enemy"], d(D["Enemy"]), this["influence"], 0x1);
+            for (let g of [D["Player"], D["Enemy"]]) {
+                let j = d(g);
+                if (j["length"] === 0x0) continue;
+                let l = {
+                        'x': j[0x0]["centre"]['x'] + (g === D["Player"] ? 0x1 : -0x1) * c["map"]["tile"] * 0x2,
+                        'y': j[0x0]["centre"]['y'] - c["map"]["tile"] * 0x2
+                    },
+                    m = WW(c, l, 0x1, null, c["sideLevers"][g], -0x1, g);
+                ve(c, m), m["squad"] = -0x2;
+            }
+            c["arenaPace"] = p => {
+                const Kv = Kq;
+                let {
+                    paceRange: q
+                } = f[Kv(0xfac)], r = this[Kv(0x8cf)][Kv(0xa0f)](p);
+                return q[0x0] + (q[0x1] - q[0x0]) * r;
+            };
+        } ["influence"];
+        ["commanders"] = [];
+        ["losses"];
+        ["counted"] = new Set();
+        ["step"](c) {
+            const Kw = cX;
+            this["influence"]["step"](c);
+            for (let d of this["commanders"]) d?.["step"](c);
+            for (let g of this["world"]["enemies"]) g["alive"] || this["counted"]["has"](g['id']) || (this["counted"]["add"](g['id']), this["losses"][g["faction"]] = (this["losses"][g["faction"]] ?? 0x0) + 0x1);
+        } ["standing"](c) {
+            const Kx = cX;
+            return this["commanders"][c]?.["alive"]() ?? 0x0;
+        } ["front"]() {
+            const Kz = cX;
+            let c = this["influence"]["hottest"]();
+            return c["tension"] < f["arena"]["tensionThreshold"] ? null : this["influence"]["centreOf"](c["index"]);
+        }
+    };
+
+function U3(c, d) {
+    const KA = cX;
+    let g = c["map"],
+        j = d === "hostages" ? g["hostages"] : d === "extraction" ? g["extraction"] : g["playerSpawns"];
+    if (j["length"] === 0x0) return null;
+    let l = 0x0,
+        m = 0x0;
+    for (let p of j) l += p['x'], m += p['y'];
+    return {
+        'x': l / j["length"],
+        'y': m / j["length"]
+    };
+}
+
+function B6(c, d, g) {
+    const KB = cX;
+    let i = c["map"]["tile"];
+    if ("rect" in d) {
+        let l = d["rect"];
+        return g['x'] >= l['x'] * i && g['x'] < (l['x'] + l['w']) * i && g['y'] >= l['y'] * i && g['y'] < (l['y'] + l['h']) * i;
+    }
+    let j = U3(c, d['at']);
+    return j !== null && Math["hypot"](g['x'] - j['x'], g['y'] - j['y']) <= d["radius"] * i;
+}
+
+function $3(c, d) {
+    const KC = cX;
+    let g = c["map"]["triggers"];
+    if (g["length"] === 0x0) return;
+    c["triggerState"] ??= g["map"](() => ({
+        'fired': 0x0,
+        'inside': 0x0,
+        'cooldown': 0x0,
+        'armed': !0x0
+    }));
+    let i = c["soldiers"]["filter"](j => j["alive"] && j["faction"] === D["Player"]);
+    g["forEach"]((j, l) => {
+        const KD = KC;
+        let m = c[KD(0x313)][l];
+        if (m[KD(0x571)] > 0x0 && (m[KD(0x571)] = Math[KD(0xbba)](0x0, m[KD(0x571)] - d)), !(m[KD(0xee6)] >= (j[KD(0x1231)] ?? 0x1))) {
+            if (!i[KD(0x2fc)](p => B6(c, j[KD(0x166a)], p[KD(0x366)]))) {
+                m[KD(0x1087)] = 0x0, m[KD(0x39d)] = !0x0;
+                return;
+            }
+            m[KD(0x1087)] += d, !(!m[KD(0x39d)] || m[KD(0x571)] > 0x0 || m[KD(0x1087)] < (j[KD(0x1059)] ?? 0.5)) && (H6(c, j[KD(0xe25)]), m[KD(0xee6)]++, m[KD(0x1087)] = 0x0, m[KD(0x571)] = j[KD(0x571)] ?? 0x0, (j[KD(0x6b5)] ?? KD(0xd69)) === KD(0xd69) && (m[KD(0x39d)] = !0x1));
+        }
+    });
+}
+
+function H6(g, j) {
+    const KE = cX;
+    let m = g["map"]["tile"],
+        p = j["near"],
+        q = typeof p == "string" ? U3(g, p) : {
+            'x': (p['x'] + 0.5) * m,
+            'y': (p['y'] + 0.5) * m
+        };
+    if (!q) return;
+    let v = (j["spread"] ?? 0x6) * m,
+        y = (j["minDistance"] ?? 0xe) * m,
+        A = g["soldiers"]["filter"](E => E["alive"] && E["faction"] === D["Player"]),
+        C = 0x0;
+    for (let E = 0x0; C < j["count"] && E < j["count"] * 0xc; E++) {
+        let F = g["rng"]() * Math['PI'] * 0x2,
+            H = v * Math["sqrt"](g["rng"]()),
+            I = uT(g["map"], {
+                'x': q['x'] + Math["cos"](F) * H,
+                'y': q['y'] + Math["sin"](F) * H
+            });
+        if (A["some"](L => Math["hypot"](L["pos"]['x'] - I['x'], L["pos"]['y'] - I['y']) < y)) continue;
+        let K = WW(g, I, 0x0, null, g["levers"], -0x1, D["Enemy"], g["map"]["personas"]);
+        re(g, K), K["state"] = 0x0, ve(g, K), g["enemyTotal"]++, C++;
+    }
+}
+var G6 = 0x28,
+    V6 = 0x14;
+
+function Er(c, d, g = 0x9, j) {
+    const KF = cX;
+    let l = null,
+        m = 0x1 / 0x0;
+    for (let q of c["actors"]) {
+        if (!q["alive"] || q["faction"] === j) continue;
+        let u = Math["hypot"](q["pos"]['x'] - d['x'], q["pos"]['y'] - d['y']);
+        u <= q["radius"] + g && u < m && (m = u, l = q);
+    }
+    if (l) return {
+        'kind': "enemy",
+        'actor': l
+    };
+    let p = ft(c, d['x'], d['y'], 0x2);
+    return p && p["role"] !== "protect" ? {
+        'kind': "building",
+        'building': p
+    } : {
+        'kind': "ground"
+    };
+}
+var Mr = (c, d) => c["soldiers"]["filter"](g => g["faction"] === d),
+    P2 = (c, d) => {
+        const KG = cX;
+        d === c["viewSide"] && c["sounds"]["push"]({
+            'kind': "order"
+        });
+    };
+
+function ae(c, d, g = c, j, l = {}) {
+    const KH = cX;
+    if (c["preroll"] > 0x0) return;
+    let m = uT(c["map"], d);
+    g["squadTarget"] = null, g["targetBuilding"] = null, g["field"] = yW(c["map"], m, !0x0, l["swimCost"] ?? 0x1), g["orderGoal"] = m, g["orderMarker"] = f["soldier"]["orderMarkerTime"], Rr(c, m, j);
+    for (let p of Mr(c, j)) p["alive"] && (p["state"] = 0x1);
+    l["quiet"] || P2(c, j);
+}
+
+function Cr(c, d, g) {
+    const KI = cX;
+    for (let i of Mr(c, g)) i["alive"] && (i["fireLatch"] = _T[i["weapon"]]["fireInterval"], i["fireLatchAt"] = {
+        'x': d['x'],
+        'y': d['y']
+    });
+}
+
+function kt(c, d, g = c, i, j = {}) {
+    const KJ = cX;
+    if (!(c["preroll"] > 0x0)) {
+        g["squadTarget"] = d, g["targetBuilding"] = null, g["field"] = yW(c["map"], d["pos"], !0x0, j["swimCost"] ?? 0x1), g["orderGoal"] = {
+            ...d["pos"]
+        }, g["orderMarker"] = f["soldier"]["orderMarkerTime"], g["lastTargetPos"] = {
+            ...d["pos"]
+        }, g["repathTimer"] = 0x0, Rr(c, d["pos"], i);
+        for (let l of Mr(c, i)) l["alive"] && (l["state"] = 0x2);
+        P2(c, i);
+    }
+}
+
+function Ar(c, d, g = c, j, l = {}) {
+    const KK = cX;
+    if (c["preroll"] > 0x0) return;
+    g["squadTarget"] = null, g["targetBuilding"] = d;
+    let m = uT(c["map"], d["centre"]);
+    g["field"] = yW(c["map"], m, !0x0, l["swimCost"] ?? 0x1), g["orderGoal"] = {
+        ...d["centre"]
+    }, g["orderMarker"] = f["soldier"]["orderMarkerTime"], Rr(c, m, j);
+    for (let p of Mr(c, j)) p["alive"] && (p["state"] = 0x2);
+    P2(c, j);
+}
+
+function Rr(c, d, g) {
+    const KL = cX;
+    let j = c["soldiers"]["filter"](u => u["alive"] && u["faction"] === g),
+        l = f["soldier"]["formationSpacing"],
+        m = f["soldier"]["formationJitter"],
+        p = Ci(d, j["length"] * 0x3, l)["map"](u => ({
+            'x': u['x'] + (c["jitter"]() * 0x2 - 0x1) * m,
+            'y': u['y'] + (c["jitter"]() * 0x2 - 0x1) * m
+        }))["filter"](u => !fT(c["map"], u['x'], u['y'], f["soldier"]["radius"]))["slice"](0x0, Math["max"](j["length"], 0x1));
+    if (p["length"] === 0x0) {
+        for (let u of j) u["slot"] = {
+            ...d
+        }, u["slotStuck"] = 0x0;
+        return;
+    }
+    let q = k0(j, p);
+    for (let v of j) v["slot"] = q["get"](v) ?? {
+        ...d
+    }, v["slotStuck"] = 0x0;
+}
+
+function q6(g, j, m) {
+    const KM = cX;
+    let p = f["soldier"]["formationSpacing"],
+        q = j["orderGoal"] ?? m["pos"],
+        v = null,
+        y = -0x1 / 0x0;
+    for (let A = 0x0; A < 0xe; A++) {
+        let C = g["jitter"]() * Math['PI'] * 0x2,
+            E = p * (0.5 + g["jitter"]() * 0x2),
+            F = {
+                'x': q['x'] + Math["cos"](C) * E,
+                'y': q['y'] + Math["sin"](C) * E
+            };
+        if (fT(g["map"], F['x'], F['y'], m["radius"]) || !DW(g["map"], m["pos"], F, m["radius"])) continue;
+        let H = Math["hypot"](F['x'] - q['x'], F['y'] - q['y']),
+            I = TT[oW(g["map"], F['x'], F['y'])]["blocksSight"],
+            K = -H + (I ? p * 1.5 : 0x0);
+        K > y && (y = K, v = F);
+    }
+    m["slotStuck"] = 0x0, v && (m["slot"] = v);
+}
+
+function L2(d, g, j, l = null, m = d, p, q = !0x1) {
+    const KN = cX;
+    let u = f["soldier"];
+    if (p === d["viewSide"] && X6(d, g), m["squadTarget"]) {
+        if (!m["squadTarget"]["alive"]) m["squadTarget"] = null;
+        else {
+            m["repathTimer"] -= g;
+            let v = m["lastTargetPos"] ? Math["hypot"](m["squadTarget"]["pos"]['x'] - m["lastTargetPos"]['x'], m["squadTarget"]["pos"]['y'] - m["lastTargetPos"]['y']) : 0x1 / 0x0;
+            m["repathTimer"] <= 0x0 && v > V6 && (m["field"] = yW(d["map"], m["squadTarget"]["pos"], !0x0, m["field"]?.["swimCost"] ?? 0x1), m["orderGoal"] = {
+                ...m["squadTarget"]["pos"]
+            }, m["lastTargetPos"] = {
+                ...m["squadTarget"]["pos"]
+            }, Rr(d, m["squadTarget"]["pos"], p), m["repathTimer"] = 0.35);
+        }
+    }
+    m["targetBuilding"] && !m["targetBuilding"]["standing"] && (m["targetBuilding"] = null);
+    for (let y of d["soldiers"]) {
+        if (!y["alive"] || y["faction"] !== p || (y["prev"]['x'] = y["pos"]['x'], y["prev"]['y'] = y["pos"]['y'], y["fireCooldown"] -= g, y["fireLatch"] > 0x0 && (y["fireLatch"] -= g), Mi(y, d["map"], g))) continue;
+        let A = U6(d, m, y) ?? ut(d["map"], y);
+        if (Ei(y, A, d["hash"], d["map"], w0, g), h1(y, d["map"], g), g1(y, d["map"]), A && y["slot"] && Math["hypot"](y["vel"]['x'], y["vel"]['y']) < f["movement"]["slotStuckSpeed"] ? (y["slotStuck"] += g, y["slotStuck"] > f["movement"]["slotStuckTrigger"] && q6(d, m, y)) : y["slotStuck"] > 0x0 && (y["slotStuck"] = Math["max"](0x0, y["slotStuck"] - g * 0x2)), ji(d, y), p === d["viewSide"] && y["wading"] && d["jitter"]() < 0.08 && Math["hypot"](y["vel"]['x'], y["vel"]['y']) > 0x8) {
+            let C = z(d["map"], Math["floor"](y["pos"]['x'] / d["map"]["tile"]), Math["floor"](y["pos"]['y'] / d["map"]["tile"])) === 0x9;
+            d['fx']["splash"](y["pos"], C), d["sounds"]["push"]({
+                'kind': "wade",
+                'at': y["pos"],
+                'value': C ? 0x1 : 0x0
+            });
+        }
+        K6(d, m, y, j, u, l, q);
+    }
+}
+
+function U6(c, d, g) {
+    const KO = cX;
+    let i = f["soldier"],
+        j = d["squadTarget"]?.["alive"] ? d["squadTarget"]["pos"] : d["targetBuilding"]?.["standing"] ? d["targetBuilding"]["centre"] : null;
+    if (j) {
+        let m = Math["hypot"](j['x'] - g["pos"]['x'], j['y'] - g["pos"]['y']),
+            p = uW(g["weapon"]),
+            q = p["melee"] ? p["fireRange"] * 0.75 : p["fireRange"] - i["engageBuffer"];
+        if (m <= q && (p["melee"] || PW(c["map"], g["pos"], j))) return g["state"] = 0x2, null;
+    }
+    if (g["state"] === 0x0 || !g["slot"]) return null;
+    let l = Math["hypot"](g["slot"]['x'] - g["pos"]['x'], g["slot"]['y'] - g["pos"]['y']);
+    return l <= f["movement"]["slotArrived"] ? (j || (g["state"] = 0x0), null) : l < G6 || !d["field"] ? g["slot"] : f1(d["field"], c["map"], g["pos"], g["radius"]) ?? g["slot"];
+}
+
+function $6(c, d, g) {
+    const KP = cX;
+    let j = f["soldier"]["manualFan"];
+    if (j <= 0x0) return g;
+    let l = hT(c, d["faction"]);
+    if (!l) return g;
+    let m = d["pos"]['x'] - l['x'],
+        p = d["pos"]['y'] - l['y'],
+        q = Math["hypot"](m, p);
+    if (q < 0.001) return g;
+    let u = Math["min"](0x1, j / q);
+    return {
+        'x': g['x'] + m * u,
+        'y': g['y'] + p * u
+    };
+}
+
+function K6(c, d, g, j, m, p, q = !0x1) {
+    const KQ = cX;
+    let u = j ?? (g["fireLatch"] > 0x0 ? g["fireLatchAt"] : null);
+    if (g["wading"]) {
+        Math["hypot"](g["vel"]['x'], g["vel"]['y']) > 0x2 && (g["angle"] = Math["atan2"](g["vel"]['y'], g["vel"]['x']));
+        return;
+    }
+    let v = null;
+    if (u) v = q ? u : $6(c, g, u);
+    else {
+        if (d["squadTarget"]?.["alive"] && K3(c, g, d["squadTarget"]["pos"])) v = d["squadTarget"]["pos"];
+        else {
+            if (d["targetBuilding"]?.["standing"] && K3(c, g, d["targetBuilding"]["centre"])) v = d["targetBuilding"]["centre"];
+            else {
+                if (m["autoEngage"] && d["autoEngage"]) {
+                    let y = Y6(c, g);
+                    y && (v = y["pos"]);
+                }
+            }
+        }
+    }
+    if (!v) {
+        if (Math["hypot"](g["vel"]['x'], g["vel"]['y']) > 0x2) g["angle"] = Math["atan2"](g["vel"]['y'], g["vel"]['x']);
+        else {
+            if (p) {
+                let A = p['x'] - g["pos"]['x'],
+                    C = p['y'] - g["pos"]['y'];
+                Math["hypot"](A, C) > 0xc && (g["angle"] = Math["atan2"](C, A));
+            }
+        }
+        return;
+    }
+    if (g["angle"] = Math["atan2"](v['y'] - g["pos"]['y'], v['x'] - g["pos"]['x']), g["fireCooldown"] <= 0x0) {
+        let E = z6(g);
+        g["fireCooldown"] = E["fireInterval"], g["fireLatch"] = 0x0;
+        let F = _T[g["weapon"]];
+        y1(c, g, v, E["spread"], u ? F["fireRange"] * m["manualRange"] : void 0x0);
+    }
+}
+
+function z6(c) {
+    const KR = cX;
+    let d = _T[c["weapon"]];
+    if (c["rank"] <= 0x0) return {
+        'spread': d["spread"],
+        'fireInterval': d["fireInterval"]
+    };
+    let g = ne(c["rank"]) / (Tt["length"] - 0x1);
+    return {
+        'spread': d["spread"] * (0x1 + (f["veteran"]["spread"] - 0x1) * g),
+        'fireInterval': d["fireInterval"] * (0x1 + (f["veteran"]["fireInterval"] - 0x1) * g)
+    };
+}
+var K3 = (c, d, g) => Math["hypot"](g['x'] - d["pos"]['x'], g['y'] - d["pos"]['y']) <= _T[d["weapon"]]["fireRange"] && (uW(d["weapon"])["melee"] === !0x0 || PW(c["map"], d["pos"], g));
+
+function Y6(c, d) {
+    const KS = cX;
+    let g = null,
+        j = uW(d["weapon"]),
+        l = j["fireRange"] * (j["autoEngage"] ?? f["soldier"]["autoEngageRange"]),
+        m = j["rocket"] ? j["rocket"]["speed"] * j["rocket"]["life"] : f["bullet"]["speed"] * (j["bulletLife"] ?? f["bullet"]["life"]);
+    for (let p of c["actors"]) {
+        if (!p["alive"] || p["faction"] === d["faction"]) continue;
+        let q = Math["hypot"](p["pos"]['x'] - d["pos"]['x'], p["pos"]['y'] - d["pos"]['y']);
+        wi(c, p, q) && q < l && kW(c["map"], d["pos"], p["pos"]) && PW(c["map"], d["pos"], p["pos"]) && !Uh(c, d["pos"], p["pos"], j["spread"], m) && (l = q, g = p);
+    }
+    return g;
+}
+
+function X6(c, d) {
+    const KU = cX;
+    if (c["stepNoise"] -= d, c["stepNoise"] > 0x0) return;
+    c["stepNoise"] = f["enemy"]["stepInterval"];
+    let g = null,
+        j = 0x0;
+    for (let m of c["soldiers"]) {
+        if (!m["alive"] || m["wading"] || !c["playerSides"]["includes"](m["faction"])) continue;
+        let p = Math["hypot"](m["vel"]['x'], m["vel"]['y']);
+        p > j && (j = p, g = m);
+    }
+    if (!g) return;
+    let l = Math["min"](0x1, j / f["soldier"]["speed"]);
+    Ai(c, g["pos"], f["enemy"]["stepNoise"] * l);
+}
+var On = [];
+
+function J6(c) {
+    const KV = cX;
+    On["length"] = 0x0;
+    for (let d of c["actors"]) On["push"](d);
+    for (let g of c["hostages"]) g["alive"] && !g["delivered"] && On["push"](g);
+    for (let i of c["critters"]) i["alive"] && On["push"](i);
+    return On;
+}
+
+function wt(c, d, g, i = null) {
+    const KX = cX;
+    if (c["preroll"] > 0x0) {
+        c["preroll"] = Math["max"](0x0, c["preroll"] - d), c['fx']["step"](d);
+        return;
+    }
+    if (c["time"] += d, c["phaseTime"] += d, c["stepIndex"]++, c["phase"] !== 0x0) {
+        c['fx']["step"](d), Ui(c, d), $i(c, d), gt(c, d), c2(c, d), Ii(c, d);
+        return;
+    }
+    if (c["orderMarker"] = Math["max"](0x0, c["orderMarker"] - d), c["shouts"]["length"] > 0x0) {
+        for (let l of c["shouts"]) l['t'] -= d;
+        c["shouts"] = c["shouts"]["filter"](m => m['t'] > 0x0);
+    }
+    c["grenadeCooldown"] = Math["max"](0x0, c["grenadeCooldown"] - d), c["herdField"] && (c["herdField"]["age"] += d), c["hostageField"] && (c["hostageField"]["age"] += d), c["sideB"] && (c["sideB"]["grenadeCooldown"] = Math["max"](0x0, c["sideB"]["grenadeCooldown"] - d), c["sideB"]["orderMarker"] = Math["max"](0x0, c["sideB"]["orderMarker"] - d)), c["screams"]["length"] = 0x0, c["deaths"]["length"] = 0x0, c["sounds"]["length"] = 0x0, E0(c, d), S0(c);
+    let j = J6(c);
+    c["hash"]["rebuild"](j), g && L2(c, d, g["manualAim"], g["cursor"], c, D["Player"], g["targeted"]), c["sideB"] && L2(c, d, i?.["manualAim"] ?? null, null, c["sideB"], D["Enemy"]), th(c, d), $h(c, d), mh(c, d), $3(c, d), x0(j, c["hash"], c["map"], 0x2), c["lastKnownAge"] += d, c["fog"]["step"](c["map"], c["soldiers"], d, c["viewSide"] ?? D["Player"]), Vh(c, d), qh(c, d), Ui(c, d), $i(c, d), gt(c, d), c3(c, d), Ii(c, d), Yh(c, d), zh(c), c['fx']["step"](d), Sn(c) && Z6(c, d);
+}
+
+function Z6(c, d) {
+    const KY = cX;
+    if (c["reapTimer"] -= d, c["reapTimer"] > 0x0) return;
+    c["reapTimer"] = 0x2;
+    let g = i => !i["alive"] && i["deathTime"] >= f['fx']["deathTime"];
+    if (c["actors"]["some"](g)) {
+        for (let i of c["enemies"]) g(i) && c['fx']["forget"](i['id']);
+        c["enemies"] = c["enemies"]["filter"](j => !g(j)), x1(c);
+    }
+}
+var St = class {
+        constructor(c, d, g, j, l = !0x1, m = 0x0) {
+            const KZ = cX;
+            this["map"] = c, this["camera"] = d, this["input"] = g, this["onClearDecals"] = j, this["alwaysLocked"] = l, this["runSeed"] = m, (this["world"] = this["newWorld"](), this["arena"] = new Sr(this["world"]));
+            let p = this["arena"]["front"]() ?? this["centre"]();
+            this["camera"]["centreOn"](p, this["map"]);
+        } ["world"];
+        ["arena"];
+        ["exitRequested"] = !0x1;
+        ["idle"] = 0x0;
+        ["newWorld"]() {
+            const L5 = cX;
+            let c = BW(this["map"], "veteran", void 0x0, void 0x0, this["runSeed"]);
+            return this["onClearDecals"](), c["fog"] = new ze(this["map"], 0x0), c["viewSide"] = null, c;
+        } ["centre"]() {
+            const L7 = cX;
+            return {
+                'x': this["map"]["pixelWidth"] / 0x2,
+                'y': this["map"]["pixelHeight"] / 0x2
+            };
+        } ["step"](c) {
+            const L8 = cX;
+            this["moveCamera"](c), wt(this["world"], c, null), this["arena"]["step"](c);
+            for (let d of this["input"]["drain"]()) d["type"] === "exit" && (this["exitRequested"] = !0x0), d["type"] === "recentre" && this["camera"]["release"]();
+        } ["moveCamera"](c) {
+            const L9 = cX;
+            if (this["alwaysLocked"] || G()["arenaLockCamera"]) {
+                this["input"]["consumePan"](this["camera"]["zoom"]), this["input"]["edgeScroll"](c), this["world"]['fx']["takeShake"](), this["camera"]["lookAt"](this["centre"](), this["map"]), this["camera"]["update"](c, null, this["map"]), xe(this["world"], this["camera"]);
+                return;
+            }
+            let d = this["input"]["consumePan"](this["camera"]["zoom"]),
+                g = this["input"]["edgeScroll"](c);
+            d['x'] !== 0x0 || d['y'] !== 0x0 || g['x'] !== 0x0 || g['y'] !== 0x0 ? this["idle"] = 0x0 : this["idle"] += c, this["camera"]["pan"](d['x'] + g['x'], d['y'] + g['y'], this["map"], "timed");
+            let i = this["world"]['fx']["takeShake"]();
+            i > 0x0 && this["camera"]["addShake"](i);
+            let j = this["idle"] > f["arena"]["driftAfter"] ? this["arena"]["front"]() ?? this["centre"]() : null;
+            this["camera"]["update"](c, j, this["map"]), xe(this["world"], this["camera"]);
+        } ["readout"]() {
+            const Lj = cX;
+            let c = this["world"],
+                d = (j, l, m) => ({
+                    'label': l,
+                    'cls': m,
+                    'up': this["arena"]["standing"](j),
+                    'lost': this["arena"]["losses"][j] ?? 0x0,
+                    'kills': c["killsBySide"][j] ?? 0x0
+                }),
+                g = [d(D["Player"], "GREEN", "ab-green"), d(D["Enemy"], "BLUE", "ab-red")];
+            if (c["map"]["critterNotice"] !== null) {
+                let i = c["critters"]["filter"](j => j["alive"])["length"];
+                g["push"]({
+                    'label': "CHICKENS",
+                    'cls': "ab-hen",
+                    'up': i,
+                    'lost': c["critters"]["length"] - i,
+                    'kills': c["killsBySide"][j1] ?? 0x0
+                });
+            }
+            return g;
+        }
+    },
+    z3 = "arena-forest";
+
+function Y3(c) {
+    const Lk = cX;
+    let {
+        camera: d,
+        renderer: g,
+        input: j,
+        hud: m,
+        layout: p
+    } = c["shell"], q = null, u = null, v = !0x1, y = null, A = () => p["state"]["mode"] === "wide";
+    return {
+        'wanted': A,
+        'start': async () => {
+            const Lq = Lk;
+            if (!A()) return;
+            try {
+                if (q) g[Lq(0x1344)](u, q[Lq(0xce4)]);
+                else {
+                    u = Te(aT[z3], z3), g[Lq(0x1344)](u, BW(u, Lq(0x87d)));
+                    let F = Math[Lq(0x7a7)](Math[Lq(0xeed)]() * 0x7fffffff);
+                    q = new St(u, d, j, () => g[Lq(0xe0d)](), !0x0, F);
+                }
+            } catch {
+                return;
+            }
+            j[Lq(0x16ad)] = Lq(0x207), document[Lq(0x5b7)][Lq(0x11f0)][Lq(0x16ad)] = Lq(0x622), p[Lq(0x5fd)](), v = !0x0;
+            let C = q;
+            c[Lq(0x1603)]({
+                'name': Lq(0x622),
+                'world': C[Lq(0xce4)],
+                'step': H => {
+                    const Lv = Lq;
+                    document[Lv(0x6ad)] || (C[Lv(0x15ea)](H), m[Lv(0xf63)](C[Lv(0xfa6)]()));
+                },
+                'draw': (H, I) => g[Lq(0x9df)](C[Lq(0xce4)], d, H, I)
+            });
+            let E = () => Xn(sn() ? Lq(0x478) : Lq(0x171f));
+            E(), y = tt(E);
+        },
+        'stop': () => {
+            const Lw = Lk;
+            v && (v = !0x1, c[Lw(0x1603)](null), m[Lw(0x6d1)](), y?.(), y = null, Xn(Lw(0xfbb)), j[Lw(0x16ad)] = Lw(0x61f), delete document[Lw(0x5b7)][Lw(0x11f0)][Lw(0x16ad)], p[Lw(0x5fd)]());
+        }
+    };
+}
+
+function X3(g) {
+    const Lx = cX;
+    let {
+        ctx: j,
+        bed: m,
+        lfo: p,
+        layer: q
+    } = g, v = q(), y = j["createBiquadFilter"]();
+    y["type"] = "lowpass", y["frequency"]["value"] = 0x190, y['Q']["value"] = 0.7;
+    let A = j["createGain"]();
+    A["gain"]["value"] = 0.12, m()["connect"](y)["connect"](A)["connect"](v);
+    for (let [C, E, F, H] of [
+            [0x6d6, 0x8c, 1.9, 0.3],
+            [0xa28, 0x8c, 3.1, 0.26],
+            [0xdde, 0x8c, 2.3, 0.22]
+        ]) {
+        let I = j["createBiquadFilter"]();
+        I["type"] = "bandpass", I["frequency"]["value"] = C, I['Q']["value"] = 0x8;
+        let K = j["createGain"]();
+        K["gain"]["value"] = 0.34, m()["connect"](I)["connect"](K)["connect"](v), p(0.5 + F * 0.07, E, I["frequency"]), p(F, H, K["gain"]);
+    }
+    return v;
+}
+
+function J3(c) {
+    const Lz = cX;
+    let {
+        ctx: d,
+        voice: g,
+        bed: j,
+        lfo: l,
+        layer: m
+    } = c, p = m(), q = d["createBiquadFilter"]();
+    if (q["type"] = "lowpass", q["frequency"]["value"] = g["windCutoff"], q['Q']["value"] = 0.6, j()["connect"](q)["connect"](p), g["whistle"]) {
+        let u = d["createBiquadFilter"]();
+        u["type"] = "bandpass", u["frequency"]["value"] = 0x384, u['Q']["value"] = 0x9;
+        let v = d["createGain"]();
+        v["gain"]["value"] = 0.35, j()["connect"](u)["connect"](v)["connect"](p), l(0.07, 0xc8, u["frequency"]);
+    }
+    return p;
+}
+
+function Z3(c) {
+    const LA = cX;
+    let {
+        ctx: d,
+        bed: g,
+        layer: i
+    } = c, j = i(), l = d["createBiquadFilter"]();
+    return l["type"] = "highpass", l["frequency"]["value"] = 0xbb8, g()["connect"](l)["connect"](j), j;
+}
+
+function Q3(g) {
+    const LB = cX;
+    let {
+        ctx: j,
+        voice: m,
+        oscillators: p,
+        bed: q,
+        lfo: v,
+        layer: y
+    } = g, A = y();
+    if (m["insects"] === "crickets")
+        for (let [C, E, F] of [
+                [0x10cc, 0x1b, -0.4],
+                [0x1324, 0x1f, 0.4]
+            ]) {
+            let H = j["createOscillator"]();
+            H["frequency"]["value"] = C;
+            let I = j["createGain"]();
+            I["gain"]["value"] = 0.5, v(E, 0.5, I["gain"]);
+            let K = j["createStereoPanner"]();
+            K["pan"]["value"] = F, H["connect"](I)["connect"](K)["connect"](A), H["start"](), p["push"](H);
+        } else {
+            if (m["insects"] === "cicadas") {
+                let L = j["createBiquadFilter"]();
+                L["type"] = "bandpass", L["frequency"]["value"] = 0x157c, L['Q']["value"] = 0x5;
+                let M = j["createGain"]();
+                M["gain"]["value"] = 0.5, v(0x5a, 0.5, M["gain"]), q()["connect"](L)["connect"](M)["connect"](A);

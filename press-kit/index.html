@@ -1,0 +1,296 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Press kit -- Boots &amp; Bullets</title>
+<meta name="description" content="A free top-down squad shooter that plays in your browser, a remake of Cannon Fodder from 1993. Fact sheet, screenshots, video and brand assets.">
+<link rel="canonical" href="https://bootsandbullets.com/press-kit/">
+<meta name="robots" content="index, follow">
+<meta property="og:type" content="website">
+<meta property="og:site_name" content="Boots &amp; Bullets">
+<meta property="og:title" content="Press kit -- Boots &amp; Bullets">
+<meta property="og:description" content="A free top-down squad shooter that plays in your browser, a remake of Cannon Fodder from 1993. Fact sheet, screenshots, video and brand assets.">
+<meta property="og:url" content="https://bootsandbullets.com/press-kit/">
+<meta property="og:image" content="https://bootsandbullets.com/cover.png">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:title" content="Press kit -- Boots &amp; Bullets">
+<meta name="twitter:description" content="A free top-down squad shooter that plays in your browser, a remake of Cannon Fodder from 1993. Fact sheet, screenshots, video and brand assets.">
+<meta name="twitter:image" content="https://bootsandbullets.com/cover.png">
+<link rel="icon" href="/icons/favicon-32.png" sizes="32x32">
+<link rel="apple-touch-icon" href="/icons/apple-touch-icon.png">
+<style>/*
+ * The marketing pages' one stylesheet. Hand-written, no framework, no CDN,
+ * no webfont: a page for journalists loads instantly, works from a saved
+ * copy, and prints.
+ *
+ * It is NOT the game's stylesheet. The game's chrome is brass plates and a
+ * plotted sprite face, and neither survives being text you can select --
+ * which is the whole point of this page. So the identity comes from the
+ * colours, the crest and the spacing, and the type is a system stack.
+ *
+ * The colours are the game's own, taken from `tools/lib/house.mjs` (the
+ * palette both the films and the covers use) rather than eyedropped, so the
+ * page and the pictures on it cannot drift apart.
+ */
+
+:root {
+  --ground: #0a0d05;      /* the page's own ground */
+  --ink: #d6dcae;         /* the share card's text */
+  --dim: #8a9668;         /* its byline */
+  --gold: #fdd66a;        /* the crest's BOOTS */
+  --red: #e6431a;         /* the crest's BULLETS */
+  --green: #9cb82a;       /* the wings */
+  --plate: #12160b;
+  --line: #2a3118;
+  --measure: 40rem;
+}
+
+* { box-sizing: border-box; }
+
+html { -webkit-text-size-adjust: 100%; }
+
+body {
+  margin: 0;
+  padding: 0;
+  background: var(--ground);
+  color: var(--ink);
+  font: 16px/1.6 system-ui, -apple-system, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+}
+
+a { color: var(--gold); }
+a:hover { color: var(--ink); }
+
+.top {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  flex-wrap: wrap;
+  padding: 1.5rem clamp(1rem, 4vw, 3rem);
+  border-bottom: 2px solid var(--line);
+}
+.top .crest img {
+  /* The crest is a plotted sprite: never smoothed, never on a half pixel. */
+  width: 220px; height: auto;
+  image-rendering: pixelated;
+  display: block;
+}
+.top nav a {
+  font-weight: 700;
+  text-decoration: none;
+  border: 2px solid var(--gold);
+  padding: 0.5rem 1rem;
+}
+.top nav a:hover { background: var(--gold); color: var(--ground); }
+
+main {
+  max-width: 60rem;
+  margin: 0 auto;
+  padding: 2rem clamp(1rem, 4vw, 3rem) 4rem;
+}
+
+h1 {
+  font-size: clamp(2rem, 6vw, 3rem);
+  line-height: 1.1;
+  margin: 1rem 0 0.5rem;
+  color: var(--gold);
+}
+h2 {
+  font-size: 1.4rem;
+  margin: 3rem 0 0.75rem;
+  padding-bottom: 0.4rem;
+  border-bottom: 2px solid var(--line);
+}
+h3 {
+  font-size: 1rem;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: var(--dim);
+  margin: 1.5rem 0 0.4rem;
+}
+
+p, li { max-width: var(--measure); }
+.lede { font-size: 1.15rem; color: var(--ink); }
+.note { color: var(--dim); font-size: 0.9rem; }
+
+/* The boilerplate is meant to be selected and pasted, so it looks liftable. */
+.copy {
+  background: var(--plate);
+  border-left: 4px solid var(--green);
+  padding: 0.8rem 1rem;
+  max-width: var(--measure);
+}
+
+.play { display: flex; align-items: center; gap: 1rem; flex-wrap: wrap; }
+.button {
+  display: inline-block;
+  background: var(--gold);
+  color: var(--ground);
+  font-weight: 700;
+  text-decoration: none;
+  padding: 0.7rem 1.2rem;
+  border: 2px solid var(--gold);
+}
+.button:hover { background: var(--ground); color: var(--gold); }
+
+table { border-collapse: collapse; width: 100%; max-width: var(--measure); }
+th, td { text-align: left; padding: 0.5rem 0.75rem; border-bottom: 1px solid var(--line); vertical-align: top; }
+th { color: var(--dim); font-weight: 600; white-space: nowrap; width: 9rem; }
+
+ul { padding-left: 1.2rem; }
+li { margin: 0.3rem 0; }
+
+/* Images: a grid that becomes one column on a phone. */
+.shots {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 20rem), 1fr));
+  gap: 1rem;
+  margin: 1rem 0;
+  padding: 0;
+  list-style: none;
+}
+.shots li { margin: 0; max-width: none; }
+.shots img {
+  width: 100%;
+  height: auto;
+  display: block;
+  border: 2px solid var(--line);
+  /* Every picture here is the game at native pixels. Do not let a browser
+     soften them on the way down. */
+  image-rendering: pixelated;
+}
+.shots figcaption, .shots .cap { color: var(--dim); font-size: 0.85rem; padding-top: 0.35rem; }
+.shots a { text-decoration: none; }
+
+.brand-grid { background: #1b1f12; }
+
+.embed {
+  position: relative;
+  max-width: 48rem;
+  aspect-ratio: 16 / 9;
+  border: 2px solid var(--line);
+}
+.embed iframe { position: absolute; inset: 0; width: 100%; height: 100%; border: 0; }
+
+.foot {
+  border-top: 2px solid var(--line);
+  padding: 1.5rem clamp(1rem, 4vw, 3rem);
+  color: var(--dim);
+  font-size: 0.9rem;
+}
+
+/* A press kit gets printed to PDF. Ten lines, and it comes out readable. */
+@media print {
+  body { background: #fff; color: #000; font-size: 11pt; }
+  a { color: #000; }
+  h1, h2 { color: #000; border-color: #999; }
+  h3 { color: #444; }
+  .top nav, .play { display: none; }
+  .copy { background: none; border-left: 3px solid #999; }
+  .shots { grid-template-columns: 1fr 1fr; }
+  .embed { display: none; }
+  th { color: #444; }
+}
+</style>
+</head>
+<body>
+<header class="top">
+  <a class="crest" href="/"><img src="/press/logo.png" alt="Boots &amp; Bullets" width="323" height="144"></a>
+  <nav><a href="/">Play the game</a></nav>
+</header>
+<main>
+<h1>Press kit</h1>
+<p class="lede">Boots &amp; Bullets is a free top-down squad shooter that plays in your browser, a remake of Cannon Fodder from 1993. Six men, a mouse: left click moves them, right click fires, and one hit kills anyone, yours included.</p>
+<p class="play"><a class="button" href="/">Play it in your browser</a> <span class="note">Free, no sign-up, desktop only</span></p>
+
+<section id="fact-sheet">
+  <h2>Fact sheet</h2>
+    <table>
+    <tr><th>Title</th><td>Boots &amp; Bullets</td></tr>
+    <tr><th>Developer</th><td>Darren Moore, IMBF Games</td></tr>
+    <tr><th>Release</th><td>Early preview, September 2026</td></tr>
+    <tr><th>Platform</th><td>Desktop web browser. Phones cannot play it yet</td></tr>
+    <tr><th>Price</th><td>Free. No account, no sign-up, nothing to install</td></tr>
+    <tr><th>Genre</th><td>Top-down squad shooter</td></tr>
+    <tr><th>Built with</th><td>TypeScript and Canvas 2D, one runtime dependency</td></tr>
+    <tr><th>Website</th><td>https://bootsandbullets.com</td></tr>
+    <tr><th>Contact</th><td>darren@inselnova.com</td></tr>
+  </table>
+</section>
+
+<section id="description">
+  <h2>Description</h2>
+  <h3>One line</h3>
+  <p class="copy">A free top-down squad shooter that plays in your browser. Six men, one hit each.</p>
+  <h3>Short</h3>
+  <p class="copy">Boots &amp; Bullets is a free top-down squad shooter that plays in your browser, a remake of Cannon Fodder from 1993. Six men, a mouse: left click moves them, right click fires, and one hit kills anyone, yours included.</p>
+  <h3>Long</h3>
+  <p class="copy">Boots &amp; Bullets is a free top-down squad shooter that plays in your browser, a remake of Cannon Fodder from 1993. Six men, a mouse: left click moves them, right click fires, and one hit kills anyone, yours included, so every mission is a nervous walk with a name behind each death. Fifty missions across jungle, desert and the frozen north, with objectives that change what a mission is: kill every enemy, level every building, find the officer, recover the supplies, walk the hostages out, hold the outpost. There is an Armoury to spend War Bonds in between missions, 1v1 multiplayer over a websocket, and a challenge map called The Herd where three hundred of them come at you at once. It runs on desktop, needs no account and installs nothing.</p>
+</section>
+
+<section id="features">
+  <h2>Features</h2>
+    <ul>
+    <li>Fifty missions across three zones: The Jungle, The Desert, The Frozen North</li>
+    <li>Six soldiers, and one hit kills any of them</li>
+    <li>Objectives that change what a mission is: eliminate, demolish, assassinate, collect, rescue, reach, hold</li>
+    <li>The Herd, a challenge map where three hundred enemies come at you at once</li>
+    <li>An Armoury of guns, throwables and call-ins, bought with War Bonds between missions</li>
+    <li>1v1 multiplayer over a websocket, private rooms by code</li>
+    <li>Three difficulties: Rookie, Veteran, Elite</li>
+    <li>Free, no account, nothing to install</li>
+  </ul>
+</section>
+
+<section id="video">
+  <h2>Video</h2>
+    <div class="embed"><iframe src="https://www.youtube-nocookie.com/embed/SPuNqng3quM" title="Boots &amp; Bullets: every mission type in forty seconds" loading="lazy" allowfullscreen></iframe></div>
+  <p class="note">Direct link: <a href="https://youtu.be/SPuNqng3quM">youtu.be/SPuNqng3quM</a></p>
+</section>
+
+<section id="images">
+  <h2>Images</h2>
+  <h3>Key art</h3>
+    <ul class="shots">
+    <li><a href="/press/three-zones.png"><img class="" src="/press/three-zones.png" alt="The three zones of the campaign: jungle, desert and the frozen north, with the squad in each" loading="lazy"></a><div class="cap">The three zones of the campaign: jungle, desert and the frozen north, with the squad in each</div></li>
+    <li><a href="/press/kill-every-enemy.png"><img class="" src="/press/kill-every-enemy.png" alt="A grenade going off at the treeline on Chicken Run" loading="lazy"></a><div class="cap">A grenade going off at the treeline on Chicken Run</div></li>
+    <li><a href="/press/the-herd.png"><img class="" src="/press/the-herd.png" alt="The Herd: three hundred enemies crossing open ground into a squad's grenades" loading="lazy"></a><div class="cap">The Herd: three hundred enemies crossing open ground into a squad's grenades</div></li>
+    <li><a href="/press/level-every-building.png"><img class="" src="/press/level-every-building.png" alt="A hut coming apart on Village, with a second still standing" loading="lazy"></a><div class="cap">A hut coming apart on Village, with a second still standing</div></li>
+    <li><a href="/press/walk-the-hostages-out.png"><img class="" src="/press/walk-the-hostages-out.png" alt="Ice Station: the squad crossing the ice, a hostage at the edge of the frame" loading="lazy"></a><div class="cap">Ice Station: the squad crossing the ice, a hostage at the edge of the frame</div></li>
+    <li><a href="/press/no-sign-up.png"><img class="" src="/press/no-sign-up.png" alt="Free in your browser, no sign-up, nothing to install" loading="lazy"></a><div class="cap">Free in your browser, no sign-up, nothing to install</div></li>
+  </ul>
+  <h3>Screenshots</h3>
+  <p class="note">The same frames without our words on them.</p>
+    <ul class="shots">
+    <li><a href="/press/2026-09-08-level-select.png"><img class="" src="/press/2026-09-08-level-select.png" alt="The mission select: fifty missions across three zones, with a fourth locked" loading="lazy"></a><div class="cap">The mission select: fifty missions across three zones, with a fourth locked</div></li>
+    <li><a href="/press/2026-09-08-the-armoury.png"><img class="" src="/press/2026-09-08-the-armoury.png" alt="The Armoury, where War Bonds are spent between missions" loading="lazy"></a><div class="cap">The Armoury, where War Bonds are spent between missions</div></li>
+    <li><a href="/press/2026-09-09-throwables.png"><img class="" src="/press/2026-09-09-throwables.png" alt="The Armoury's throwables: frags, smoke and flashbangs" loading="lazy"></a><div class="cap">The Armoury's throwables: frags, smoke and flashbangs</div></li>
+    <li><a href="/press/2026-09-09-village.png"><img class="" src="/press/2026-09-09-village.png" alt="Village, mid-mission: a hut detonating and the squad beside it" loading="lazy"></a><div class="cap">Village, mid-mission: a hut detonating and the squad beside it</div></li>
+    <li><a href="/press/2026-09-09-ice-station-wide.png"><img class="" src="/press/2026-09-09-ice-station-wide.png" alt="Ice Station, mid-mission, in the frozen north" loading="lazy"></a><div class="cap">Ice Station, mid-mission, in the frozen north</div></li>
+    <li><a href="/press/2026-09-08-arena-cpu-vs-cpu.png"><img class="" src="/press/2026-09-08-arena-cpu-vs-cpu.png" alt="The arena: the same game played by two AIs with nobody at the controls" loading="lazy"></a><div class="cap">The arena: the same game played by two AIs with nobody at the controls</div></li>
+  </ul>
+</section>
+
+<section id="brand">
+  <h2>Logo</h2>
+    <ul class="shots">
+    <li><a href="/press/logo.png"><img class="brand-grid" src="/press/logo.png" alt="The Boots &amp; Bullets crest, transparent" loading="lazy"></a><div class="cap">The Boots &amp; Bullets crest, transparent</div></li>
+    <li><a href="/press/logo-on-black.png"><img class="brand-grid" src="/press/logo-on-black.png" alt="The crest on black" loading="lazy"></a><div class="cap">The crest on black</div></li>
+    <li><a href="/press/logo-square.png"><img class="brand-grid" src="/press/logo-square.png" alt="The crest square, for a profile picture" loading="lazy"></a><div class="cap">The crest square, for a profile picture</div></li>
+    <li><a href="/press/icon-512.png"><img class="brand-grid" src="/press/icon-512.png" alt="The app icon" loading="lazy"></a><div class="cap">The app icon</div></li>
+  </ul>
+</section>
+
+<section id="permission">
+  <h2>Permission and contact</h2>
+  <p>You may use these images and the video in coverage of the game, and you may embed the video and use the logo unmodified. The game is a remake of Cannon Fodder (Sensible Software, 1993) and is not affiliated with Sensible Software or Codemasters, who own that name: no original graphics are reused and the name is different.</p>
+  <p>Anything else, ask: <a href="mailto:darren@inselnova.com">darren@inselnova.com</a></p>
+</section>
+
+</main>
+<footer class="foot">
+  <p>Boots &amp; Bullets is made by Darren Moore. Not affiliated with Sensible Software or Codemasters.</p>
+</footer>
+</body>
+</html>

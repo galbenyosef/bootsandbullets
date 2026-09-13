@@ -1,0 +1,249 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta
+      name="viewport"
+      content="width=device-width, initial-scale=1, viewport-fit=cover, user-scalable=no, interactive-widget=resizes-content"
+    />
+    <meta name="theme-color" content="#0a0d05" />
+    <meta name="mobile-web-app-capable" content="yes" />
+    <meta name="apple-mobile-web-app-capable" content="yes" />
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+    <title>Boots &amp; Bullets</title>
+    <!--
+      What a pasted link looks like (999-release). One description, used
+      four times over so the three cards and the manifest cannot disagree;
+      `https://bootsandbullets.com` is stamped per request by server/share.mjs, because
+      three of these must be absolute and the tree does not know its domain.
+      test/share.test.mjs holds the list of what has to be here.
+    -->
+    <meta name="description" content="A top-down squad shooter cut to the pattern of Cannon Fodder. Six fragile men, one hit each, and a Major who is certain about everything." />
+    <link rel="canonical" href="https://bootsandbullets.com/" />
+    <meta name="robots" content="index, follow" />
+    <meta property="og:type" content="website" />
+    <meta property="og:site_name" content="Boots &amp; Bullets" />
+    <meta property="og:title" content="Boots &amp; Bullets" />
+    <meta property="og:description" content="A top-down squad shooter cut to the pattern of Cannon Fodder. Six fragile men, one hit each, and a Major who is certain about everything." />
+    <meta property="og:url" content="https://bootsandbullets.com/" />
+    <meta property="og:image" content="https://bootsandbullets.com/cover.png" />
+    <meta property="og:image:width" content="1200" />
+    <meta property="og:image:height" content="630" />
+    <meta property="og:image:alt" content="The Boots &amp; Bullets crest: a helmet and wings over the wordmark, and the line Six men, one hit each." />
+    <meta name="twitter:card" content="summary_large_image" />
+    <meta name="twitter:title" content="Boots &amp; Bullets" />
+    <meta name="twitter:description" content="A top-down squad shooter cut to the pattern of Cannon Fodder. Six fragile men, one hit each, and a Major who is certain about everything." />
+    <meta name="twitter:image" content="https://bootsandbullets.com/cover.png" />
+    <script type="application/ld+json">
+      {
+        "@context": "https://schema.org",
+        "@type": "VideoGame",
+        "name": "Boots & Bullets",
+        "url": "https://bootsandbullets.com/",
+        "image": "https://bootsandbullets.com/cover.png",
+        "description": "A top-down squad shooter cut to the pattern of Cannon Fodder. Six fragile men, one hit each, and a Major who is certain about everything.",
+        "genre": ["Action", "Strategy"],
+        "gamePlatform": "Web browser",
+        "applicationCategory": "Game",
+        "operatingSystem": "Any",
+        "author": { "@type": "Organization", "name": "IMBF Games", "url": "https://inselnova.com/imbf/" }
+      }
+    </script>
+    <!-- The SVG is the icon; the PNGs beside it are for the browsers and
+         home screens that will not take one. Plotted from it at build. -->
+    <link rel="icon" href="/icon.svg" type="image/svg+xml" />
+    <link rel="icon" href="/icons/favicon-32.png" type="image/png" sizes="32x32" />
+    <link rel="apple-touch-icon" href="/icons/apple-touch-icon.png" />
+    <link rel="manifest" href="/manifest.webmanifest" />
+    <style>
+      /* Only what the loading screen needs. Everything else waits. */
+      #boot {
+        position: fixed; inset: 0; z-index: 100;
+        display: flex; align-items: center; justify-content: center;
+        background: #0a0d05; color: #d6dcae;
+        /* The game's own face first. It does not exist until the bundle has
+           built and installed it (ui/pixel-face.ts), and the text below is
+           held invisible until then (see #boot-inner > p) so a cold visitor
+           never sees the system monospace re-set itself into the face. The
+           stack behind it is only ever seen if the bundle fails. Sizes are
+           multiples of ten and spacing is whole pixels so every glyph edge
+           of that face sits on a device pixel. */
+        font: 20px/1.4 "Boots & Bullets Pixel", ui-monospace, "Cascadia Mono", Menlo, Consolas, monospace;
+        letter-spacing: 4px; text-align: center;
+        /* CONFIG.timing.bootFade, published by installSkin -- and the one
+           of the four that keeps a fallback. This block has to paint before
+           the bundle exists, so a boot screen that never faded because the
+           bundle never arrived would be worse than a drift (600-infra 041). */
+        transition: opacity var(--t-bootFade, 400ms) linear;
+      }
+      #boot.gone { opacity: 0; }
+      /* Its own compositing layer with no background of its own. Chromium
+         only applies LCD sub-pixel filtering to text in an opaque layer, so
+         this is what stops the bitmap face coming out with a red column on
+         one side of every stem and a blue one on the other -- measured, six
+         colours per glyph. On a transparent layer the smoothing is greyscale.
+         It is still not two colours: Chromium spreads every stem of this face
+         a pixel each side in grey, on the front screen's buttons as much as
+         here, and that is the face's problem to solve, not this screen's. */
+      #boot-inner { will-change: transform; width: 100%; }
+      /* The words wait for the face; the bar does not (700-qa 003).
+         ui/boot.ts adds has-face once the bundle has decoded the pixel
+         face, a few milliseconds after it runs. The animation is the safety
+         net: if no bundle ever arrives, the text shows itself in the fallback
+         stack after this long rather than never. */
+      #boot:not(.has-face) #boot-inner > p {
+        visibility: hidden;
+        animation: boot-reveal 0s 2.5s forwards;
+      }
+      @keyframes boot-reveal { to { visibility: visible; } }
+      #boot-brand { margin: 0 0 24px; color: #f0d878; font-size: 20px; }
+      /* Four cells, filled whole. A partial cell would have a soft edge. */
+      #boot-bar { display: flex; gap: 4px; justify-content: center; margin: 0 auto; }
+      #boot-bar i { width: 40px; height: 12px; background: #1e2612; box-shadow: inset 0 0 0 1px #3b4d26; }
+      #boot-bar i.on { background: #8aa621; box-shadow: inset 0 0 0 1px #c2d45e; }
+      #boot-word { margin: 20px 0 0; color: #8a9668; font-size: 20px; }
+      /* A block cursor, blinking between exactly on and exactly off. Opacity
+         animates on the compositor, so it keeps going while the main thread
+         bakes the atlas and nothing else on this screen can move. */
+      #boot-cursor {
+        display: inline-block; width: 0.6em; height: 1em; margin-left: 0.2em;
+        vertical-align: -2px; background: #8a9668;
+        animation: boot-blink 0.8s step-end infinite;
+      }
+      @keyframes boot-blink { 0%, 100% { opacity: 1; } 50% { opacity: 0; } }
+      /* Empty until the bundle is running; ui/boot.ts fills it. */
+      #boot-quote {
+        margin: 28px auto 0; max-width: 840px; min-height: 2.8em; text-wrap: balance;
+        color: #8a9668; font-size: 20px; letter-spacing: 0; line-height: 1.4;
+      }
+      #boot-who { margin: 8px 0 0; color: #6f7a55; font-size: 20px; }
+      #boot-who:empty { display: none; }
+      /* From the sprites step the brand is the plotted wordmark at 1x, published
+         by ui/skin.ts as --sk-logo. Whole-number scale only. */
+      #boot.has-logo #boot-brand {
+        font-size: 0; margin: 0 auto 24px;
+        width: calc(var(--sk-logo-w) * 1px); height: calc(var(--sk-logo-h) * 1px);
+        background: var(--sk-logo) 0 0 / 100% 100% no-repeat;
+        image-rendering: pixelated;
+      }
+      #boot-hint { margin: 10px 0 0; color: #a05040; font-size: 20px; }
+      #boot.failed #boot-word { color: #e07050; }
+    </style>
+    <link rel="stylesheet" href="/style.css" media="print" onload="this.media='all'" />
+    <noscript><link rel="stylesheet" href="/style.css" /></noscript>
+    <!-- HQ, the game's own analytics (930-analytics). Served by our server
+         with the key in it; a 404 here means HQ is not mounted, and the
+         game's wrapper drops its queue after a minute. -->
+    <script async src="/hq/track.js"></script>
+  </head>
+  <body>
+    <!-- The one paragraph a crawler that runs no script gets. Everything
+         else on this page is built by the bundle. -->
+    <noscript>
+      <p>
+        Boots &amp; Bullets is a top-down squad shooter cut to the pattern of
+        Cannon Fodder: six fragile men, one hit each, and a Major who is
+        certain about everything. It runs in the browser and needs
+        JavaScript and a desktop screen.
+      </p>
+    </noscript>
+    <div id="boot">
+      <div id="boot-inner">
+        <p id="boot-brand">BOOTS &amp; BULLETS</p>
+        <div id="boot-bar"><i></i><i></i><i></i><i></i></div>
+        <p><span id="boot-word">BOOT</span><i id="boot-cursor"></i></p>
+        <p id="boot-quote"></p>
+        <p id="boot-who"></p>
+        <p id="boot-hint"></p>
+      </div>
+    </div>
+
+    <div id="stage">
+      <aside id="hud"></aside>
+      <div id="viewport">
+        <canvas id="screen"></canvas>
+        <div id="controls"></div>
+      </div>
+    </div>
+
+    <div id="blackout"></div>
+
+    <div id="overlay" hidden><div id="overlay-card"></div></div>
+    <div id="sheet" hidden></div>
+
+    <div id="front" hidden>
+      <div id="front-inner">
+        <h1 id="front-logo"><span class="fx-sr">Boots &amp; Bullets</span></h1>
+
+        <section id="front-mobile" class="fx-pane" aria-hidden="false">
+          <p class="fx-mobile-title">This theatre of&nbsp;war is&nbsp;too&nbsp;small</p>
+          <p class="fx-mobile-sub">No mobile deployment yet, soldier.<br>
+            March to a desktop and report back.</p>
+        </section>
+
+        <section id="intro" class="fx-pane">
+          <div id="intro-actions"></div>
+        </section>
+
+        <section id="lobby" class="fx-pane" hidden>
+          <div id="lobby-frame">
+            <div id="lobby-head"></div>
+            <!-- The template's shape (501-multiplayer 000): a head, a body
+                 whose own boxes scroll, and a foot. The body is two columns
+                 on the lobby -- you on the left, what is on on the right. -->
+            <div id="lobby-body">
+              <div id="lobby-actions"></div>
+              <div id="lobby-games"></div>
+            </div>
+            <p id="lobby-note"></p>
+          </div>
+        </section>
+
+        <section id="armoury" class="fx-pane" hidden>
+          <div id="armoury-frame">
+            <div id="armoury-head"></div>
+            <div id="armoury-list"></div>
+          </div>
+        </section>
+
+        <section id="select" class="fx-pane" hidden>
+          <div id="select-frame">
+            <div id="select-head"></div>
+            <div id="select-body">
+              <nav id="select-rail"></nav>
+              <div id="select-list"></div>
+            </div>
+            <div id="select-foot"></div>
+          </div>
+        </section>
+      </div>
+
+      <p id="front-foot">
+        <a href="https://inselnova.com/imbf/" target="_blank" rel="noopener noreferrer">IMBF Games</a>
+        <span class="foot-sep" aria-hidden="true">·</span>
+        <!-- A page at a URL, not a dialog, so it is a plain anchor and needs
+             no JavaScript. Same tab: leaving a game that is already running
+             for a new tab is the behaviour people complain about. -->
+        <a href="/press-kit/">Press kit</a>
+        <span class="foot-sep" aria-hidden="true">·</span>
+        <a href="#privacy" id="privacy-link">Privacy</a>
+        <!-- The build's own number, filled in by front.ts from __VERSION__.
+             Both halves start hidden and are shown together, so a bundle
+             with no version shows a studio and a policy rather than a
+             dangling separator.
+
+             A button rather than a span, because it opens the release notes
+             -- but only once front.ts has confirmed there are notes to open,
+             which is when it stops being disabled. A `button` and not an
+             anchor: there is no URL behind it, and a keyboard reaches it the
+             same way it reaches the two links beside it. -->
+        <span class="foot-sep" id="front-version-sep" aria-hidden="true" hidden>·</span>
+        <button type="button" id="front-version" hidden disabled></button>
+      </p>
+    </div>
+
+
+    <script>globalThis.__DEV__ = globalThis.__DEV__ ?? false; globalThis.__VERSION__ = globalThis.__VERSION__ ?? ''; globalThis.__CHANGELOG__ = globalThis.__CHANGELOG__ ?? []; globalThis.__MECHANICS__ = globalThis.__MECHANICS__ ?? '';</script>
+    <script type="module" src="/bundle.js"></script>
+  </body>
+</html>
