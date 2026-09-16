@@ -9,6 +9,21 @@ with join codes). Single self-contained `bundle.js`, PWA installable, includes
 
 Source: https://bootsandbullets.com/
 
+![bootsandbullets](docs/cover.png)
+
+## Stack
+
+What the mirror is built with, read from the files themselves:
+
+- **WebSocket networking** — `readable/bundle.deob.js`
+- **Web Audio API** — `readable/bundle.deob.js`
+
+Assets in the mirror: 23 images, 1 audio, 1 data files.
+
+## What this is
+
+The deployment lives in the repo root, mirrored byte-for-byte — page, scripts, styles and the assets the site actually serves. The site's own bundles are here too: `readable/bundle.deob.js` (2.2 MB), `bundle.js` (1.4 MB), `src/11-map-data.js` (594 KB), `src/07-ui-widgets.js` (507 KB). `readable/` carries the readable layer (3 files), 2 prettified bundles (47,960 lines); `split-spec.json` indexes 15 entries, each naming the file it came from.
+
 ## Layout
 
 - `index.html`, `bundle.js`, `style.css`, `icons/`, `music/`, `manifest.webmanifest` — served files, byte-exact
@@ -39,13 +54,23 @@ Source: https://bootsandbullets.com/
 | `13-simulation` | combat, AI, orders, objectives |
 | `14-hud-loop` | loadout HUD, mission results, bootstrap |
 
-## Multiplayer note
+Also present at top level: `.upstream/`, `docs/`, `icon.svg`, `README.md`.
 
-The live game dials `ws(s)://<host>/ws`. Offline, that lands on the static
-server and fails gracefully (the netcode has its own retry cap). The campaign
-is fully playable offline.
+## Run
 
-## Updating
+```bash
+npx http-server . -p 4308   # serves index.html
+```
+
+## Verify
+
+```bash
+node tools/update.mjs               # compare the mirror against the live origin
+```
+
+This project's own tooling: `tools/deobfuscate.mjs`, `tools/split.mjs`, `tools/verify.mjs`.
+
+## Updating from upstream
 
 ```
 node tools/update.mjs          # probe live site, report drift, pull if changed
@@ -60,3 +85,17 @@ plus the `changelog` version string, so a no-change probe is one HEAD-ish
 request.
 
 ![bootsandbullets](docs/cover.png)
+
+## Multiplayer note
+
+The live game dials `ws(s)://<host>/ws`. Offline, that lands on the static
+server and fails gracefully (the netcode has its own retry cap). The campaign
+is fully playable offline.
+
+## Mirror conventions
+
+- **Capture layer** — the files under the deployment directory are byte-exact copies of what the origin served; nothing in them is edited.
+- **Readable layer** — derived, on top of the capture: prettified bundles and reconstructed modules. Vendor libraries ship whole and are listed in `dependencies.json`; they are never split.
+- **Provenance** — `split-spec.json` maps every readable file back to the bundle (and byte range) it came from; `.upstream/manifest.json` records sha256 for each mirrored artifact.
+- **Drift** — `tools/update.mjs` is a read-only probe: it reports what changed upstream and never rewrites the capture. Refreshing regenerates the readable layer on top of a newly pulled build.
+- **Standalone** — the tooling engine is vendored in `tools/engine/`, so this repo works from a fresh clone with no sibling checkout.
