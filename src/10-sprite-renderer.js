@@ -295,9 +295,9 @@ function xi(q, F, H, K = 3000, L = false, N = 1) {
             const wM = wL;
             let az = ax % P,
                 aA = (ax - az) / P,
-                aB = Math[wM(4348)](az - X),
-                aC = Math[wM(4348)](aA - Y);
-            return aB + aC + (Math[wM(1686)] - 2) * Math[wM(544)](aB, aC);
+                aB = Math.abs(az - X),
+                aC = Math.abs(aA - Y);
+            return aB + aC + (Math.SQRT2 - 2) * Math.min(aB, aC);
         };
     a7[U] = 0, aj.push(U, ak(U));
     let aq = 0;

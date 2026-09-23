@@ -22,309 +22,309 @@
                 for (let [bV, bX] of Object.entries(aK)) bX.hidden = bV !== bU;
                 bU === "armoury" && bC(), bU === "select" && aM(), bU !== "intro" && dm(bU), aK[bU].querySelector("button")?.focus();
             };
-        aC[tC(4097)] = () => {
+        aC.onclick = () => {
             const tD = tC;
-            N[tD(5057)][tD(4578)](tD(2636)) && aN(tD(2729));
+            N.classList.contains("on-select") && aN("intro");
         };
-        let aO = document[tC(4309)](tC(3996));
-        aO && (aO[tC(4097)] = bU => {
+        let aO = document.getElementById("privacy-link");
+        aO && (aO.onclick = bU => {
             const tE = tC;
-            bU[tE(2670)](), Bm();
+            bU.preventDefault(), Bm();
         });
-        let aP = document[tC(4309)](tC(2457)),
-            aQ = document[tC(4309)](tC(4954));
-        aP && (aP[tC(4920)] = tC(3784), aP[tC(1709)] = false, aQ && (aQ[tC(1709)] = false), Gm() && (aP[tC(1894)] = false, aP[tC(3984)] = tC(1696), aP[tC(4097)] = () => {
+        let aP = document.getElementById("front-version"),
+            aQ = document.getElementById("front-version-sep");
+        aP && (aP.textContent = "v0.3.0", aP.hidden = false, aQ && (aQ.hidden = false), Gm() && (aP.disabled = false, aP.title = "What has changed", aP.onclick = () => {
             Vm();
         }));
         let aR = co(q),
-            aS = A && aR[tC(764)](bU => bU.id === A && aE[tC(1543)][tC(1328)](bU.id)) ? A : null,
-            aU = aR[tC(502)](bU => aE[tC(1543)][tC(1328)](bU.id) && !K[tC(3184)][bU.id]);
-        aA[tC(4920)] = '';
+            aS = A && aR.some(bU => bU.id === A && aE.open.has(bU.id)) ? A : null,
+            aU = aR.find(bU => aE.open.has(bU.id) && !K.records[bU.id]);
+        aA.textContent = '';
         let aV = bU => {
                 const tF = tC;
-                let bV = w(tF(991), tF(1143) + bU);
-                return aA[tF(2592)](bV), bV;
+                let bV = w("div", "intro-row " + bU);
+                return aA.appendChild(bV), bV;
             },
-            aX = aV(tC(587)),
-            aY = aV(tC(3487)),
-            aZ = aV(tC(3155));
-        aX[tC(2592)](RW(tC(1548), tC(681), () => {
+            aX = aV("intro-row-play"),
+            aY = aV("intro-row-pair"),
+            aZ = aV("intro-row-net");
+        aX.appendChild(RW("PLAY NOW", "primary", () => {
             const tG = tC;
-            let bU = aU?.id ?? aS ?? aR[tG(502)](bV => aE[tG(1543)][tG(1328)](bV.id))?.id;
+            let bU = aU?.id ?? aS ?? aR.find(bV => aE.open.has(bV.id))?.id;
             bU && aJ(bU);
-        })), aY[tC(2592)](RW(tC(3954), '', () => aN(tC(2264)))), aY[tC(2592)](RW(tC(1330), '', () => aN(tC(2109))));
-        let b4 = RW(tC(913), tC(5931), () => {
+        })), aY.appendChild(RW("MAP SELECT", '', () => aN("select"))), aY.appendChild(RW("ARMOURY", '', () => aN("armoury")));
+        let b4 = RW("MULTIPLAYER", "dark", () => {
             const tH = tC;
-            aN(tH(2736)), $[tH(866)] || $[tH(5368)]();
+            aN("lobby"), $.room || $.list();
         });
-        b4[tC(716)](eT(Ie(true), 2, tC(2626))), b4[tC(2592)](eT(Ie(true), 2, tC(2626))), aZ[tC(2592)](b4);
+        b4.prepend(eT(Ie(true), 2, "intro-star")), b4.appendChild(eT(Ie(true), 2, "intro-star")), aZ.appendChild(b4);
         let b7 = false,
             b8 = () => {
                 const tI = tC;
-                b7 || (b7 = true, $[tI(5368)](), bx(), window[tI(2948)](() => {
+                b7 || (b7 = true, $.list(), bx(), window.setTimeout(() => {
                     b7 = false, bx();
                 }, 500));
             },
-            b9 = bU => Math[tC(1207)](bU / 60) + tC(5418) + (bU === 60 ? '' : 'S'),
+            b9 = bU => Math.round(bU / 60) + " MINUTE" + (bU === 60 ? '' : 'S'),
             bj = bU => {
                 const tJ = tC;
-                let bV = w(tJ(991), tJ(4638)),
+                let bV = w("div", "lb-settings"),
                     bX = (c8, c9, cj, ck) => {
                         const tK = tJ;
                         ST({
                             title: c8,
                             body: c9,
-                            buttons: cj[tK(588)](([cq, cw]) => ({
+                            buttons: cj.map(([cq, cw]) => ({
                                 label: cq,
                                 value: cw
                             })),
-                            dismiss: tK(5233)
-                        })[tK(4353)](cq => {
+                            dismiss: "cancel"
+                        }).then(cq => {
                             const tL = tK;
-                            cq !== tL(5233) && ck(cq);
+                            cq !== "cancel" && ck(cq);
                         });
                     },
-                    bY = lo[tJ(3639)](c8 => aT[c8]?.[tJ(3362)] === tJ(3913)),
+                    bY = lo.filter(c8 => aT[c8]?.objective === "skirmish"),
                     bZ = [
-                        [tJ(1366), pi(bU[tJ(1364)]), () => bX(tJ(1366), tJ(3264), bY[tJ(588)](c8 => [pi(c8), c8]), c8 => $[tJ(4438)]({
+                        ["MAP", pi(bU.mapId), () => bX("MAP", "Where the next game is fought.", bY.map(c8 => [pi(c8), c8]), c8 => $.settings({
                             mapId: c8
                         }))],
-                        [tJ(4656), b9(bU[tJ(4290)]), () => bX(tJ(4656), tJ(3614), jf[tJ(588)](c8 => [b9(c8), String(c8)]), c8 => $[tJ(4438)]({
+                        ["DURATION", b9(bU.seconds), () => bX("DURATION", "How long the next game runs.", jf.map(c8 => [b9(c8), String(c8)]), c8 => $.settings({
                             seconds: Number(c8)
                         }))],
-                        [tJ(2424), bU[tJ(5805)][tJ(4303)](), () => bX(tJ(2424), tJ(4688), [
-                            [tJ(1324), tJ(3913)]
+                        ["MODE", bU.mode.toUpperCase(), () => bX("MODE", "Skirmish for now. More coming soon.", [
+                            ["SKIRMISH", "skirmish"]
                         ], () => {})],
-                        [tJ(2072), bU[tJ(617)][tJ(4303)](), () => bX(tJ(2072), tJ(5705), [
-                            [tJ(4440), tJ(1306)],
-                            [tJ(774), tJ(4032)]
-                        ], c8 => $[tJ(4438)]({
+                        ["VISIBILITY", bU.visibility.toUpperCase(), () => bX("VISIBILITY", "Public games are listed in the lobby. Private ones need the code.", [
+                            ["PRIVATE", "private"],
+                            ["PUBLIC", "public"]
+                        ], c8 => $.settings({
                             visibility: c8
                         }))],
-                        [tJ(2873), bU[tJ(2883)] ? 'ON' : tJ(5556), () => bX(tJ(2873), tJ(4215), [
+                        ["FOG OF WAR", bU.fog ? 'ON' : "OFF", () => bX("FOG OF WAR", "With it on, you only see what your own men can see.", [
                             ['ON', 'on'],
-                            [tJ(5556), tJ(684)]
-                        ], c8 => $[tJ(4438)]({
+                            ["OFF", "off"]
+                        ], c8 => $.settings({
                             fog: c8 === 'on'
                         }))],
-                        [tJ(1631), bU[tJ(3470)] ? 'ON' : tJ(5556), () => bX(tJ(1631), tJ(5713), [
+                        ["EDGE MOVEMENT", bU.edgeScroll ? 'ON' : "OFF", () => bX("EDGE MOVEMENT", "Push the pointer at the edge of the screen to scroll.", [
                             ['ON', 'on'],
-                            [tJ(5556), tJ(684)]
-                        ], c8 => $[tJ(4438)]({
+                            ["OFF", "off"]
+                        ], c8 => $.settings({
                             edgeScroll: c8 === 'on'
                         }))],
-                        [tJ(4757), String(bU[tJ(1469)]), () => bX(tJ(4757), tJ(3128), Pf[tJ(588)](c8 => [String(c8), String(c8)]), c8 => $[tJ(4438)]({
+                        ["ROUNDS", String(bU.rounds), () => bX("ROUNDS", "How many rounds a match is. The winner of the match takes the point.", Pf.map(c8 => [String(c8), String(c8)]), c8 => $.settings({
                             rounds: Number(c8)
                         }))],
-                        [tJ(1347), String(Math[tJ(544)](bU[tJ(1490)], Yf(bU[tJ(1364)]))), () => bX(tJ(1347), tJ(4151), Lf[tJ(3639)](c8 => c8 <= Yf(bU[tJ(1364)]))[tJ(588)](c8 => [String(c8), String(c8)]), c8 => $[tJ(4438)]({
+                        ["MEN PER SIDE", String(Math.min(bU.squad, Yf(bU.mapId))), () => bX("MEN PER SIDE", "How many men each squad fields. The ground caps it.", Lf.filter(c8 => c8 <= Yf(bU.mapId)).map(c8 => [String(c8), String(c8)]), c8 => $.settings({
                             squad: Number(c8)
                         }))]
                     ],
                     c7 = {
-                        MAP: eT(Ue(tJ(588)), 1),
-                        DURATION: eT(Ue(tJ(4888)), 1),
-                        MODE: eT(Ue(tJ(5313)), 1),
+                        MAP: eT(Ue("map"), 1),
+                        DURATION: eT(Ue("clock"), 1),
+                        MODE: eT(Ue("flag"), 1),
                         VISIBILITY: eT(Pe(false), 1),
-                        'FOG\x20OF\x20WAR': eT(Ue(tJ(3309)), 1),
-                        'EDGE\x20MOVEMENT': eT(Ue(tJ(2820)), 1),
-                        ROUNDS: eT(Ue(tJ(4888)), 1),
-                        'MEN\x20PER\x20SIDE': eT(Ue(tJ(5313)), 1)
+                        'FOG\x20OF\x20WAR': eT(Ue("cloud"), 1),
+                        'EDGE\x20MOVEMENT': eT(Ue("arrows"), 1),
+                        ROUNDS: eT(Ue("clock"), 1),
+                        'MEN\x20PER\x20SIDE': eT(Ue("flag"), 1)
                     };
                 for (let [c8, c9, cj] of bZ) {
-                    let ck = w(tJ(5291), tJ(4883));
-                    ck[tJ(2882)] = tJ(5291), ck[tJ(2592)](c7[c8]), ck[tJ(2592)](w(tJ(4768), tJ(2482), c8)), ck[tJ(2592)](w(tJ(4768), tJ(2348), c9)), ck[tJ(4097)] = cj, bV[tJ(2592)](ck);
+                    let ck = w("button", "lb-set");
+                    ck.type = "button", ck.appendChild(c7[c8]), ck.appendChild(w("span", "lb-set-k", c8)), ck.appendChild(w("span", "lb-set-v", c9)), ck.onclick = cj, bV.appendChild(ck);
                 }
                 return bV;
             },
             bk = bU => () => {
                 const tM = tC;
-                $[tM(1620)]({
-                    seconds: f[tM(3913)][tM(4290)],
+                $.create({
+                    seconds: f.skirmish.seconds,
                     visibility: bU
                 });
             },
             bq = () => {
                 const tN = tC;
-                ak[tN(4920)] = '';
-                let bU = w(tN(991), tN(1396));
-                bU[tN(2592)](w(tN(4768), void 0, tN(3771)));
-                let bV = w(tN(5291), b7 ? tN(4938) : tN(2322));
-                bV[tN(2882)] = tN(5291), bV[tN(3984)] = tN(783), bV[tN(2592)](eT(Zt(tN(4428)), 2)), bV[tN(4097)] = b8, bU[tN(2592)](bV), ak[tN(2592)](bU);
-                let bX = w(tN(991), tN(2062));
-                b7 && bX[tN(5057)][tN(2129)](tN(4808));
-                for (let bZ of $[tN(1653)]) {
-                    let c7 = w(tN(991), bZ[tN(782)] ? tN(5420) : tN(1860));
-                    c7[tN(2592)](w(tN(991), tN(2135)));
-                    let c8 = w(tN(991), tN(1303));
-                    c8[tN(2592)](w(tN(4768), tN(3164), bZ[tN(3918)])), c8[tN(2592)](w(tN(4768), tN(2384), bZ[tN(5805)][tN(4303)]())), c8[tN(2592)](w(tN(4768), tN(2384), pi(bZ[tN(1364)]))), c7[tN(2592)](c8);
-                    let c9 = w(tN(991), tN(1892));
-                    c9[tN(2592)](w(tN(4768), tN(4946), bZ[tN(5210)] + tN(1527) + bZ[tN(1668)])), bZ[tN(782)] ? c9[tN(2592)](RW(tN(2990), '', () => $[tN(4251)](bZ[tN(1443)], tN(5368)))) : c9[tN(2592)](w(tN(4768), tN(4153), tN(1946))), c7[tN(2592)](c9), bX[tN(2592)](c7);
+                ak.textContent = '';
+                let bU = w("div", "lb-games-head");
+                bU.appendChild(w("span", void 0, "PUBLIC GAMES"));
+                let bV = w("button", b7 ? "lb-refresh busy" : "lb-refresh");
+                bV.type = "button", bV.title = "Refresh", bV.appendChild(eT(Zt("restart"), 2)), bV.onclick = b8, bU.appendChild(bV), ak.appendChild(bU);
+                let bX = w("div", "lb-games-list");
+                b7 && bX.classList.add("busy");
+                for (let bZ of $.games) {
+                    let c7 = w("div", bZ.joinable ? "lb-game" : "lb-game full");
+                    c7.appendChild(w("div", "lb-game-map"));
+                    let c8 = w("div", "lb-game-body");
+                    c8.appendChild(w("span", "lb-game-name", bZ.name)), c8.appendChild(w("span", "lb-game-meta", bZ.mode.toUpperCase())), c8.appendChild(w("span", "lb-game-meta", pi(bZ.mapId))), c7.appendChild(c8);
+                    let c9 = w("div", "lb-game-tail");
+                    c9.appendChild(w("span", "lb-game-count", bZ.players + " / " + bZ.capacity)), bZ.joinable ? c9.appendChild(RW("JOIN", '', () => $.join(bZ.code, "list"))) : c9.appendChild(w("span", "lb-game-status", "IN PLAY")), c7.appendChild(c9), bX.appendChild(c7);
                 }
-                let bY = w(tN(991), tN(3503));
-                $[tN(1653)][tN(488)] ? bY[tN(4920)] = tN(1426) : (bY[tN(5057)][tN(2129)](tN(2270)), bY[tN(2592)](w(tN(4768), void 0, tN(3596))), bY[tN(2592)](RW(tN(1031), '', bk(tN(4032))))), bX[tN(2592)](bY), ak[tN(2592)](bX);
+                let bY = w("div", "lb-end");
+                $.games.length ? bY.textContent = "NO MORE GAMES" : (bY.classList.add("empty"), bY.appendChild(w("span", void 0, "NO GAMES OPEN")), bY.appendChild(RW("START ONE", '', bk("public")))), bX.appendChild(bY), ak.appendChild(bX);
             },
             bw = () => {
                 const tO = tC;
-                a9[tO(4920)] = '', aj[tO(4920)] = '';
-                let bU = $[tO(866)],
-                    bV = bU?.[tO(3084)][0]?.[tO(3918)];
-                if (a9[tO(2592)](w(tO(4768), tO(4963), bU ? bU[tO(3918)] : tO(3812))), a9[tO(2592)](aL(() => {
+                a9.textContent = '', aj.textContent = '';
+                let bU = $.room,
+                    bV = bU?.seats[0]?.name;
+                if (a9.appendChild(w("span", "ar-title", bU ? bU.name : "MULTIPLAYER LOBBY")), a9.appendChild(aL(() => {
                         const tP = tO;
-                        if (!$[tP(866)]) {
-                            aN(tP(2729));
+                        if (!$.room) {
+                            aN("intro");
                             return;
                         }
-                        $[tP(1147)](), bx();
+                        $.leave(), bx();
                     })), bU) {
-                    let cq = w(tO(4768), tO(1088));
-                    cq[tO(2592)](eT(bU[tO(617)] === tO(1306) ? Pe(false) : Na(), 1)), cq[tO(2592)](w(tO(4768), void 0, bU[tO(617)][tO(4303)]() + tO(4857) + bU[tO(1443)])), a9[tO(2592)](cq), a9[tO(2592)](w(tO(4768), tO(1919), bU[tO(5805)][tO(4303)]() + tO(1102) + pi(bU[tO(1364)])));
+                    let cq = w("span", "ar-bonds");
+                    cq.appendChild(eT(bU.visibility === "private" ? Pe(false) : Na(), 1)), cq.appendChild(w("span", void 0, bU.visibility.toUpperCase() + " GAME · " + bU.code)), a9.appendChild(cq), a9.appendChild(w("span", "lb-sub", bU.mode.toUpperCase() + " · " + pi(bU.mapId)));
                 }
-                if (aq[tO(5057)][tO(827)](tO(5451), !!bU), ak[tO(1709)] = !!bU, ak[tO(4920)] = '', !bU) {
+                if (aq.classList.toggle("in-room", !!bU), ak.hidden = !!bU, ak.textContent = '', !bU) {
                     bq();
-                    let cw = w(tO(991), tO(4758));
-                    cw[tO(2592)](w(tO(4768), tO(4557), tO(4332)));
-                    let cx = w(tO(991), tO(2067));
-                    cx[tO(2592)](eT(Ve(true), 1, tO(1728))), cx[tO(2592)](w(tO(4768), tO(2648), vn()));
-                    let cz = w(tO(5291), tO(5608));
-                    cz[tO(2882)] = tO(5291), cz[tO(3984)] = tO(890), cz[tO(2592)](eT(Zt(tO(5815)), 2)), cx[tO(2592)](cz), cz[tO(4097)] = () => {
+                    let cw = w("div", "lb-box");
+                    cw.appendChild(w("span", "lb-box-label", "PLAYING AS:"));
+                    let cx = w("div", "lb-box-row");
+                    cx.appendChild(eT(Ve(true), 1, "lb-avatar-plate")), cx.appendChild(w("span", "lb-who", vn()));
+                    let cz = w("button", "lb-pencil");
+                    cz.type = "button", cz.title = "Change your name", cz.appendChild(eT(Zt("pencil"), 2)), cx.appendChild(cz), cz.onclick = () => {
                         const tQ = tO;
                         Ru({
-                            title: tQ(1342),
-                            label: tQ(5687),
+                            title: "YOUR NAME",
+                            label: "What the other lot will call you",
                             value: vn(),
-                            placeholder: tQ(3866),
+                            placeholder: "SOLDIER",
                             maxLength: 12
-                        })[tQ(4353)](cF => {
+                        }).then(cF => {
                             const tR = tQ;
-                            cF !== null && (Df(cF), $[tR(1871)](), bx());
+                            cF !== null && (Df(cF), $.rename(), bx());
                         });
-                    }, cw[tO(2592)](cx), aj[tO(2592)](cw);
+                    }, cw.appendChild(cx), aj.appendChild(cw);
                     let cA = (cF, cG, cH, cI) => {
                         const tS = tO;
-                        let cJ = RW('', tS(5034), cI);
-                        cJ[tS(4920)] = '', cJ[tS(2592)](cH);
-                        let cK = w(tS(991), tS(5902));
-                        return cK[tS(2592)](w(tS(4768), tS(4063), cF)), cK[tS(2592)](w(tS(4768), tS(5419), cG)), cJ[tS(2592)](cK), cJ;
+                        let cJ = RW('', "lb-door", cI);
+                        cJ.textContent = '', cJ.appendChild(cH);
+                        let cK = w("div", "lb-card-text");
+                        return cK.appendChild(w("span", "fx-btn-label", cF)), cK.appendChild(w("span", "lb-box-sub", cG)), cJ.appendChild(cK), cJ;
                     };
-                    aj[tO(2592)](cA(tO(1262), tO(5930), eT(Na(), 2, tO(2193)), bk(tO(4032)))), aj[tO(2592)](cA(tO(1868), tO(2002), eT(Pe(true), 2, tO(2193)), bk(tO(1306))));
-                    let cB = w(tO(991), tO(4758));
-                    cB[tO(2592)](w(tO(4768), tO(4590), tO(3346))), cB[tO(2592)](w(tO(4768), tO(5419), tO(2771)));
-                    let cC = w(tO(991), tO(5184)),
-                        cD = w(tO(1869), tO(2954));
-                    cD[tO(4592)][tO(3296)] = tO(5695), cD[tO(2367)] = 6, cD[tO(1675)] = tO(4138);
+                    aj.appendChild(cA("CREATE PUBLIC GAME", "Anyone can join", eT(Na(), 2, "lb-card-icon"), bk("public"))), aj.appendChild(cA("CREATE PRIVATE GAME", "Invite your friends", eT(Pe(true), 2, "lb-card-icon"), bk("private")));
+                    let cB = w("div", "lb-box");
+                    cB.appendChild(w("span", "lb-box-title", "JOIN WITH CODE")), cB.appendChild(w("span", "lb-box-sub", "Enter a join code"));
+                    let cC = w("div", "lb-join"),
+                        cD = w("input", "lb-input");
+                    cD.dataset.keep = "join-code", cD.maxLength = 6, cD.placeholder = "e.g. H7KD2P";
                     let cE = () => {
                         const tT = tO;
-                        cD[tT(862)][tT(2762)]() && $[tT(4251)](cD[tT(862)]);
+                        cD.value.trim() && $.join(cD.value);
                     };
-                    cD[tO(5374)] = cF => {
+                    cD.onkeydown = cF => {
                         const tU = tO;
-                        cF[tU(2547)] === tU(1227) && cE();
-                    }, cC[tO(2592)](cD), cC[tO(2592)](RW(tO(2990), '', cE)), cB[tO(2592)](cC), $[tO(4961)] && cB[tO(2592)](w(tO(991), tO(762), $[tO(4961)][tO(4303)]())), aj[tO(2592)](cB), aw[tO(4920)] = '';
+                        cF.key === "Enter" && cE();
+                    }, cC.appendChild(cD), cC.appendChild(RW("JOIN", '', cE)), cB.appendChild(cC), $.lastError && cB.appendChild(w("div", "lb-err", $.lastError.toUpperCase())), aj.appendChild(cB), aw.textContent = '';
                     return;
                 }
-                let bX = w(tO(991), tO(902));
+                let bX = w("div", "lb-slots");
                 for (let cF = 0; cF < 2; cF++) {
-                    let cG = bU[tO(3084)][cF],
-                        cH = w(tO(991), tO(3912));
-                    cG?.[tO(5645)] && cH[tO(5057)][tO(2129)](tO(5645)), cG && !cG[tO(2661)] && cH[tO(5057)][tO(2129)](tO(1949)), cH[tO(2592)](w(tO(4768), tO(5953), cF === bU[tO(3034)] ? tO(880) : tO(3193) + (cF + 1))), cH[tO(2592)](eT(cG ? Ve(true) : Rf(), 1, tO(2955)));
-                    let cI = w(tO(991), tO(4849));
+                    let cG = bU.seats[cF],
+                        cH = w("div", "lb-slot");
+                    cG?.ready && cH.classList.add("ready"), cG && !cG.connected && cH.classList.add("away"), cH.appendChild(w("span", "lb-box-label lb-slot-label", cF === bU.you ? "YOUR SQUAD" : "SLOT " + (cF + 1))), cH.appendChild(eT(cG ? Ve(true) : Rf(), 1, "lb-avatar"));
+                    let cI = w("div", "lb-slot-body");
                     if (cG) {
-                        let cJ = w(tO(991), tO(5843));
-                        if (cJ[tO(2592)](w(tO(4768), void 0, cG[tO(3918)] + (cF === bU[tO(3034)] ? tO(3057) : ''))), cI[tO(2592)](cJ), cF === 0 && cI[tO(2592)](w(tO(4768), tO(4156), tO(1627))), bU[tO(3084)][tO(764)](cL => cL[tO(5708)] > 0)) {
-                            let cL = w(tO(4768), tO(3117));
-                            cL[tO(2592)](w(tO(4768), tO(5552), tO(1472) + cG[tO(5708)])), cI[tO(2592)](cL);
+                        let cJ = w("div", "lb-slot-name");
+                        if (cJ.appendChild(w("span", void 0, cG.name + (cF === bU.you ? " (YOU)" : ''))), cI.appendChild(cJ), cF === 0 && cI.appendChild(w("span", "lb-host", "HOST")), bU.seats.some(cL => cL.wins > 0)) {
+                            let cL = w("span", "lb-slot-state");
+                            cL.appendChild(w("span", "lb-wins", "WON " + cG.wins)), cI.appendChild(cL);
                         }
-                        cH[tO(2592)](cI);
-                        let cK = cG[tO(2661)] ? cG[tO(5645)] ? tO(5532) : tO(781) : tO(1082);
-                        if (cF === bU[tO(3034)]) {
-                            let cM = RW(cG[tO(5645)] ? tO(5532) : tO(5013), cG[tO(5645)] ? '' : tO(681), () => $[tO(5645)](!cG[tO(5645)]));
-                            cM[tO(5057)][tO(2129)](tO(1380), tO(3131)), cH[tO(2592)](cM);
-                        } else cH[tO(2592)](w(tO(991), tO(3376), cK));
-                        bX[tO(2592)](cH);
+                        cH.appendChild(cI);
+                        let cK = cG.connected ? cG.ready ? "READY" : "NOT READY" : "WIRE DOWN";
+                        if (cF === bU.you) {
+                            let cM = RW(cG.ready ? "READY" : "ARE YOU READY?", cG.ready ? '' : "primary", () => $.ready(!cG.ready));
+                            cM.classList.add("lb-ready", "lb-actline"), cH.appendChild(cM);
+                        } else cH.appendChild(w("div", "lb-actline lb-status", cK));
+                        bX.appendChild(cH);
                         continue;
                     } else {
-                        cI[tO(2592)](w(tO(4768), tO(5843), tO(2596))), cI[tO(2592)](w(tO(4768), tO(3117), tO(3557)));
-                        let cN = w(tO(991), tO(873)),
-                            cO = w(tO(4768), tO(4318), ri(bU[tO(1443)])),
-                            cP = w(tO(991), tO(5436));
-                        cP[tO(2592)](cO), cP[tO(2592)](RW(tO(2211), tO(4218), () => {
+                        cI.appendChild(w("span", "lb-slot-name", "WAITING FOR ANOTHER SOLDIER...")), cI.appendChild(w("span", "lb-slot-state", "INVITE YOUR FRIEND"));
+                        let cN = w("div", "lb-invite"),
+                            cO = w("span", "lb-url", ri(bU.code)),
+                            cP = w("div", "lb-invite-row");
+                        cP.appendChild(cO), cP.appendChild(RW("COPY LINK", "lb-copy", () => {
                             const tV = tO;
-                            navigator[tV(4019)]?.[tV(2253)](ri(bU[tV(1443)])), cO[tV(4920)] = tV(4569), window[tV(2948)](() => {
+                            navigator.clipboard?.writeText(ri(bU.code)), cO.textContent = "COPIED", window.setTimeout(() => {
                                 const tW = tV;
-                                cO[tW(4920)] = ri(bU[tW(1443)]);
+                                cO.textContent = ri(bU.code);
                             }, 900);
-                        })), cN[tO(2592)](cP);
-                        let cQ = w(tO(991), tO(1640));
-                        cQ[tO(2592)](w(tO(4768), tO(3117), tO(5855))), cQ[tO(2592)](w(tO(4768), tO(602), bU[tO(1443)])), cN[tO(2592)](cQ), cH[tO(2592)](cI), cH[tO(2592)](cN), bX[tO(2592)](cH);
+                        })), cN.appendChild(cP);
+                        let cQ = w("div", "lb-orcode");
+                        cQ.appendChild(w("span", "lb-slot-state", "OR CODE:")), cQ.appendChild(w("span", "lb-code", bU.code)), cN.appendChild(cQ), cH.appendChild(cI), cH.appendChild(cN), bX.appendChild(cH);
                         continue;
                     }
-                    cH[tO(2592)](cI), bX[tO(2592)](cH);
+                    cH.appendChild(cI), bX.appendChild(cH);
                 }
-                aj[tO(2592)](bX);
-                let bY = w(tO(991), tO(3983));
-                bU[tO(1364)] in aT || Iu(bU[tO(1364)]);
+                aj.appendChild(bX);
+                let bY = w("div", "lb-lower");
+                bU.mapId in aT || Iu(bU.mapId);
                 let bZ = bj(bU);
-                bY[tO(2592)](bZ);
-                let c7 = w(tO(991), tO(5327)),
-                    c8 = w(tO(991), tO(2016));
-                for (let cR of $[tO(5433)]) {
-                    let cS = w(tO(991), tO(4129) + cR[tO(2372)]);
-                    cR[tO(2372)] === tO(671) ? (cS[tO(2592)](w(tO(4768), tO(608) + (cR[tO(2677)] ?? tO(2732)), '<' + (cR[tO(1566)] ?? '?') + '>')), cS[tO(2592)](w(tO(4768), tO(5388), cR[tO(5412)]))) : cS[tO(2592)](w(tO(4768), tO(5388), cR[tO(5412)])), c8[tO(2592)](cS);
+                bY.appendChild(bZ);
+                let c7 = w("div", "lb-feedbox"),
+                    c8 = w("div", "lb-feed");
+                for (let cR of $.feed) {
+                    let cS = w("div", "lb-line " + cR.kind);
+                    cR.kind === "chat" ? (cS.appendChild(w("span", "lb-nick " + (cR.colour ?? "green"), '<' + (cR.from ?? '?') + '>')), cS.appendChild(w("span", "lb-said", cR.text))) : cS.appendChild(w("span", "lb-said", cR.text)), c8.appendChild(cS);
                 }
-                c7[tO(2592)](c8);
-                let c9 = w(tO(991), tO(5183)),
-                    cj = w(tO(1869), tO(2954));
-                cj[tO(4592)][tO(3296)] = tO(671), cj[tO(2367)] = ei, cj[tO(1675)] = tO(3063);
+                c7.appendChild(c8);
+                let c9 = w("div", "lb-say"),
+                    cj = w("input", "lb-input");
+                cj.dataset.keep = "chat", cj.maxLength = ei, cj.placeholder = "TYPE A MESSAGE...";
                 let ck = () => {
                     const tX = tO;
-                    let cU = cj[tX(862)];
-                    cU[tX(2762)]() && (cj[tX(862)] = '', $[tX(2057)](cU));
+                    let cU = cj.value;
+                    cU.trim() && (cj.value = '', $.say(cU));
                 };
-                cj[tO(5374)] = cU => {
+                cj.onkeydown = cU => {
                     const tY = tO;
-                    cU[tY(2547)] === tY(1227) && ck();
-                }, c9[tO(2592)](cj), c9[tO(2592)](RW(tO(5473), tO(4218), ck)), c7[tO(2592)](c9), bY[tO(2592)](c7), aj[tO(2592)](bY), c8[tO(1041)] = c8[tO(3988)], aw[tO(4920)] = '';
+                    cU.key === "Enter" && ck();
+                }, c9.appendChild(cj), c9.appendChild(RW("SEND", "lb-copy", ck)), c7.appendChild(c9), bY.appendChild(c7), aj.appendChild(bY), c8.scrollTop = c8.scrollHeight, aw.textContent = '';
             },
             bx = () => {
                 const tZ = tC;
-                let bU = document[tZ(5067)],
-                    bV = [...a8[tZ(823)](tZ(1869))][tZ(588)](bX => ({
-                        keep: bX[tZ(4592)][tZ(3296)],
-                        value: bX[tZ(862)],
-                        at: bX[tZ(1152)] ?? bX[tZ(862)][tZ(488)],
+                let bU = document.activeElement,
+                    bV = [...a8.querySelectorAll("input")].map(bX => ({
+                        keep: bX.dataset.keep,
+                        value: bX.value,
+                        at: bX.selectionStart ?? bX.value.length,
                         had: bX === bU
                     }));
                 bw();
                 for (let bX of bV) {
-                    if (!bX[tZ(3296)]) continue;
-                    let bY = a8[tZ(546)](tZ(952) + bX[tZ(3296)] + '"]');
-                    bY && (bX[tZ(862)] && (bY[tZ(862)] = bX[tZ(862)]), bX[tZ(5907)] && (bY[tZ(3930)](), bY[tZ(2295)](bX.at, bX.at)));
+                    if (!bX.keep) continue;
+                    let bY = a8.querySelector("input[data-keep=\"" + bX.keep + '"]');
+                    bY && (bX.value && (bY.value = bX.value), bX.had && (bY.focus(), bY.setSelectionRange(bX.at, bX.at)));
                 }
             };
-        $[tC(5229)] = bx, $[tC(5363)] = () => rs(), $[tC(866)] || $[tC(5368)]();
-        let bz = window[tC(4524)](() => {
+        $.onChange = bx, $.onJoin = () => rs(), $.room || $.list();
+        let bz = window.setInterval(() => {
             const u7 = tC;
-            !$[u7(866)] && !a8[u7(1709)] && $[u7(5368)]();
+            !$.room && !a8.hidden && $.list();
         }, 5000);
-        $[tC(3018)] = bU => aI({
+        $.onStart = bU => aI({
             net: bU
         }), bx();
         let bA = Ff();
-        bA && history[tC(842)](null, '', '/');
-        let bB = bA ?? $[tC(2130)];
-        $[tC(866)] ? aN(tC(2736)) : bB && (aN(tC(2736)), Bf(bB)[tC(4353)](bU => {
+        bA && history.replaceState(null, '', '/');
+        let bB = bA ?? $.rememberedCode;
+        $.room ? aN("lobby") : bB && (aN("lobby"), Bf(bB).then(bU => {
             const u8 = tC;
             if (!bU) {
-                $[u8(5617)](u8(4125));
+                $.note("that muster has stood down");
                 return;
             }
-            $[u8(4251)](bB, u8(3353));
+            $.join(bB, "link");
         }));
         let bC = () => mi({
                 head: Y,
                 list: a7,
                 campaign: K,
-                closeButton: aL(() => aN(tC(2729))),
+                closeButton: aL(() => aN("intro")),
                 tab: () => X,
                 onTab: bU => {
                     X = bU;
@@ -337,81 +337,81 @@
                     difficulty: aD
                 });
             };
-        aB[tC(1709)] = false, aB[tC(4920)] = '', aB[tC(2592)](w(tC(4768), tC(4963), tC(3954)));
-        let bF = q[tC(3639)](bU => K[tC(3184)][bU.id])[tC(488)],
-            bG = q[tC(1799)]((bU, bV) => bU + oe(K[tC(3184)][bV.id]), 0);
-        aB[tC(2592)](w(tC(4768), tC(1088), tC(576) + bF + '/' + q[tC(488)] + tC(5064) + bG)), aB[tC(2592)](aL(() => aN(tC(2729))));
-        let bH = bU => aF[tC(764)](bV => bV[tC(5069)].id === bU) && (aE[tC(1432)][tC(778)](bU)?.[tC(5746)] ?? 0) === 0,
-            bI = Py() ?? aF[0]?.[tC(5069)].id ?? '';
-        bH(bI) || (bI = aF[tC(502)](bU => bH(bU[tC(5069)].id))?.[tC(5069)].id ?? '');
+        aB.hidden = false, aB.textContent = '', aB.appendChild(w("span", "ar-title", "MAP SELECT"));
+        let bF = q.filter(bU => K.records[bU.id]).length,
+            bG = q.reduce((bU, bV) => bU + oe(K.records[bV.id]), 0);
+        aB.appendChild(w("span", "ar-bonds", "MISSIONS " + bF + '/' + q.length + " · STARS " + bG)), aB.appendChild(aL(() => aN("intro")));
+        let bH = bU => aF.some(bV => bV.zone.id === bU) && (aE.byZone.get(bU)?.starsNeeded ?? 0) === 0,
+            bI = Py() ?? aF[0]?.zone.id ?? '';
+        bH(bI) || (bI = aF.find(bU => bH(bU.zone.id))?.zone.id ?? '');
         let bJ = () => {
                 const u9 = tC;
-                for (let bU of ax[u9(5509)]) bU[u9(5057)][u9(827)]('on', bU[u9(4592)][u9(1419)] === bI);
+                for (let bU of ax.children) bU.classList.toggle('on', bU.dataset.group === bI);
             },
             bK = () => {
                 const uj = tC;
-                let bU = aF[uj(502)](bX => bX[uj(5069)].id === bI);
-                if (az[uj(4920)] = '', !bU) return;
-                let bV = aE[uj(1432)][uj(778)](bU[uj(5069)].id)?.[uj(5746)] ?? 0;
-                for (let bX of bU[uj(2218)]) {
-                    let bY = aE[uj(1543)][uj(1328)](bX.id),
-                        bZ = K[uj(3184)][bX.id],
-                        c7 = w(uj(5291), bY ? uj(5812) : uj(2799));
-                    c7[uj(2882)] = uj(5291), bY || c7[uj(4492)](uj(4413), uj(2588)), c7[uj(4592)].id = bX.id;
-                    let c8 = bU[uj(2218)][uj(1773)](bX) + 1;
-                    c7[uj(2592)](w(uj(4768), uj(4525), String(c8)[uj(5898)](2, '0')));
-                    let c9 = w(uj(4768), uj(1790));
-                    c9[uj(2592)](w(uj(4768), uj(5321), bX[uj(3918)][uj(4303)]()));
+                let bU = aF.find(bX => bX.zone.id === bI);
+                if (az.textContent = '', !bU) return;
+                let bV = aE.byZone.get(bU.zone.id)?.starsNeeded ?? 0;
+                for (let bX of bU.levels) {
+                    let bY = aE.open.has(bX.id),
+                        bZ = K.records[bX.id],
+                        c7 = w("button", bY ? "fx-card" : "fx-card locked");
+                    c7.type = "button", bY || c7.setAttribute("aria-disabled", "true"), c7.dataset.id = bX.id;
+                    let c8 = bU.levels.indexOf(bX) + 1;
+                    c7.appendChild(w("span", "fx-card-num", String(c8).padStart(2, '0')));
+                    let c9 = w("span", "fx-card-body");
+                    c9.appendChild(w("span", "fx-card-name", bX.name.toUpperCase()));
                     let cj = Ny(bX);
-                    cj && c9[uj(2592)](w(uj(4768), uj(2347), cj)), c7[uj(2592)](c9);
-                    let ck = w(uj(4768), uj(579));
-                    bY ? ck[uj(2592)](Oy(oe(bZ))) : ck[uj(2592)](w('i', uj(2757))), c7[uj(2592)](ck), c7[uj(1661)](uj(5016), () => {
+                    cj && c9.appendChild(w("span", "fx-card-desc", cj)), c7.appendChild(c9);
+                    let ck = w("span", "fx-card-tail");
+                    bY ? ck.appendChild(Oy(oe(bZ))) : ck.appendChild(w('i', "fx-lock")), c7.appendChild(ck), c7.addEventListener("click", () => {
                         const uk = uj;
-                        bY ? bE(bX) : CW(c7, bV > 0 ? bV + uk(3613) : uk(5964));
-                    }), az[uj(2592)](c7);
+                        bY ? bE(bX) : CW(c7, bV > 0 ? bV + " stars needed" : "clear another mission first");
+                    }), az.appendChild(c7);
                 }
             },
             bL = bU => {
                 const uq = tC;
-                let bV = w('i', uq(4177));
-                return bV[uq(935)][uq(1807)] = uq(1422) + bU + ')', bV;
+                let bV = w('i', "fx-group-scene");
+                return bV.style.backgroundImage = "var(--sk-theatre-" + bU + ')', bV;
             },
             bM = bU => {
                 const uw = tC;
                 let bV = Ao[bU.id];
                 if (!bV) return;
-                let bX = RW('', uw(1731), () => {
+                let bX = RW('', "fx-group future", () => {
                     const ux = uw;
-                    ZT(ux(4908), {
+                    ZT("future_zone_clicked", {
                         source: bV,
                         zone: bU.id
                     }), Lo(bV, K, q, {
                         zone: bU.id
                     });
                 });
-                bX[uw(4592)][uw(1291)] = bU.id, bX[uw(4920)] = '', bX[uw(2592)](bL(bU.id));
-                let bY = w(uw(4768), uw(2003));
-                bY[uw(2592)](w(uw(4768), uw(1049), bU[uw(3918)][uw(4303)]())), bX[uw(2592)](bY), bX[uw(2592)](w('i', uw(4195))), ax[uw(2592)](bX);
+                bX.dataset.future = bU.id, bX.textContent = '', bX.appendChild(bL(bU.id));
+                let bY = w("span", "fx-group-body");
+                bY.appendChild(w("span", "fx-group-name", bU.name.toUpperCase())), bX.appendChild(bY), bX.appendChild(w('i', "fx-group-lock")), ax.appendChild(bX);
             };
-        ax[tC(4920)] = '';
+        ax.textContent = '';
         for (let bU of $t) {
-            let bV = aF[tC(502)](cj => cj[tC(5069)].id === bU.id);
+            let bV = aF.find(cj => cj.zone.id === bU.id);
             if (!bV) {
-                bU[tC(1291)] && bM(bU);
+                bU.future && bM(bU);
                 continue;
             }
-            let bX = bV[tC(2218)][tC(3639)](cj => K[tC(3184)][cj.id])[tC(488)],
-                bY = aE[tC(1432)][tC(778)](bV[tC(5069)].id)?.[tC(5746)] ?? 0,
+            let bX = bV.levels.filter(cj => K.records[cj.id]).length,
+                bY = aE.byZone.get(bV.zone.id)?.starsNeeded ?? 0,
                 bZ = bY > 0,
-                c7 = RW('', tC(2177) + (bZ ? tC(3104) : ''), () => {
+                c7 = RW('', "fx-group" + (bZ ? " shut" : ''), () => {
                     const uz = tC;
-                    bI = bV[uz(5069)].id, bZ || Ly(bI), bJ(), bK();
+                    bI = bV.zone.id, bZ || Ly(bI), bJ(), bK();
                 });
-            c7[tC(4592)][tC(1419)] = bV[tC(5069)].id, c7[tC(4920)] = '', c7[tC(2592)](bL(bV[tC(5069)].id));
-            let c8 = w(tC(4768), tC(2003));
-            c8[tC(2592)](w(tC(4768), tC(1049), bV[tC(5069)][tC(3918)][tC(4303)]()));
-            let c9 = w(tC(4768), tC(810));
-            bZ ? c9[tC(2592)](w(tC(4768), tC(3736), aE[tC(5644)] + tC(2550) + bY + tC(2558))) : (c9[tC(2592)](w(tC(4768), tC(3736), bV[tC(2218)][tC(488)] + tC(5773) + (bV[tC(2218)][tC(488)] === 1 ? '' : 'S'))), c9[tC(2592)](w(tC(4768), tC(2828), bX + '/' + bV[tC(2218)][tC(488)]))), c8[tC(2592)](c9), c7[tC(2592)](c8), ax[tC(2592)](c7);
+            c7.dataset.group = bV.zone.id, c7.textContent = '', c7.appendChild(bL(bV.zone.id));
+            let c8 = w("span", "fx-group-body");
+            c8.appendChild(w("span", "fx-group-name", bV.zone.name.toUpperCase()));
+            let c9 = w("span", "fx-group-meta");
+            bZ ? c9.appendChild(w("span", "fx-group-count", aE.stars + " OF " + bY + " STARS")) : (c9.appendChild(w("span", "fx-group-count", bV.levels.length + " MISSION" + (bV.levels.length === 1 ? '' : 'S'))), c9.appendChild(w("span", "fx-group-done", bX + '/' + bV.levels.length))), c8.appendChild(c9), c7.appendChild(c8), ax.appendChild(c7);
         }
         let bN = false;
         aM = () => {
@@ -420,36 +420,36 @@
                 bN = true;
                 for (let cj of hd()) {
                     let ck = Ao[cj.id];
-                    ck && ZT(uA(3472), {
+                    ck && ZT("future_zone_impression", {
                         source: ck,
                         zone: cj.id
                     });
                 }
             }
-        }, document[tC(4309)](tC(2310))[tC(4920)] = '', bJ(), bK();
+        }, document.getElementById("select-foot").textContent = '', bJ(), bK();
         let bO = Wm(N),
-            bP = w(tC(5291), tC(3774));
-        bP[tC(2882)] = tC(5291), bP[tC(3984)] = tC(1234), bP[tC(4492)](tC(5246), tC(1234)), bP[tC(1661)](tC(5016), () => Vo()), N[tC(2592)](bP);
+            bP = w("button", "corner-tool front-gear");
+        bP.type = "button", bP.title = "Settings", bP.setAttribute("aria-label", "Settings"), bP.addEventListener("click", () => Vo()), N.appendChild(bP);
         let bQ = Pm(N, K, q);
-        L && aN(L), N[tC(1709)] = false, requestAnimationFrame(() => N[tC(5057)][tC(2129)]('in')), window[tC(2948)](() => MW(0), 340), aN(L ?? ($[tC(866)] || bB ? tC(2736) : tC(2729)));
+        L && aN(L), N.hidden = false, requestAnimationFrame(() => N.classList.add('in')), window.setTimeout(() => MW(0), 340), aN(L ?? ($.room || bB ? "lobby" : "intro"));
         let bR = cj => {
             const uB = tC;
             if (!aH && !xu()) {
-                if (cj[uB(2547)] === 'm' || cj[uB(2547)] === 'M') {
+                if (cj.key === 'm' || cj.key === 'M') {
                     ea();
                     return;
                 }
-                cj[uB(2547)] === uB(2034) && N[uB(5057)][uB(4578)](uB(2636)) && aN(uB(2729));
+                cj.key === "Escape" && N.classList.contains("on-select") && aN("intro");
             }
         };
-        document[tC(1661)](tC(1777), bR);
+        document.addEventListener("keydown", bR);
         let bS = cj => {
             const uC = tC;
-            if (aH || !N[uC(5057)][uC(4578)](uC(2636))) return;
-            let ck = cj[uC(5099)];
-            ck && (ck[uC(2325)](uC(3352)) || aN(uC(2729)));
+            if (aH || !N.classList.contains("on-select")) return;
+            let ck = cj.target;
+            ck && (ck.closest("#select-frame, #lobby-frame, #armoury-frame, #front-logo") || aN("intro"));
         };
-        U[tC(1661)](tC(2082), bS);
+        U.addEventListener("pointerdown", bS);
     });
 }
 var Dy = 3;
@@ -499,10 +499,10 @@ function kn({
         v = () => {
             const uG = uF;
             let y = m || j;
-            q[uG(4667)]((A, C) => {
+            q.forEach((A, C) => {
                 const uH = uG;
-                A[uH(3476)][uH(5057)][uH(827)]('on', C < y), A[uH(4492)](uH(2584), String(C + 1 === j));
-            }), p[uG(5057)][uG(827)](uG(4965), j > 0), u[uG(4920)] = j ? j + uG(3493) + Za : d;
+                A.firstElementChild.classList.toggle('on', C < y), A.setAttribute("aria-checked", String(C + 1 === j));
+            }), p.classList.toggle("picked", j > 0), u.textContent = j ? j + " out of " + Za : d;
         };
     for (let y = 1; y <= Za; y++) {
         let A = w("button", "dsp-star");
@@ -524,9 +524,9 @@ function kn({
         value: () => j,
         disable: () => {
             const uI = uF;
-            q[uI(4667)](C => {
+            q.forEach(C => {
                 const uJ = uI;
-                C[uJ(1894)] = true;
+                C.disabled = true;
             });
         }
     };
@@ -547,7 +547,7 @@ function Qf({
             prompt: "Pick a star.",
             onChange: C => {
                 const uL = uK;
-                A[uL(1894)] = C === 0;
+                A.disabled = C === 0;
             }
         });
     p.append(q.row, q.hint);
@@ -558,28 +558,28 @@ function Qf({
     p.appendChild(y);
     let A = IT("Send", "dsp-go primary", () => {
         const uM = uK;
-        let C = q[uM(862)]();
-        C !== 0 && (A[uM(1894)] = true, y[uM(4920)] = uM(1167), rt({
-            kind: uM(4106),
+        let C = q.value();
+        C !== 0 && (A.disabled = true, y.textContent = "Sending...", rt({
+            kind: "review",
             stars: C,
-            comment: v[uM(862)]
+            comment: v.value
         }, {
             ...Ro(d, g),
             stars: C
-        })[uM(4353)](E => {
+        }).then(E => {
             const uN = uM;
             if (E) {
-                j(uN(4764), uN(5351) + C);
+                j("continue", "sent:" + C);
                 return;
             }
-            A[uN(1894)] = false, y[uN(4920)] = uN(5914);
+            A.disabled = false, y.textContent = "That did not get through. Your words are still here if you want to try again.";
         }));
     });
     return A.disabled = true, m.append(A, IT("Not now", "dsp-go dark", () => {
         const uO = uK;
-        hW(uO(2338), {
-            stars: q[uO(862)]() || null
-        }), j(uO(4764), uO(3051));
+        hW("feedback_skipped", {
+            stars: q.value() || null
+        }), j("continue", "skipped");
     })), jo() || (y.textContent = "The line is down, so this would not reach anybody. No harm done.", A.disabled = true, q.disable()), p;
 }
 var Hy = {
@@ -827,7 +827,7 @@ function gi(g, j = {}) {
         K = new Set();
     if (E.forEach((L, M) => {
             const vA = vz;
-            let N = (o0[L] ?? o0[' '])[vA(3916)]('/'),
+            let N = (o0[L] ?? o0[' ']).split('/'),
                 P = 2 + M * 12;
             for (let Q = 0; Q < 13; Q++) {
                 let R = N[Q] ?? '';
@@ -836,7 +836,7 @@ function gi(g, j = {}) {
                         for (let U = 0; U <= 1; U++) {
                             let V = P + S + U,
                                 X = V * 4096 + 2 + Q;
-                            K[vA(1328)](X) || (K[vA(2129)](X), I[vA(3087)]([V, 2 + Q]));
+                            K.has(X) || (K.add(X), I.push([V, 2 + Q]));
                         }
             }
         }), y) {
@@ -1147,8 +1147,8 @@ function m0(K, L, U) {
         aw = new Map(),
         ax = aN => {
             const vL = vK;
-            let aO = aw[vL(778)](aN);
-            return aO || (aO = new KT(aj, a7, a8, Y, aN, 3), aw[vL(5635)](aN, aO)), aO;
+            let aO = aw.get(aN);
+            return aO || (aO = new KT(aj, a7, a8, Y, aN, 3), aw.set(aN, aO)), aO;
         };
     for (let aN of new Set(U.material)) ax(zT(a9, aN).scale);
     let az = new KT(aj, a7, a8, Y, 0.38, 2),
@@ -1188,7 +1188,7 @@ function m0(K, L, U) {
         const vM = vK;
         let bw = bk + (az.at(bk, bq) - 0.5) * 2 * ie + (aC.at(bk, bq) - 0.5) * 7,
             bx = bq + (aA.at(bk, bq) - 0.5) * 2 * ie + (aC.at(bk + 43, bq + 91) - 0.5) * 7;
-        return wW(aJ, U[vM(3904)], U[vM(2900)], Y, bw, bx) < -0.02;
+        return wW(aJ, U.width, U.height, Y, bw, bx) < -0.02;
     };
     for (let bk = 0; bk < L.height; bk++)
         for (let bq = 0; bq < L.width; bq++) {
@@ -1297,10 +1297,10 @@ function Qy(q, A, F, H, K, L, N, P, Q) {
                 aA = 7 + (aq >> ax * 3 + 2 & 7);
             for (let aB = 0; aB < aA; aB++) {
                 let aC = aB / aA,
-                    aD = Math[vQ(1207)](aj + Math[vQ(527)](az) * aB * (0.35 + aC * 0.75)),
-                    aE = ak - Math[vQ(1207)](aB * (0.94 - Math[vQ(4348)](Math[vQ(527)](az)) * 0.3));
+                    aD = Math.round(aj + Math.sin(az) * aB * (0.35 + aC * 0.75)),
+                    aE = ak - Math.round(aB * (0.94 - Math.abs(Math.sin(az)) * 0.3));
                 if (aE < 0 || aE >= F || aD < 0 || aD >= A || !a7(aD, aE) || aC < 0.45 && aD + 1 < A && !a7(aD + 1, aE)) break;
-                q[aE * A + aD] = iW(Q[vQ(3566)], aC * Y * 1.3, aD, aE), aC < 0.45 && aD + 1 < A && (q[aE * A + aD + 1] = iW(Q[vQ(3566)], aC * Y, aD + 1, aE));
+                q[aE * A + aD] = iW(Q.scrub, aC * Y * 1.3, aD, aE), aC < 0.45 && aD + 1 < A && (q[aE * A + aD + 1] = iW(Q.scrub, aC * Y, aD + 1, aE));
             }
         }
     }, a9 = 11;
@@ -1403,8 +1403,8 @@ function nv(K, L, Q, U) {
     let Y = L.tile,
         a7 = (a8, a9) => {
             const vV = vU;
-            let aj = a8[Math[vV(3002)](0, Math[vV(544)](a8[vV(488)] - 1, a9))];
-            return vV(3343) + (aj & 255) + ',' + (aj >> 8 & 255) + ',' + (aj >> 16 & 255) + ')';
+            let aj = a8[Math.max(0, Math.min(a8.length - 1, a9))];
+            return "rgb(" + (aj & 255) + ',' + (aj >> 8 & 255) + ',' + (aj >> 16 & 255) + ')';
         };
     for (let a8 = 0; a8 < L.height; a8++)
         for (let a9 = 0; a9 < L.width; a9++) {
@@ -1423,12 +1423,12 @@ function nv(K, L, Q, U) {
                     aB = !(az >= aA),
                     aC = (aL, aM) => {
                         const vX = vU;
-                        let aN = (Math[vX(4833)](aL + 14201, 2654435761) ^ Math[vX(4833)](aM + 40503, 1597334677)) >>> 0;
-                        return aN ^= aN >>> 15, aN = Math[vX(4833)](aN, 2246822519) >>> 0, aN ^= aN >>> 13, aN >>> 0;
+                        let aN = (Math.imul(aL + 14201, 2654435761) ^ Math.imul(aM + 40503, 1597334677)) >>> 0;
+                        return aN ^= aN >>> 15, aN = Math.imul(aN, 2246822519) >>> 0, aN ^= aN >>> 13, aN >>> 0;
                     },
                     aD = aL => {
                         const vY = vU;
-                        let aM = Math[vY(1959)](aL / 24) * 24,
+                        let aM = Math.floor(aL / 24) * 24,
                             aN = aM;
                         for (;;) {
                             let aO = 3 + aC(aN, 1) % 3;
@@ -1441,13 +1441,13 @@ function nv(K, L, Q, U) {
                     aG = (aL, aM) => {
                         const vZ = vU;
                         let aN = aC(aL, aE),
-                            aO = Math[vZ(3002)](1, Math[vZ(1959)](aF / 3)),
+                            aO = Math.max(1, Math.floor(aF / 3)),
                             aP = aN % 3 === 0 ? aE + aO + (aN >>> 8) % aO : -1;
                         return aP < 0 || aM < aP ? [aE, aP < 0 ? aF : aP - aE] : [aP, aE + aF - aP];
                     },
                     aH = (aL, aM, aN, aO) => {
                         const w1 = vU;
-                        aN <= 0 || (K[w1(2754)] = aO, aB ? K[w1(3797)](aM, aL, aN, 1) : K[w1(3797)](aL, aM, 1, aN));
+                        aN <= 0 || (K.fillStyle = aO, aB ? K.fillRect(aM, aL, aN, 1) : K.fillRect(aL, aM, 1, aN));
                     },
                     aI = aB ? ak : aq;
                 for (let aL = 0; aL < Y; aL++) {
@@ -1550,25 +1550,25 @@ function nv(K, L, Q, U) {
                             for (let [cA, cB] of [
                                     [7, 6],
                                     [12, 11]
-                                ]) cw(bQ), (bL || bP) && K[w7(3797)](ck, cq + cA, bZ, 2), (bM || bP) && K[w7(3797)](ck + bZ, cq + cA, bZ, 2), cw(bR), (bL || bP) && K[w7(3797)](ck, cq + cB, bZ, 1), (bM || bP) && K[w7(3797)](ck + bZ, cq + cB, bZ, 1);
+                                ]) cw(bQ), (bL || bP) && K.fillRect(ck, cq + cA, bZ, 2), (bM || bP) && K.fillRect(ck + bZ, cq + cA, bZ, 2), cw(bR), (bL || bP) && K.fillRect(ck, cq + cB, bZ, 1), (bM || bP) && K.fillRect(ck + bZ, cq + cB, bZ, 1);
                             for (let [cC, cD] of [
                                     [0, bN],
                                     [bZ, bO]
-                                ]) cD && (cw(bQ), K[w7(3797)](ck + bZ - 2, cq + cC, 3, bZ), cw(bR), K[w7(3797)](ck + bZ - 2, cq + cC, 1, bZ));
+                                ]) cD && (cw(bQ), K.fillRect(ck + bZ - 2, cq + cC, 3, bZ), cw(bR), K.fillRect(ck + bZ - 2, cq + cC, 1, bZ));
                             let cx = (bN || bO) && (bL || bM),
-                                cz = [bN, bO, bL, bM][w7(3639)](Boolean)[w7(488)] <= 1;
-                            if (cx || cz || bP) cw(bS), K[w7(3797)](ck + bZ - 1, cq + 3, 3, 12), cw(bU), K[w7(3797)](ck + bZ - 1, cq + 3, 1, 12);
+                                cz = [bN, bO, bL, bM].filter(Boolean).length <= 1;
+                            if (cx || cz || bP) cw(bS), K.fillRect(ck + bZ - 1, cq + 3, 3, 12), cw(bU), K.fillRect(ck + bZ - 1, cq + 3, 1, 12);
                             else {
                                 if (bL || bM) {
                                     cw(bS);
-                                    for (let cE = 1; cE < Y; cE += 5) K[w7(3797)](ck + cE, cq + 3, 2, 12);
+                                    for (let cE = 1; cE < Y; cE += 5) K.fillRect(ck + cE, cq + 3, 2, 12);
                                     cw(bU);
-                                    for (let cF = 1; cF < Y; cF += 5) K[w7(3797)](ck + cF, cq + 3, 1, 12);
+                                    for (let cF = 1; cF < Y; cF += 5) K.fillRect(ck + cF, cq + 3, 1, 12);
                                 } else {
                                     cw(bS);
-                                    for (let cG = 1; cG < Y; cG += 5) K[w7(3797)](ck + bZ - 3, cq + cG, 6, 3);
+                                    for (let cG = 1; cG < Y; cG += 5) K.fillRect(ck + bZ - 3, cq + cG, 6, 3);
                                     cw(bU);
-                                    for (let cH = 1; cH < Y; cH += 5) K[w7(3797)](ck + bZ - 3, cq + cH, 6, 1);
+                                    for (let cH = 1; cH < Y; cH += 5) K.fillRect(ck + bZ - 3, cq + cH, 6, 1);
                                 }
                             }
                         };

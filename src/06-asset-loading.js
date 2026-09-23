@@ -49,17 +49,17 @@ async function Es() {
     let c = Math.max(0, j4 - (performance.now() - zl));
     return new Promise(d => {
         const gH = gG;
-        window[gH(2948)](() => {
+        window.setTimeout(() => {
             const gI = gH;
-            let g = ee(gI(3999));
+            let g = ee("boot");
             if (!g) {
                 d();
                 return;
             }
-            g[gI(5057)][gI(2129)](gI(4880)), window[gI(2948)](() => {
+            g.classList.add("gone"), window.setTimeout(() => {
                 const gJ = gI;
-                g[gJ(549)](), d();
-            }, f[gI(1021)][gI(2986)]);
+                g.remove(), d();
+            }, f.timing.bootFade);
         }, c);
     });
 }
@@ -73,10 +73,10 @@ function L4(c = 2000) {
                 const gL = b;
                 window.clearTimeout(j), g();
             },
-            j = window[gM(2948)](i, c);
-        d[gM(1661)](gM(1785), i, {
+            j = window.setTimeout(i, c);
+        d.addEventListener("load", i, {
             once: true
-        }), d[gM(1661)](gM(2113), i, {
+        }), d.addEventListener("error", i, {
             once: true
         });
     });
@@ -156,10 +156,10 @@ function oc() {
     try {
         window.addEventListener("error", c => {
             const gS = gR;
-            Wc(gS(2113), c[gS(2113)] ?? c[gS(5577)], (c[gS(1531)] ?? '') + ':' + (c[gS(932)] ?? 0) + ':' + (c[gS(4096)] ?? 0));
+            Wc("error", c.error ?? c.message, (c.filename ?? '') + ':' + (c.lineno ?? 0) + ':' + (c.colno ?? 0));
         }), window.addEventListener("unhandledrejection", c => {
             const gU = gR;
-            Wc(gU(2249), c[gU(3895)]);
+            Wc("rejection", c.reason);
         });
     } catch {}
 }
@@ -174,11 +174,11 @@ function ic(c, d) {
             const gX = gV;
             if (!m) return;
             requestAnimationFrame(p);
-            let u = Math[gX(544)](0.25, (q - l) / 1000);
+            let u = Math.min(0.25, (q - l) / 1000);
             l = q, j += u;
             let v = 0;
-            for (; j >= g && v < f[gX(2908)];) c(g), j -= g, v++;
-            v === f[gX(2908)] && (j = 0), d(j / g);
+            for (; j >= g && v < f.MAX_STEPS_PER_FRAME;) c(g), j -= g, v++;
+            v === f.MAX_STEPS_PER_FRAME && (j = 0), d(j / g);
         };
     return requestAnimationFrame(p), () => {
         m = false;
@@ -1649,8 +1649,8 @@ function co(c) {
     const hj = cX;
     return c.filter(d => {
         const hk = hj;
-        let g = Kt(d[hk(5069)]);
-        return g[hk(3564)] === hk(4662) && !g[hk(864)];
+        let g = Kt(d.zone);
+        return g.roster === "campaign" && !g.dev;
     });
 }
 async function yd() {

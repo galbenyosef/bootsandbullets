@@ -746,8 +746,8 @@ function o1(c, d, g = null) {
     };
     return We.push(i), ro === 0 && (ro = window.setInterval(() => {
         const fS = fR;
-        if (!(so || We[fS(488)] === 0)) {
-            for (let j of [...We]) We[fS(5073)](j) && (j[fS(1551)] -= qt / 1000, !(j[fS(1551)] > 0) && (j[fS(1942)] === null ? We = We[fS(3639)](l => l !== j) : j[fS(1551)] += j[fS(1942)], j[fS(5903)]()));
+        if (!(so || We.length === 0)) {
+            for (let j of [...We]) We.includes(j) && (j.left -= qt / 1000, !(j.left > 0) && (j.every === null ? We = We.filter(l => l !== j) : j.left += j.every, j.run()));
         }
     }, qt)), i;
 }
@@ -789,12 +789,12 @@ function C4(c, d, g, j) {
     j.talk();
     let p = o1(Vl, () => {
         const fZ = fY;
-        if (l >= d[fZ(488)]) {
-            S4(p), j[fZ(5428)]();
+        if (l >= d.length) {
+            S4(p), j.rest();
             return;
         }
         let q = d[l++];
-        c[fZ(4920)] += q, !E4[fZ(4732)](q) && m++ % g[fZ(1010)] === 0 && G()[fZ(3218)] && O1(g);
+        c.textContent += q, !E4.test(q) && m++ % g.everyNth === 0 && G().sound && O1(g);
     }, Vl);
 }
 
@@ -818,7 +818,7 @@ function A4(c, d) {
         u = 0;
     return o1(qt / 1000, () => {
         const g8 = g7;
-        u += qt / 1000, !(u < m[g8(4372)]) && (u = 0, q++, q >= m[g8(4928)][g8(488)] && (q = 0, p && (p = false, m = j)), g(m[g8(4928)][q]));
+        u += qt / 1000, !(u < m.hold) && (u = 0, q++, q >= m.frames.length && (q = 0, p && (p = false, m = j)), g(m.frames[q]));
     }, qt / 1000), {
         talk: () => {
             const g9 = g7;
@@ -826,7 +826,7 @@ function A4(c, d) {
                 p = false;
                 return;
             }
-            m = l, p = false, q = 0, u = 0, g(l[g9(4928)][0]);
+            m = l, p = false, q = 0, u = 0, g(l.frames[0]);
         },
         rest: () => {
             m === l && (p = true);
@@ -864,10 +864,10 @@ function je(c, d, g = {}) {
     let q = g.delay ?? k4;
     o1(q, () => {
         const gk = gj;
-        j[gk(1709)] = false, requestAnimationFrame(() => {
+        j.hidden = false, requestAnimationFrame(() => {
             const gq = gk;
-            j[gq(5057)][gq(2129)]('in'), e1() && j[gq(5057)][gq(2129)](gq(501)), o1(e1() ? 0 : 0.26, () => C4(p, d, c[gq(1441)], l));
-        }), g[gk(4507)] || (o1(g[gk(4290)] ?? w4, $l), R4());
+            j.classList.add('in'), e1() && j.classList.add("still"), o1(e1() ? 0 : 0.26, () => C4(p, d, c.voice, l));
+        }), g.sticky || (o1(g.seconds ?? w4, $l), R4());
     });
 }
 var ql = 1;
@@ -887,7 +887,7 @@ function $l() {
     const gx = cX;
     ws(), rW && (rW.classList.remove('in'), ks = window.setTimeout(() => {
         const gz = gx;
-        rW && (rW[gz(1709)] = true);
+        rW && (rW.hidden = true);
     }, f.timing.commsExit));
 }
 

@@ -1403,8 +1403,8 @@ function s1(c, d) {
     };
     return Z1.push(g), _u || (window.addEventListener("keydown", Gg, true), _u = true), () => {
         const jb = j9;
-        let i = Z1[jb(1773)](g);
-        i !== -1 && Z1[jb(5282)](i, 1);
+        let i = Z1.indexOf(g);
+        i !== -1 && Z1.splice(i, 1);
     };
 }
 var JT = () => Z1.length > 0,
@@ -1480,7 +1480,7 @@ function Su(c) {
         root: d,
         set(q, u) {
             const jD = jC;
-            p[jD(935)][jD(3904)] = Math[jD(3002)](0, Math[jD(544)](1, q)) * 100 + '%', u !== void 0 && (l[jD(4920)] = u);
+            p.style.width = Math.max(0, Math.min(1, q)) * 100 + '%', u !== void 0 && (l.textContent = u);
         }
     };
 }
@@ -1504,20 +1504,20 @@ function Eu(c) {
         root: d,
         setBadge(m) {
             const jG = jF;
-            l[jG(1709)] = m === null, m !== null && (l[jG(4920)] = m);
+            l.hidden = m === null, m !== null && (l.textContent = m);
         },
         setCooldown(m) {
             const jH = jF;
-            let p = Math[jH(3002)](0, Math[jH(544)](1, m));
-            g[jH(935)][jH(5209)] = p > 0.001 ? '1' : '0', g[jH(935)][jH(3412)] = jH(1100) + p * 360 + jH(1190);
+            let p = Math.max(0, Math.min(1, m));
+            g.style.opacity = p > 0.001 ? '1' : '0', g.style.background = "conic-gradient(rgba(10,13,5,0.72) " + p * 360 + "deg, transparent 0)";
         },
         setActive(m) {
             const jI = jF;
-            d[jI(5057)][jI(827)]('on', m);
+            d.classList.toggle('on', m);
         },
         setDisabled(m) {
             const jJ = jF;
-            d[jJ(5057)][jJ(827)](jJ(684), m), m ? d[jJ(4492)](jJ(4413), jJ(2588)) : d[jJ(822)](jJ(4413));
+            d.classList.toggle("off", m), m ? d.setAttribute("aria-disabled", "true") : d.removeAttribute("aria-disabled");
         }
     };
 }
@@ -1530,15 +1530,15 @@ function Mu(c) {
             label: l
         }) => {
             const jL = jK;
-            let m = w(jL(5291), jL(4460) + j);
-            return m[jL(2882)] = jL(5291), m[jL(4920)] = l, m[jL(4592)].id = j, m[jL(1661)](jL(5016), () => {
+            let m = w("button", "ui-seg diff-" + j);
+            return m.type = "button", m.textContent = l, m.dataset.id = j, m.addEventListener("click", () => {
                 const jM = jL;
-                i(j), c[jM(5229)](j);
-            }), d[jL(2592)](m), m;
+                i(j), c.onChange(j);
+            }), d.appendChild(m), m;
         }),
         i = j => {
             const jN = jK;
-            for (let l of g) l[jN(5057)][jN(827)]('on', l[jN(4592)].id === j);
+            for (let l of g) l.classList.toggle('on', l.dataset.id === j);
         };
     return i(c.value), {
         root: d,
@@ -1556,26 +1556,26 @@ function Cu(c) {
     let m = 0,
         p = () => {
             const jP = jO;
-            let v = Math[jP(1207)](m * 100) + '%';
-            j[jP(935)][jP(3904)] = v, l[jP(935)][jP(1551)] = v;
+            let v = Math.round(m * 100) + '%';
+            j.style.width = v, l.style.left = v;
         },
         q = v => {
             const jQ = jO;
-            m = Math[jQ(1207)](Math[jQ(3002)](0, Math[jQ(544)](1, v)) * 20) / 20, p();
+            m = Math.round(Math.max(0, Math.min(1, v)) * 20) / 20, p();
         };
     q(c.value);
     let u = v => {
         const jR = jO;
-        let y = g[jR(2491)](),
+        let y = g.getBoundingClientRect(),
             A = m;
-        q((v[jR(4043)] - y[jR(1551)]) / y[jR(3904)]), m !== A && c[jR(5229)](m);
+        q((v.clientX - y.left) / y.width), m !== A && c.onChange(m);
     };
     return d.addEventListener("pointerdown", v => {
         const jS = jO;
-        d[jS(4293)](v[jS(4984)]), u(v);
+        d.setPointerCapture(v.pointerId), u(v);
     }), d.addEventListener("pointermove", v => {
         const jU = jO;
-        d[jU(3130)](v[jU(4984)]) && u(v);
+        d.hasPointerCapture(v.pointerId) && u(v);
     }), {
         root: d,
         set: q
@@ -1617,8 +1617,8 @@ function Ru(c) {
     let g = document.createElement("input");
     g.id = "confirm-input", g.className = "confirm-input", g.type = "text", g.value = c.value ?? '', c.maxLength !== void 0 && (g.maxLength = c.maxLength), c.placeholder !== void 0 && (g.placeholder = c.placeholder), d.appendChild(g), g.addEventListener("keydown", l => {
         const jZ = jY;
-        if (l[jZ(2547)] !== jZ(1227)) return;
-        l[jZ(2670)](), document[jZ(546)](jZ(2422))?.[jZ(5016)]();
+        if (l.key !== "Enter") return;
+        l.preventDefault(), document.querySelector(".confirm-btn.primary")?.click();
     });
     let i = ST({
         title: c.title,
@@ -1632,7 +1632,7 @@ function Ru(c) {
     });
     return window.setTimeout(() => {
         const k5 = jY;
-        g[k5(3930)](), g[k5(2264)]();
+        g.focus(), g.select();
     }, 0), i.then(l => l === 'ok' && g.value.trim() || null);
 }
 
@@ -1646,7 +1646,7 @@ function ST(c) {
         A.className = "confirm-card panel-scroll", q.appendChild(A);
         let C = P => {
                 const k8 = k7;
-                Au--, window[k8(4489)](L), N(), q[k8(549)](), j(P);
+                Au--, window.clearInterval(L), N(), q.remove(), j(P);
             },
             E = document.createElement("div");
         if (E.className = "confirm-title", E.textContent = c.title, A.appendChild(E), c.dismiss !== void 0) {
@@ -1676,8 +1676,8 @@ function ST(c) {
             a9 && (a9.className = "confirm-count", F.appendChild(a9));
             let aj = () => {
                 const k9 = k7;
-                let ak = Y?.[k9(546)](k9(2725));
-                ak && (ak[k9(4920)] = a8 + ' (' + a7 + ')'), a9 && (a9[k9(4920)] = ((X ?? '') + ' ' + a7)[k9(2762)]());
+                let ak = Y?.querySelector(".fx-btn-label");
+                ak && (ak.textContent = a8 + ' (' + a7 + ')'), a9 && (a9.textContent = ((X ?? '') + ' ' + a7).trim());
             };
             aj(), L = window.setInterval(() => {
                 const kj = k7;
@@ -1685,14 +1685,14 @@ function ST(c) {
                     aj();
                     return;
                 }
-                window[kj(4489)](L), C(U);
+                window.clearInterval(L), C(U);
             }, 1000);
         }
         let M = c.dismiss,
             N = s1("confirm", M !== void 0 ? () => C(M) : () => {});
         q.addEventListener("pointerdown", ak => {
             const kk = k7;
-            ak[kk(5099)] === q && c[kk(1158)] !== void 0 && C(c[kk(1158)]);
+            ak.target === q && c.dismiss !== void 0 && C(c.dismiss);
         }), document.body.appendChild(q), (I ?? H)?.focus();
     });
 }
@@ -1824,7 +1824,7 @@ function zg(c) {
         g = [],
         j = (q, u, v) => {
             const kC = kB;
-            u > 0 && v > 0 && g[kC(3087)]({
+            u > 0 && v > 0 && g.push({
                 source: q,
                 count: u,
                 bonds: u * v
@@ -1885,11 +1885,11 @@ function Bu() {
             taken: ((() => {
                 const kE = kD;
                 let q = {};
-                for (let [u, v] of Object[kE(5413)](p[kE(884)] ?? {})) {
+                for (let [u, v] of Object.entries(p.taken ?? {})) {
                     let y = Ys(u);
-                    if (!y || !Array[kE(4562)](v)) continue;
-                    let A = [...new Set(v[kE(588)](C => Math[kE(1959)](Number(C)))[kE(3639)](C => Number[kE(2895)](C) && C >= 0))];
-                    A[kE(488)] > 0 && (q[y] = A);
+                    if (!y || !Array.isArray(v)) continue;
+                    let A = [...new Set(v.map(C => Math.floor(Number(C))).filter(C => Number.isFinite(C) && C >= 0))];
+                    A.length > 0 && (q[y] = A);
                 }
                 return q;
             })())
@@ -1908,13 +1908,13 @@ function Bu() {
             stock: ((() => {
                 const kF = kD;
                 let q = {},
-                    u = d[kF(2586)];
-                if (u && typeof u == kF(3028))
-                    for (let [v, y] of Object[kF(5413)](u)) {
-                        let A = Math[kF(1959)](Number(y));
-                        Number[kF(2895)](A) && A > 0 && (q[v] = A);
+                    u = d.stock;
+                if (u && typeof u == "object")
+                    for (let [v, y] of Object.entries(u)) {
+                        let A = Math.floor(Number(y));
+                        Number.isFinite(A) && A > 0 && (q[v] = A);
                     }
-                for (let C of $g) q[C] === void 0 && Array[kF(4562)](d[kF(2582)]) && d[kF(2582)][kF(5073)](C) && (q[C] = Kg);
+                for (let C of $g) q[C] === void 0 && Array.isArray(d.unlocked) && d.unlocked.includes(C) && (q[C] = Kg);
                 return q;
             })()),
             loadout: {
@@ -1979,23 +1979,23 @@ function Gu(j, q) {
         time: L
     } = q, N = new Map(j.squad.map(aA => [aA.name, aA])), P = q.survived.map(aA => {
         const kL = kK;
-        let aB = N[kL(778)](aA),
-            aC = aB?.[kL(1348)] ?? 0;
+        let aB = N.get(aA),
+            aC = aB?.missions ?? 0;
         return {
             name: aA,
             missions: A ? aC + 1 : aC,
             promoted: A && ne(aC + 1) > ne(aC),
-            own: !!aB?.[kL(2138)]
+            own: !!aB?.own
         };
     }), Q = q.died.map(aA => {
         const kM = kK;
-        let aB = N[kM(778)](aA);
+        let aB = N.get(aA);
         return {
             name: aA,
-            missions: aB?.[kM(1348)] ?? 0,
+            missions: aB?.missions ?? 0,
             mission: H,
             difficulty: K,
-            own: !!aB?.[kM(2138)]
+            own: !!aB?.own
         };
     }), S = j.records[F], U = S?.bestTime ?? 1 / 0, V = S?.bestHome ?? 0, X = !!S?.clears.includes(K), Y = q.packagesFound ?? [], a7 = zg({
         won: A,
@@ -2252,14 +2252,14 @@ function Zu(c = 20000) {
                 g();
                 return;
             }
-            if (ET || (ET = new Audio(i), ET[lx(4127)] = true, ET[lx(1505)] = lx(1887), ET[lx(1709)] = true, document[lx(1463)][lx(2592)](ET)), ET[lx(5751)] >= 4) {
+            if (ET || (ET = new Audio(i), ET.loop = true, ET.preload = "auto", ET.hidden = true, document.body.appendChild(ET)), ET.readyState >= 4) {
                 g();
                 return;
             }
-            let j = window[lx(2948)](() => g(), c);
-            ET[lx(1661)](lx(1630), () => {
+            let j = window.setTimeout(() => g(), c);
+            ET.addEventListener("canplaythrough", () => {
                 const lz = lx;
-                window[lz(2511)](j), g();
+                window.clearTimeout(j), g();
             }, {
                 once: true
             });
@@ -2334,8 +2334,8 @@ function nt() {
         p = () => {
             const lF = lE;
             if (!(d !== Yu || et)) {
-                if (m++, c[lF(2734)] = Math[lF(3002)](0, j * (1 - m / g)), m < g) {
-                    window[lF(2948)](p, l / g);
+                if (m++, c.volume = Math.max(0, j * (1 - m / g)), m < g) {
+                    window.setTimeout(p, l / g);
                     return;
                 }
                 l1();
@@ -2379,13 +2379,13 @@ function Wm(c) {
         const lI = lH;
         let j = sn(),
             l = ot();
-        d[lI(5057)][lI(827)]('on', j && !l), d[lI(5057)][lI(827)](lI(3577), l), d[lI(4492)](lI(4892), String(j)), d[lI(3984)] = j ? l ? lI(5441) : Xu() === lI(5892) ? lI(1403) : lI(807) : lI(3323), d[lI(4492)](lI(5246), d[lI(3984)]), d[lI(5582)] = j ? Wb : eb;
+        d.classList.toggle('on', j && !l), d.classList.toggle("blocked", l), d.setAttribute("aria-pressed", String(j)), d.title = j ? l ? "Start the music  (M)" : Xu() === "synth" ? "Music on — house march  (M)" : "Music on  (M)" : "Music off  (M)", d.setAttribute("aria-label", d.title), d.innerHTML = j ? Wb : eb;
     };
     d.addEventListener("click", ea);
     let i = tt(g);
     return g(), c.appendChild(d), () => {
         const lJ = lH;
-        i(), d[lJ(549)]();
+        i(), d.remove();
     };
 }
 var em = ["review", "armoury", "offer"],
@@ -2855,8 +2855,8 @@ async function rt(c, d = {}) {
         let l = y => {
                 const mD = mC;
                 if (y === void 0) return null;
-                let A = Math[mD(1207)](y);
-                return Number[mD(2895)](A) && A >= 1 && A <= 5 ? A : false;
+                let A = Math.round(y);
+                return Number.isFinite(A) && A >= 1 && A <= 5 ? A : false;
             },
             m = c.kind === "mission" ? l(c.fun) : null,
             p = c.kind === "mission" ? l(c.hard) : null;
@@ -2935,7 +2935,7 @@ function Po({
         let P = w("div", "dsp-actions"),
             Q = a8 => {
                 const mI = mH;
-                q || (q = true, a7(), U(), S(), F[mI(549)](), j(a8));
+                q || (q = true, a7(), U(), S(), F.remove(), j(a8));
             },
             R = g(P, Q);
         R.classList.add("dsp-body"), H.append(R, P);
@@ -2946,7 +2946,7 @@ function Po({
             Y = 0,
             a7 = () => {
                 const mJ = mH;
-                window[mJ(4489)](X), window[mJ(4489)](Y), K[mJ(935)][mJ(4584)](mJ(5863), '0');
+                window.clearInterval(X), window.clearInterval(Y), K.style.setProperty("--dsp-face-f", '0');
             };
         if (e1()) N.textContent = c;
         else {
@@ -2955,12 +2955,12 @@ function Po({
             X = window.setInterval(() => {
                 const mK = mH;
                 let ak = c[a8];
-                N[mK(4920)] = c[mK(4157)](0, ++a8), A[mK(1441)] && !hb[mK(4732)](ak) && ++a9 % (A[mK(1441)][mK(1010)] ?? 1) === 0 && O1(A[mK(1441)]), a8 >= c[mK(488)] && a7();
+                N.textContent = c.slice(0, ++a8), A.voice && !hb.test(ak) && ++a9 % (A.voice.everyNth ?? 1) === 0 && O1(A.voice), a8 >= c.length && a7();
             }, pb);
             let aj = 0;
             Y = window.setInterval(() => {
                 const mL = mH;
-                K[mL(935)][mL(4584)](mL(5863), String(V[aj++ % V[mL(488)]] ?? 0));
+                K.style.setProperty("--dsp-face-f", String(V[aj++ % V.length] ?? 0));
             }, fb);
         }
         document.body.appendChild(F), requestAnimationFrame(() => F.classList.add('in')), P.querySelector("button")?.focus();
@@ -2998,73 +2998,73 @@ function ga({
                 content: S,
                 buttons: U
             } = R();
-            L[mN(4814)](S), v[mN(4814)](...U), U[0]?.[mN(3930)]();
+            L.replaceChildren(S), v.replaceChildren(...U), U[0]?.focus();
         },
         N = () => {
             const mO = mM;
-            let R = w(mO(991));
-            R[mO(2592)](w('h2', mO(5270), E[mO(5021)]));
-            let S = w('ul', mO(2337));
-            for (let U of E[mO(3119)]) S[mO(2592)](w('li', '', U));
-            return R[mO(2592)](S), F && R[mO(2592)](w('p', mO(5857), mO(2696) + F)), {
+            let R = w("div");
+            R.appendChild(w('h2', "dsp-headline", E.headline));
+            let S = w('ul', "dsp-list");
+            for (let U of E.bullets) S.appendChild(w('li', '', U));
+            return R.appendChild(S), F && R.appendChild(w('p', "dsp-price", "Full game -- " + F)), {
                 content: R,
-                buttons: [IT(E[mO(4184)][mO(5937)](mO(4991), F), mO(1641), () => {
+                buttons: [IT(E.cta.replace("{price}", F), "dsp-go primary", () => {
                     const mP = mO;
-                    ZT(mP(4603), {
+                    ZT("purchase_intent_clicked", {
                         ...I,
                         ...H
                     }), M(P);
-                }), IT(E[mO(5390)], mO(3508), () => {
+                }), IT(E.decline, "dsp-go dark", () => {
                     const mQ = mO;
-                    ZT(mQ(4236), {
+                    ZT("purchase_intent_declined", {
                         ...I,
                         ...H
-                    }), q(mQ(3703));
+                    }), q("declined");
                 })]
             };
         },
         P = () => {
             const mR = mM;
-            let R = w(mR(991));
-            R[mR(1643)](w('h2', mR(5270), E[mR(2545)][mR(5021)]), w('p', mR(2063), E[mR(2545)][mR(2277)]));
+            let R = w("div");
+            R.append(w('h2', "dsp-headline", E.reveal.headline), w('p', "dsp-plain", E.reveal.sub));
             let S = !Sm(),
-                U = w(mR(1869), mR(5040));
-            U[mR(2882)] = mR(5557), U[mR(1675)] = mR(4149), U[mR(4472)] = mR(5557), U[mR(4492)](mR(5246), mR(2702));
+                U = w("input", "dsp-input");
+            U.type = "email", U.placeholder = "you@example.com", U.autocomplete = "email", U.setAttribute("aria-label", "Email address");
             let V = false;
-            U[mR(3345)] = () => {
+            U.oninput = () => {
                 const mS = mR;
-                V || !U[mS(862)] || (V = true, ZT(mS(3719), I));
-            }, S && R[mR(1643)](w('p', mR(3816), E[mR(2545)][mR(1684)]), U);
-            let X = w(mR(1468), mR(2158));
-            X[mR(1197)] = 3, X[mR(2367)] = 2000, X[mR(1675)] = mR(4501), X[mR(4492)](mR(5246), E[mR(2545)][mR(3828)]), R[mR(1643)](w('p', mR(3816), E[mR(2545)][mR(3828)]), X);
-            let Y = w('p', mR(4745));
-            R[mR(2592)](Y);
-            let a7 = IT(mR(1604), mR(1641), () => {
+                V || !U.value || (V = true, ZT("email_entered", I));
+            }, S && R.append(w('p', "dsp-plain dsp-question", E.reveal.ask), U);
+            let X = w("textarea", "dsp-box");
+            X.rows = 3, X.maxLength = 2000, X.placeholder = "Optional.", X.setAttribute("aria-label", E.reveal.comment), R.append(w('p', "dsp-plain dsp-question", E.reveal.comment), X);
+            let Y = w('p', "dsp-note");
+            R.appendChild(Y);
+            let a7 = IT("Keep me posted", "dsp-go primary", () => {
                 const mU = mR;
-                let a8 = S ? U[mU(862)][mU(2762)]() : '',
-                    a9 = X[mU(862)][mU(2762)]();
+                let a8 = S ? U.value.trim() : '',
+                    a9 = X.value.trim();
                 if (!a8 && !a9) {
-                    q(mU(2144));
+                    q("nothing");
                     return;
                 }
-                a7[mU(1894)] = true, Y[mU(4920)] = mU(1167), rt({
-                    kind: mU(4326),
+                a7.disabled = true, Y.textContent = "Sending...", rt({
+                    kind: "offer",
                     email: a8,
                     comment: a9
-                }, H)[mU(4353)](aj => {
+                }, H).then(aj => {
                     const mV = mU;
                     if (!aj) {
-                        a7[mV(1894)] = false, Y[mV(4920)] = mV(5914);
+                        a7.disabled = false, Y.textContent = "That did not get through. Your words are still here if you want to try again.";
                         return;
                     }
-                    a8 && ZT(mV(2369), I), a9 && ZT(mV(4604), I), M(Q);
+                    a8 && ZT("email_submitted", I), a9 && ZT("comment_submitted", I), M(Q);
                 });
             });
             return {
                 content: R,
-                buttons: [a7, IT(E[mR(2545)][mR(4637)], mR(3508), () => {
+                buttons: [a7, IT(E.reveal.back, "dsp-go dark", () => {
                     const mX = mR;
-                    ZT(mX(5312), I), q(mX(5538));
+                    ZT("dialog_closed", I), q("closed");
                 })]
             };
         },
@@ -3072,7 +3072,7 @@ function ga({
             content: w('p', "dsp-headline", E.reveal.thanks),
             buttons: [IT(E.reveal.back, "dsp-go primary", () => {
                 const mY = mM;
-                ZT(mY(1428), I), q(mY(3238));
+                ZT("returned_to_game", I), q("sent");
             })]
         });
     return ZT("offer_viewed", {
@@ -3109,9 +3109,9 @@ function Pm(c, d, g) {
     let i = w("button", "demand-cta");
     return i.type = "button", i.appendChild(w('i', "demand-cta-star")), i.appendChild(w("span", '', bb)), i.addEventListener("click", () => {
         const n8 = n7;
-        ZT(n8(3473), {
-            source: n8(2839)
-        }), Lo(n8(2839), d, g);
+        ZT("demand_cta_clicked", {
+            source: "home_cta"
+        }), Lo("home_cta", d, g);
     }), c.appendChild(i), ZT("demand_cta_impression", {
         source: "home_cta"
     }), () => i.remove();
@@ -3127,12 +3127,12 @@ function Lm(c) {
             const ng = n9;
             if (!g) {
                 if (g = true, !l) {
-                    d[ng(549)]();
+                    d.remove();
                     return;
                 }
-                d[ng(1894)] = true, d[ng(5057)][ng(2129)](ng(1193)), d[ng(1661)](ng(3534), () => d[ng(549)](), {
+                d.disabled = true, d.classList.add("going"), d.addEventListener("animationend", () => d.remove(), {
                     once: true
-                }), window[ng(2948)](() => d[ng(549)](), 700);
+                }), window.setTimeout(() => d.remove(), 700);
             }
         };
     d.addEventListener("click", () => {
@@ -3143,7 +3143,7 @@ function Lm(c) {
     });
     return ot() ? (c.appendChild(d), () => {
         const nj = n9;
-        j(), d[nj(549)]();
+        j(), d.remove();
     }) : (j(), () => {});
 }
 var vb = () => document.getElementById("blackout"),
@@ -3169,7 +3169,7 @@ function Om(c) {
         let i = performance.now(),
             j = () => {
                 const nw = nq;
-                let l = Math[nw(544)](1, (performance[nw(2864)]() - i) / (c * 1000));
+                let l = Math.min(1, (performance.now() - i) / (c * 1000));
                 if (MW(g + (1 - g) * l), l >= 1) {
                     MW(1), d();
                     return;
@@ -3191,7 +3191,7 @@ function He(c) {
         let i = performance.now(),
             j = () => {
                 const nz = nx;
-                let l = Math[nz(544)](1, (performance[nz(2864)]() - i) / (c * 1000));
+                let l = Math.min(1, (performance.now() - i) / (c * 1000));
                 if (MW(g * (1 - l)), l >= 1) {
                     MW(0), d();
                     return;
@@ -3269,21 +3269,21 @@ function Fo(c, {
         m = c[0].id,
         p = c.map(u => {
             const nG = nF;
-            let v = w(nG(5291), nG(1900));
-            return v[nG(2882)] = nG(5291), v[nG(4592)].id = u.id, u[nG(5223)] && v[nG(2592)](eT(u[nG(5223)], 1)), v[nG(2592)](w(nG(4768), nG(1649), u[nG(1693)])), v[nG(1661)](nG(5016), () => q(u.id)), g[nG(2592)](v), v;
+            let v = w("button", "ui-tab");
+            return v.type = "button", v.dataset.id = u.id, u.icon && v.appendChild(eT(u.icon, 1)), v.appendChild(w("span", "ui-tab-label", u.label)), v.addEventListener("click", () => q(u.id)), g.appendChild(v), v;
         });
 
     function q(u) {
         const nH = nF;
         m = u;
-        for (let y of p) y[nH(5057)][nH(827)]('on', y[nH(4592)].id === u);
+        for (let y of p) y.classList.toggle('on', y.dataset.id === u);
         if (d) {
-            for (let [A, C] of l) C[nH(5057)][nH(827)](nH(4756), A !== u);
+            for (let [A, C] of l) C.classList.toggle("ui-tab-off", A !== u);
             return;
         }
-        j[nH(4920)] = '';
-        let v = l[nH(778)](u);
-        v || (v = c[nH(502)](E => E.id === u)[nH(1585)](), l[nH(5635)](u, v)), j[nH(2592)](v);
+        j.textContent = '';
+        let v = l.get(u);
+        v || (v = c.find(E => E.id === u).panel(), l.set(u, v)), j.appendChild(v);
     }
     if (d)
         for (let u of c) {
@@ -3317,21 +3317,21 @@ function Ho(d, g, j = {}) {
     q.className = "sheet-card panel-scroll";
     let u = () => {
         const nJ = nI;
-        E(), m[nJ(1709)] = true, m[nJ(4920)] = '', Bo = null, g?.();
+        E(), m.hidden = true, m.textContent = '', Bo = null, g?.();
     };
     q.append(...d(u)), p.appendChild(q);
     let v = document.createElement("button");
     v.type = "button", v.className = "hud-tool t-close frame-door", v.title = "Close", v.setAttribute("aria-label", "Close"), v.addEventListener("click", u), p.appendChild(v), De(m, p), m.hidden = false;
     let y = F => {
         const nK = nI;
-        F[nK(5099)] === m && u();
+        F.target === m && u();
     };
     m.addEventListener("pointerdown", y);
     let A = Q1(m),
         C = s1("sheet", u),
         E = () => {
             const nL = nI;
-            m[nL(4704)](nL(2082), y), C(), A();
+            m.removeEventListener("pointerdown", y), C(), A();
         };
     Bo = u, q.querySelector("button")?.focus();
 }
@@ -3357,7 +3357,7 @@ function Go(c, d, g, i = false) {
                 key: q.key,
                 onClick: () => {
                     const nN = nM;
-                    j(), q[nN(3899)]();
+                    j(), q.onPick();
                 }
             });
             q.primary ? (u.classList.add("sheet-primary"), m.appendChild(u)) : (p || (p = document.createElement("div"), p.className = "sheet-split", m.appendChild(p)), p.appendChild(u));
@@ -3395,32 +3395,32 @@ function Vo() {
         F.className = "sheet-rows";
         let H = (az, aA, aB, aC, aD) => {
                 const nQ = nP;
-                let aE = document[nQ(2784)](nQ(991));
-                aE[nQ(2084)] = nQ(3398);
-                let aF = document[nQ(2784)](nQ(991));
-                aF[nQ(2084)] = nQ(1077), aF[nQ(2592)](Object[nQ(4640)](document[nQ(2784)]('b'), {
+                let aE = document.createElement("div");
+                aE.className = "sheet-row";
+                let aF = document.createElement("div");
+                aF.className = "sheet-row-text", aF.appendChild(Object.assign(document.createElement('b'), {
                     textContent: az
-                })), aF[nQ(2592)](Object[nQ(4640)](document[nQ(2784)](nQ(4768)), {
+                })), aF.appendChild(Object.assign(document.createElement("span"), {
                     textContent: aA
-                })), aE[nQ(2592)](aF), aE[nQ(2592)](Mu({
+                })), aE.appendChild(aF), aE.appendChild(Mu({
                     options: aB,
                     value: aC,
                     onChange: aD
-                })[nQ(2106)]), F[nQ(2592)](aE);
+                }).root), F.appendChild(aE);
             },
             K = (az, aA, aB, aC) => {
                 const nR = nP;
-                let aD = document[nR(2784)](nR(991));
-                aD[nR(2084)] = nR(3398);
-                let aE = document[nR(2784)](nR(991));
-                aE[nR(2084)] = nR(1077), aE[nR(2592)](Object[nR(4640)](document[nR(2784)]('b'), {
+                let aD = document.createElement("div");
+                aD.className = "sheet-row";
+                let aE = document.createElement("div");
+                aE.className = "sheet-row-text", aE.appendChild(Object.assign(document.createElement('b'), {
                     textContent: az
-                })), aE[nR(2592)](Object[nR(4640)](document[nR(2784)](nR(4768)), {
+                })), aE.appendChild(Object.assign(document.createElement("span"), {
                     textContent: aA
-                })), aD[nR(2592)](aE), aD[nR(2592)](Cu({
+                })), aD.appendChild(aE), aD.appendChild(Cu({
                     value: aB,
                     onChange: aC
-                })[nR(2106)]), F[nR(2592)](aD);
+                }).root), F.appendChild(aD);
             },
             L = F;
         H("Edge scroll", "Push the pointer at the screen edge to pan.", [{
@@ -3501,8 +3501,8 @@ function Vo() {
             a8 = () => {
                 const nS = nP;
                 let az = U();
-                for (let [aA, aB] of a7) aB[nS(4920)] = Y(aA), aB[nS(5057)][nS(549)](nS(1228)), aB[nS(5057)][nS(827)](nS(1338), az && aA[nS(2372)] === nS(3782));
-                az ? P[nS(4492)](nS(4413), nS(2588)) : P[nS(822)](nS(4413));
+                for (let [aA, aB] of a7) aB.textContent = Y(aA), aB.classList.remove("listening"), aB.classList.toggle("clash", az && aA.kind === "cluster");
+                az ? P.setAttribute("aria-disabled", "true") : P.removeAttribute("aria-disabled");
             },
             a9 = new Set(Object.values(W1).flatMap(az => az.codes.map(aA => aA.replace(/^Key/, '').toLowerCase())));
         for (let az of Q) {
@@ -3515,20 +3515,20 @@ function Vo() {
                 S[az.id] = rl(S[az.id]), X(), a8(), U() && CW(P, V);
             }) : aB.addEventListener("click", () => {
                 const nU = nP;
-                aB[nU(4920)] = nU(4431), aB[nU(5057)][nU(2129)](nU(1228));
+                aB.textContent = "PRESS A KEY", aB.classList.add("listening");
                 let aC = aF => {
                         const nV = nU;
-                        !(aF[nV(488)] > 1 && ![nV(2446), nV(676), nV(5090)][nV(5073)](aF)) && !a9[nV(1328)](aF) && (S[az.id] = aF, X()), a8();
+                        !(aF.length > 1 && !["escape", "tab", "enter"].includes(aF)) && !a9.has(aF) && (S[az.id] = aF, X()), a8();
                     },
                     aD = null,
                     aE = aF => {
                         const nX = nU;
-                        aF[nX(2670)](), aF[nX(5788)](), window[nX(4704)](nX(1777), aE, true), aD?.(), aC(aF[nX(2547)][nX(2676)]());
+                        aF.preventDefault(), aF.stopPropagation(), window.removeEventListener("keydown", aE, true), aD?.(), aC(aF.key.toLowerCase());
                     };
-                aD = s1(nU(2296), () => {
+                aD = s1("rebind", () => {
                     const nY = nU;
-                    window[nY(4704)](nY(1777), aE, true), aD?.(), aC(nY(2446));
-                }), window[nU(1661)](nU(1777), aE, true);
+                    window.removeEventListener("keydown", aE, true), aD?.(), aC("escape");
+                }), window.addEventListener("keydown", aE, true);
             }), aA.appendChild(aB), N.appendChild(aA);
         }
         a8(), F = document.createElement("div"), F.className = "sheet-rows";
@@ -3572,7 +3572,7 @@ function Vo() {
         let ax = document.createElement("div");
         return ax.className = "sheet-actions sheet-foot", P.addEventListener("click", () => {
             const nZ = nP;
-            if (P[nZ(3171)](nZ(4413)) === nZ(2588)) {
+            if (P.getAttribute("aria-disabled") === "true") {
                 CW(P, V);
                 return;
             }
@@ -3630,14 +3630,14 @@ function Vm() {
     let c = document.createElement("div");
     return c.className = "changelog", c.innerHTML = Hm().map(d => {
         const og = o9;
-        let g = d[og(2651)] === og(2830) ? og(3466) : '',
-            i = d[og(3215)] ? og(2403) + Cb(d[og(3215)]) + og(4602) : '',
-            j = d[og(5413)][og(588)](l => {
+        let g = d.version === "0.3.0" ? "<span class=\"changelog-here\">you are here</span>" : '',
+            i = d.date ? "<span class=\"changelog-when\">" + Cb(d.date) + "</span>" : '',
+            j = d.entries.map(l => {
                 const oj = og;
-                let m = l[oj(4394)] ? Mb[l[oj(4394)]] : void 0;
-                return m ? oj(600) + m[oj(5647)] + oj(1948) + m[oj(1693)] + oj(2879) + l[oj(4260)] + oj(5097) : oj(2517) + l[oj(4260)] + oj(5097);
-            })[og(4251)]('');
-        return og(1308) + d[og(2651)] + og(4602) + i + g + og(1866) + j + og(4529);
+                let m = l.tag ? Mb[l.tag] : void 0;
+                return m ? "<li class=\"changelog-entry " + m.cls + "\"><span class=\"changelog-tag\">" + m.label + "</span><span>" + l.html + "</span></li>" : "<li class=\"changelog-entry is-note\"><span>" + l.html + "</span></li>";
+            }).join('');
+        return "<section class=\"changelog-release\"><h3><span class=\"changelog-version\">v" + d.version + "</span>" + i + g + "</h3><ul>" + j + "</ul></section>";
     }).join(''), ST({
         title: "What has changed",
         body: c,
@@ -3980,7 +3980,7 @@ function op(c, d) {
         [14, 10]
     ].forEach(([l, m], o) => {
         const oP = oO;
-        h(i, l, 8 + o * 2, m, 2, j[oP(2845)][0]), o < 4 && h(i, l, 8 + o * 2, o === 0 ? m : 2, 2, j[oP(2263)]);
+        h(i, l, 8 + o * 2, m, 2, j.wood[0]), o < 4 && h(i, l, 8 + o * 2, o === 0 ? m : 2, 2, j.edge);
     }), h(i, 12, 23, 5, 1, j.wood[2]), h(i, 18, 24, 5, 1, j.wood[2]), h(i, 25, 20, 3, 1, j.wood[2]), h(i, 13 + d, 18, 7, 1, j.stone[1]), h(i, 18, 20, 3, 1, j.stone[1]), h(i, 6, 16, 3, 3, j.wood[0]), h(i, 27, 11, 4, 2, j.wood[0]), i.clearRect(4, 19, 2, 2), i.clearRect(25, 7, 2, 2);
     for (let [l, m] of [
             [10, 16],
@@ -4596,13 +4596,13 @@ function Ko(g = 0) {
             for (let X = 0; X < j; X++) {
                 if (Uo[V][X] !== '#' || ya(X, V, ...C).d <= 4.2) continue;
                 let Y = ((X - E[0]) * (E[2] - E[0]) + (V - E[1]) * (E[3] - E[1])) / ((E[2] - E[0]) ** 2 + (E[3] - E[1]) ** 2);
-                Math[pC(4348)](Y - U) > 0.028 || k(A, X, V, pC(5659));
+                Math.abs(Y - U) > 0.028 || k(A, X, V, "#d8d2b4");
             }
     };
     F(0.22), F(0.33), F(0.7), F(0.81);
     let H = (U, V) => {
         const pD = pB;
-        h(A, U - 1, V, 3, 1, pD(2386)), h(A, U, V - 1, 1, 3, pD(2386)), k(A, U - 1, V - 1, pD(529)), k(A, U + 1, V + 1, pD(529));
+        h(A, U - 1, V, 3, 1, "#e8e4cc"), h(A, U, V - 1, 1, 3, "#e8e4cc"), k(A, U - 1, V - 1, "#a89f80"), k(A, U + 1, V + 1, "#a89f80");
     };
     H(7, 8), H(27, 21), h(A, 19, 9, 3, 3, he.deep), h(A, 19, 9, 2, 1, "#8a9a6a");
     let I = 29,
@@ -4896,7 +4896,7 @@ function Nb() {
     ].forEach(([g, j], l) => {
         const pT = pS;
         let m = 9 + l;
-        h(d, g, m, j, 1, YW[pT(1463)]), h(d, g, m, Math[pT(3002)](2, Math[pT(1207)](j / 3)), 1, YW[pT(596)]), h(d, g + j - 2, m, 2, 1, YW[pT(5931)]);
+        h(d, g, m, j, 1, YW.body), h(d, g, m, Math.max(2, Math.round(j / 3)), 1, YW.lit), h(d, g + j - 2, m, 2, 1, YW.dark);
     });
     for (let g = 12; g < 25; g += 4) h(d, 3, g, 13, 1, YW.dark);
     for (let i = 5; i < 16; i += 4) h(d, i, 10, 1, 16, YW.dark);
@@ -4946,16 +4946,16 @@ function Xp(c, d, g, j, m) {
         [p - 16, 33]
     ].forEach(([v, y], A) => {
         const pY = pX;
-        h(c, v, A, y, 1, lt[pY(1463)]), h(c, v, A, Math[pY(3002)](2, Math[pY(1207)](y / 3)), 1, lt[pY(596)]), h(c, v + y - 4, A, 4, 1, lt[pY(5931)]);
+        h(c, v, A, y, 1, lt.body), h(c, v, A, Math.max(2, Math.round(y / 3)), 1, lt.lit), h(c, v + y - 4, A, 4, 1, lt.dark);
     });
     for (let v = 2; v < 16; v++) k(c, p - 6, v, lt.dark), k(c, p + 5, v, lt.dark);
     h(c, p - 16, q, 33, 1, lt.dark);
     let r = (y, A, C) => {
             const pZ = pX;
-            let E = Math[pZ(3002)](Math[pZ(4348)](A - y), C - q);
+            let E = Math.max(Math.abs(A - y), C - q);
             for (let F = 0; F <= E; F++) {
                 let H = F / E;
-                k(c, Math[pZ(1207)](y + (A - y) * H), Math[pZ(1207)](q + (C - q) * H), g);
+                k(c, Math.round(y + (A - y) * H), Math.round(q + (C - q) * H), g);
             }
         },
         u = Math.floor(m / 2);
@@ -5068,7 +5068,7 @@ function zb(c) {
         let {
             c: i,
             g: j
-        } = O(c[qj(5595)], c[qj(647)]);
+        } = O(c.cellW, c.cellH);
         return UW(j, c, g), i;
     });
 }
@@ -5162,8 +5162,8 @@ function ty(j) {
                 P = M.a + 0.22 * K(M.nA, M.pA);
             return {
                 lr: H * M.r * (1 + 0.15 * K(M.nR, M.pR)),
-                lx: Yo + Math[qv(4513)](P) * N,
-                ly: I + Math[qv(527)](P) * N
+                lx: Yo + Math.cos(P) * N,
+                ly: I + Math.sin(P) * N
             };
         }).sort((M, N) => M.ly - N.ly);
     for (let {
@@ -5357,7 +5357,7 @@ function fy(j, q, A) {
         let Q = (K ? 2 : 1) + M;
         h(E, 3, Q, 2, 2, j.body), k(E, 3, Q - 1, j.comb), P ? k(E, 5, 2 + M, j.wing) : k(E, 4, Q + 1, j.legs), N = () => {
             const qD = qC;
-            k(E, 3, 6 + M, j[qD(5309)]), k(E, 5, 6 + M, j[qD(5309)]);
+            k(E, 3, 6 + M, j.legs), k(E, 5, 6 + M, j.legs);
         };
     } else {
         let R = H > 0 ? 1 : -1,
@@ -5373,7 +5373,7 @@ function fy(j, q, A) {
             a9 = L * R;
         N = () => {
             const qE = qC;
-            k(E, a8 + Math[qE(3002)](0, a9), 6 + M, j[qE(5309)]), k(E, a8 + 2 + Math[qE(544)](0, a9), 6 + M, j[qE(5309)]);
+            k(E, a8 + Math.max(0, a9), 6 + M, j.legs), k(E, a8 + 2 + Math.min(0, a9), 6 + M, j.legs);
         };
     }
     return B(C, j.outline), N(), C;

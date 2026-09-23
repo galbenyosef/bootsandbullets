@@ -7,18 +7,18 @@
             this.loadoutKey = g;
             let j = (p, q, v, y = '') => {
                 const IM = IL;
-                let A = document[IM(2784)](y ? IM(5291) : IM(991));
-                A[IM(2084)] = (IM(4836) + y)[IM(2762)](), A instanceof HTMLButtonElement && (A[IM(2882)] = IM(5291));
-                let C = document[IM(2784)](IM(4768));
-                C[IM(2084)] = IM(3024);
+                let A = document.createElement(y ? "button" : "div");
+                A.className = ("hud-kit " + y).trim(), A instanceof HTMLButtonElement && (A.type = "button");
+                let C = document.createElement("span");
+                C.className = "hud-kit-icon";
                 let E = $f(p ?? '');
-                E && C[IM(2592)](eT(E, 1)), A[IM(2592)](C);
-                let F = document[IM(2784)](IM(4768));
-                F[IM(2084)] = IM(3159);
-                let H = document[IM(2784)]('b');
-                H[IM(2084)] = IM(2671), H[IM(4920)] = q, F[IM(2592)](H);
-                let I = document[IM(2784)](IM(4768));
-                return I[IM(2084)] = IM(982), I[IM(4920)] = v, A[IM(1643)](F, I), A;
+                E && C.appendChild(eT(E, 1)), A.appendChild(C);
+                let F = document.createElement("span");
+                F.className = "hud-kit-text";
+                let H = document.createElement('b');
+                H.className = "hud-kit-label", H.textContent = q, F.appendChild(H);
+                let I = document.createElement("span");
+                return I.className = "hud-kit-value", I.textContent = v, A.append(F, I), A;
             };
             if (De(this.loadout, j(c.squadWeapon, ci[c.squadWeapon] ?? c.squadWeapon, ''), j(d === "flash" ? "flashbang" : d, S6[d] ?? d, 'x' + c.grenadesHeld)), c.squadCallIn !== "none") {
                 let l = c.callInsLeft <= 0,
@@ -310,8 +310,8 @@ function P6(q) {
     aq.forEach((aR, aS) => {
         const Jw = Jq;
         let aU = [];
-        for (let aV of aR) aU[Jw(3087)](0, aV[Jw(4487)](0));
-        aw[Jw(5894)](3), aw[Jw(5894)](1), aw[Jw(5894)](1033), aw[Jw(5894)](aS + 1), aw[Jw(5894)](aU[Jw(488)]), aw[Jw(5894)](ax), az[Jw(3087)](...aU), ax += aU[Jw(488)];
+        for (let aV of aR) aU.push(0, aV.charCodeAt(0));
+        aw.u16(3), aw.u16(1), aw.u16(1033), aw.u16(aS + 1), aw.u16(aU.length), aw.u16(ax), az.push(...aU), ax += aU.length;
     });
     for (let aR of az) aw.u8(aR);
     aw.pad4();
@@ -379,11 +379,11 @@ function B3() {
     const JA = cX;
     F3 || (F3 = true, document.addEventListener("pointerdown", c => {
         const JB = JA;
-        if (c[JB(5291)] !== 0) return;
-        let d = c[JB(5099)];
+        if (c.button !== 0) return;
+        let d = c.target;
         if (!(d instanceof Element)) return;
-        let g = d[JB(2325)](L6);
-        g && (g[JB(2325)](JB(4448)) || g[JB(4362)](JB(921)) || ls());
+        let g = d.closest(L6);
+        g && (g.closest("#controls") || g.matches(":disabled, [disabled], [aria-disabled=\"true\"]") || ls());
     }, {
         capture: true,
         passive: true
@@ -411,21 +411,21 @@ function V3() {
     if (c) {
         new MutationObserver(d => {
             const JE = JD;
-            let g = performance[JE(2864)]();
+            let g = performance.now();
             for (let i of d)
-                for (let j of i[JE(4686)]) O6(j, g);
+                for (let j of i.addedNodes) O6(j, g);
         }).observe(c, {
             childList: true,
             subtree: true
         });
         for (let d of ["pointerdown", "click"]) document.addEventListener(d, g => {
             const JF = JD;
-            let i = g[JF(5099)];
+            let i = g.target;
             if (!(i instanceof Element)) return;
-            let j = i[JF(2325)](R2);
-            if (!j || j[JF(2325)](JF(4448)) || !N6(j)) return;
-            let l = j2[JF(778)](j);
-            l === void 0 || performance[JF(2864)]() - l >= 250 || (g[JF(5788)](), g[JF(2670)]());
+            let j = i.closest(R2);
+            if (!j || j.closest("#controls") || !N6(j)) return;
+            let l = j2.get(j);
+            l === void 0 || performance.now() - l >= 250 || (g.stopPropagation(), g.preventDefault());
         }, {
             capture: true
         });
@@ -447,16 +447,16 @@ async function q3() {
         q = new sr(m, l);
     return m.onFirstPress(() => Zr()), l.onChange(u => {
         const JH = JG;
-        g[JH(1930)] = u[JH(5912)], g[JH(5712)](c[JH(3904)], c[JH(2900)]);
+        g.zoom = u.deviceZoom, g.resize(c.width, c.height);
     }), l.apply(), window.addEventListener("resize", () => l.apply()), window.addEventListener("orientationchange", () => l.apply()), window.addEventListener("orientationchange", () => {
         const JI = JG;
-        window[JI(2948)](() => l[JI(1533)](), 250);
+        window.setTimeout(() => l.apply(), 250);
     }), m.onZoom = u => {
         const JJ = JG;
-        let v = Math[JJ(3002)](-1, Math[JJ(544)](1, G()[JJ(3216)] + u));
-        v !== G()[JJ(3216)] && (mW({
+        let v = Math.max(-1, Math.min(1, G().zoomBias + u));
+        v !== G().zoomBias && (mW({
             zoomBias: v
-        }), l[JJ(1533)]());
+        }), l.apply());
     }, {
         canvas: c,
         ctx: d,
@@ -751,7 +751,7 @@ var F6 = 34,
                 const Kv = Kq;
                 let {
                     paceRange: q
-                } = f[Kv(4012)], r = this[Kv(2255)][Kv(2575)](p);
+                } = f.arena, r = this.influence.fractionHeld(p);
                 return q[0] + (q[1] - q[0]) * r;
             };
         } ["influence"];
@@ -811,13 +811,13 @@ function $3(c, d) {
     let i = c.soldiers.filter(j => j.alive && j.faction === D.Player);
     g.forEach((j, l) => {
         const KD = KC;
-        let m = c[KD(787)][l];
-        if (m[KD(1393)] > 0 && (m[KD(1393)] = Math[KD(3002)](0, m[KD(1393)] - d)), !(m[KD(3814)] >= (j[KD(4657)] ?? 1))) {
-            if (!i[KD(764)](p => B6(c, j[KD(5738)], p[KD(870)]))) {
-                m[KD(4231)] = 0, m[KD(925)] = true;
+        let m = c.triggerState[l];
+        if (m.cooldown > 0 && (m.cooldown = Math.max(0, m.cooldown - d)), !(m.fired >= (j.times ?? 1))) {
+            if (!i.some(p => B6(c, j.when, p.pos))) {
+                m.inside = 0, m.armed = true;
                 return;
             }
-            m[KD(4231)] += d, !(!m[KD(925)] || m[KD(1393)] > 0 || m[KD(4231)] < (j[KD(4185)] ?? 0.5)) && (H6(c, j[KD(3621)]), m[KD(3814)]++, m[KD(4231)] = 0, m[KD(1393)] = j[KD(1393)] ?? 0, (j[KD(1717)] ?? KD(3433)) === KD(3433) && (m[KD(925)] = false));
+            m.inside += d, !(!m.armed || m.cooldown > 0 || m.inside < (j.dwell ?? 0.5)) && (H6(c, j.action), m.fired++, m.inside = 0, m.cooldown = j.cooldown ?? 0, (j.rearm ?? "exit") === "exit" && (m.armed = false));
         }
     });
 }
@@ -1229,32 +1229,32 @@ function Y3(c) {
             const Lq = Lk;
             if (!A()) return;
             try {
-                if (q) g[Lq(4932)](u, q[Lq(3300)]);
+                if (q) g.prepare(u, q.world);
                 else {
-                    u = Te(aT[z3], z3), g[Lq(4932)](u, BW(u, Lq(2173)));
-                    let F = Math[Lq(1959)](Math[Lq(3821)]() * 2147483647);
-                    q = new St(u, d, j, () => g[Lq(3597)](), true, F);
+                    u = Te(aT[z3], z3), g.prepare(u, BW(u, "veteran"));
+                    let F = Math.floor(Math.random() * 2147483647);
+                    q = new St(u, d, j, () => g.clearDecals(), true, F);
                 }
             } catch {
                 return;
             }
-            j[Lq(5805)] = Lq(519), document[Lq(1463)][Lq(4592)][Lq(5805)] = Lq(1570), p[Lq(1533)](), v = true;
+            j.mode = "sealed", document.body.dataset.mode = "backdrop", p.apply(), v = true;
             let C = q;
-            c[Lq(5635)]({
-                name: Lq(1570),
-                world: C[Lq(3300)],
+            c.set({
+                name: "backdrop",
+                world: C.world,
                 step: H => {
                     const Lv = Lq;
-                    document[Lv(1709)] || (C[Lv(5610)](H), m[Lv(3939)](C[Lv(4006)]()));
+                    document.hidden || (C.step(H), m.showScore(C.readout()));
                 },
-                draw: (H, I) => g[Lq(2527)](C[Lq(3300)], d, H, I)
+                draw: (H, I) => g.draw(C.world, d, H, I)
             });
-            let E = () => Xn(sn() ? Lq(1144) : Lq(5919));
+            let E = () => Xn(sn() ? "ducked" : "silent");
             E(), y = tt(E);
         },
         stop: () => {
             const Lw = Lk;
-            v && (v = false, c[Lw(5635)](null), m[Lw(1745)](), y?.(), y = null, Xn(Lw(4027)), j[Lw(5805)] = Lw(1567), delete document[Lw(1463)][Lw(4592)][Lw(5805)], p[Lw(1533)]());
+            v && (v = false, c.set(null), m.hideArena(), y?.(), y = null, Xn("full"), j.mode = "play", delete document.body.dataset.mode, p.apply());
         }
     };
 }

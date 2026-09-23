@@ -176,7 +176,7 @@ var $T = (c, d = 0.18) => c * (1 + (Math.random() * 2 - 1) * d),
                 freq: 420,
                 q: 0.4,
                 sweepTo: 55,
-                type: ez(3831)
+                type: "lowpass"
             }), L1(64, 0.8, 0.9);
         }, 60);
     },
@@ -243,12 +243,12 @@ var $T = (c, d = 0.18) => c * (1 + (Math.random() * 2 - 1) * d),
             noise: j
         } = c, l = d.currentTime + 0.12, m = (n, q, v, y, A, C, E) => {
             const eF = eE;
-            let F = d[eF(4325)]();
-            F[eF(3295)] = j, F[eF(4127)] = true, F[eF(490)] = Math[eF(3821)]() * 0.3, F[eF(3562)] = F[eF(490)] + 0.2;
-            let H = d[eF(908)]();
-            H[eF(2882)] = n, H[eF(4403)][eF(1958)](q, l), H[eF(4403)][eF(5124)](v, l + E), H.Q[eF(862)] = y;
-            let I = d[eF(4828)]();
-            I[eF(2515)][eF(1958)](0.0001, l), I[eF(2515)][eF(5124)](A, l + C), I[eF(2515)][eF(5124)](0.0005, l + E), F[eF(1334)](H)[eF(1334)](I)[eF(1334)](g), F[eF(5406)](l), F[eF(5799)](l + E + 0.05);
+            let F = d.createBufferSource();
+            F.buffer = j, F.loop = true, F.loopStart = Math.random() * 0.3, F.loopEnd = F.loopStart + 0.2;
+            let H = d.createBiquadFilter();
+            H.type = n, H.frequency.setValueAtTime(q, l), H.frequency.exponentialRampToValueAtTime(v, l + E), H.Q.value = y;
+            let I = d.createGain();
+            I.gain.setValueAtTime(0.0001, l), I.gain.exponentialRampToValueAtTime(A, l + C), I.gain.exponentialRampToValueAtTime(0.0005, l + E), F.connect(H).connect(I).connect(g), F.start(l), F.stop(l + E + 0.05);
         };
         m("lowpass", 500, 60, 0.6, 0.7, 0.02, 1.4), m("bandpass", 1400, 700, 1.4, 0.16, 0.18, 1.1), L1(60, 0.9, 0.65);
     },
@@ -349,10 +349,10 @@ var $T = (c, d = 0.18) => c * (1 + (Math.random() * 2 - 1) * d),
         } = c, i = d.currentTime;
         [523, 659, 784, 1047].forEach((j, l) => {
             const eL = eK;
-            let m = d[eL(1912)]();
-            m[eL(2882)] = eL(2912), m[eL(4403)][eL(862)] = j;
-            let p = d[eL(4828)]();
-            p[eL(2515)][eL(1958)](0, i + l * 0.11), p[eL(2515)][eL(4605)](0.16, i + l * 0.11 + 0.01), p[eL(2515)][eL(5124)](0.0005, i + l * 0.11 + 0.24), m[eL(1334)](p)[eL(1334)](g), m[eL(5406)](i + l * 0.11), m[eL(5799)](i + l * 0.11 + 0.26);
+            let m = d.createOscillator();
+            m.type = "square", m.frequency.value = j;
+            let p = d.createGain();
+            p.gain.setValueAtTime(0, i + l * 0.11), p.gain.linearRampToValueAtTime(0.16, i + l * 0.11 + 0.01), p.gain.exponentialRampToValueAtTime(0.0005, i + l * 0.11 + 0.24), m.connect(p).connect(g), m.start(i + l * 0.11), m.stop(i + l * 0.11 + 0.26);
         });
     },
     ms = () => {
@@ -366,10 +366,10 @@ var $T = (c, d = 0.18) => c * (1 + (Math.random() * 2 - 1) * d),
         } = c, i = d.currentTime;
         [392, 330, 262, 196].forEach((j, l) => {
             const eN = eM;
-            let m = d[eN(1912)]();
-            m[eN(2882)] = eN(4074), m[eN(4403)][eN(862)] = j;
-            let p = d[eN(4828)]();
-            p[eN(2515)][eN(1958)](0, i + l * 0.14), p[eN(2515)][eN(4605)](0.13, i + l * 0.14 + 0.02), p[eN(2515)][eN(5124)](0.0005, i + l * 0.14 + 0.3), m[eN(1334)](p)[eN(1334)](g), m[eN(5406)](i + l * 0.14), m[eN(5799)](i + l * 0.14 + 0.32);
+            let m = d.createOscillator();
+            m.type = "sawtooth", m.frequency.value = j;
+            let p = d.createGain();
+            p.gain.setValueAtTime(0, i + l * 0.14), p.gain.linearRampToValueAtTime(0.13, i + l * 0.14 + 0.02), p.gain.exponentialRampToValueAtTime(0.0005, i + l * 0.14 + 0.3), m.connect(p).connect(g), m.start(i + l * 0.14), m.stop(i + l * 0.14 + 0.32);
         });
     },
     fs = {};

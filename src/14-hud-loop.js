@@ -128,20 +128,20 @@ function T_(g, j) {
             oscillators: s,
             bed: () => {
                 const LI = LH;
-                let N = g[LI(4325)]();
-                return N[LI(3295)] = A, N[LI(4127)] = true, N[LI(5406)](g[LI(5636)], Math[LI(3821)]() * 4), q[LI(3087)](N), N;
+                let N = g.createBufferSource();
+                return N.buffer = A, N.loop = true, N.start(g.currentTime, Math.random() * 4), q.push(N), N;
             },
             lfo: (N, P, Q) => {
                 const LJ = LH;
-                let R = g[LJ(1912)]();
-                R[LJ(4403)][LJ(862)] = N;
-                let S = g[LJ(4828)]();
-                S[LJ(2515)][LJ(862)] = P, R[LJ(1334)](S)[LJ(1334)](Q), R[LJ(5406)](), s[LJ(3087)](R);
+                let R = g.createOscillator();
+                R.frequency.value = N;
+                let S = g.createGain();
+                S.gain.value = P, R.connect(S).connect(Q), R.start(), s.push(R);
             },
             layer: () => {
                 const LK = LH;
-                let N = g[LK(4828)]();
-                return N[LK(2515)][LK(862)] = 0, N[LK(1334)](l), N;
+                let N = g.createGain();
+                return N.gain.value = 0, N.connect(l), N;
             }
         },
         F = X3(E),
@@ -170,10 +170,10 @@ function W_(d) {
     m.pan.value = Math.random() * 1.6 - 0.8, m.connect(d.birds);
     let p = (A, C, E, F, H, I = "triangle") => {
         const LM = LL;
-        let K = g[LM(1912)]();
-        K[LM(2882)] = I, K[LM(4403)][LM(1958)](C, A), K[LM(4403)][LM(5124)](E, A + F);
-        let L = g[LM(4828)]();
-        L[LM(2515)][LM(1958)](0, A), L[LM(2515)][LM(4605)](H, A + 0.005), L[LM(2515)][LM(5124)](0.0005, A + F), K[LM(1334)](L)[LM(1334)](m), K[LM(5406)](A), K[LM(5799)](A + F + 0.02);
+        let K = g.createOscillator();
+        K.type = I, K.frequency.setValueAtTime(C, A), K.frequency.exponentialRampToValueAtTime(E, A + F);
+        let L = g.createGain();
+        L.gain.setValueAtTime(0, A), L.gain.linearRampToValueAtTime(H, A + 0.005), L.gain.exponentialRampToValueAtTime(0.0005, A + F), K.connect(L).connect(m), K.start(A), K.stop(A + F + 0.02);
     };
     if (we.birds === "arctic") {
         p(j, 1200, 650, 0.5, 0.05, "sawtooth");
@@ -350,29 +350,29 @@ async function u5(d) {
         world: y.world,
         step: F => {
             const M1 = LZ;
-            y[M1(5610)](F), G()[M1(5417)] && p[M1(3230)](y[M1(4006)](), G()[M1(2096)]);
+            y.step(F), G().arenaShowScore && p.showArena(y.readout(), G().arenaLockCamera);
         },
         draw: (F, H) => {
             const M5 = LZ;
-            j[M5(2527)](y[M5(3300)], g, F, H), Qe(g, j[M5(1261)], H, true);
+            j.draw(y.world, g, F, H), Qe(g, j.windTime, H, true);
         }
     }), Je(v);
     let A = () => {
             const M6 = LZ;
-            u && (G()[M6(5417)] ? p[M6(3230)](u[M6(4006)](), G()[M6(2096)]) : p[M6(1745)]());
+            u && (G().arenaShowScore ? p.showArena(u.readout(), G().arenaLockCamera) : p.hideArena());
         },
         C = F => {
             const M7 = LZ;
-            F[M7(2547)] === 'c' || F[M7(2547)] === 'C' ? (mW({
-                arenaLockCamera: !G()[M7(2096)]
-            }), G()[M7(2096)] || g[M7(5414)](), A()) : (F[M7(2547)] === 'h' || F[M7(2547)] === 'H') && (mW({
-                arenaShowScore: !G()[M7(5417)]
+            F.key === 'c' || F.key === 'C' ? (mW({
+                arenaLockCamera: !G().arenaLockCamera
+            }), G().arenaLockCamera || g.release(), A()) : (F.key === 'h' || F.key === 'H') && (mW({
+                arenaShowScore: !G().arenaShowScore
             }), A());
         };
     window.addEventListener("keydown", C), A();
     let E = () => {
         const M8 = LZ;
-        u && (u[M8(3886)] = true);
+        u && (u.exitRequested = true);
     };
     m.onPause = E, MW(1), He(f.banner.fade), await T1(() => u?.exitRequested ? (u = null, d.set(null), m.mode = "play", delete document.body.dataset.mode, q.apply(), m.onPause = null, window.removeEventListener("keydown", C), Ze(), p.hideArena(), true) : null);
 }
@@ -699,25 +699,25 @@ async function g5(g, j) {
         world: E.world,
         step: I => {
             const MO = MN;
-            v[MO(1349)](E[MO(3300)]);
+            v.update(E.world);
             let K = JT();
-            K ? B1() : H1(), !K && (E[MO(5610)](I), u[MO(1349)](E[MO(3300)]));
+            K ? B1() : H1(), !K && (E.step(I), u.update(E.world));
         },
         draw: (I, K) => {
             const MP = MN;
-            p[MP(2527)](E[MP(3300)], m, I, K, q[MP(5824)]), Qe(m, p[MP(1261)], K, !st() && !E[MP(3300)][MP(3913)]?.[MP(5381)]);
+            p.draw(E.world, m, I, K, q.aim), Qe(m, p.windTime, K, !st() && !E.world.skirmish?.over);
         }
     }), Je(C), He(f.banner.fade), q.mode = "play", je(EW.trumper, "The other lot want the glade. They have been told it is spoken for; persuade them.", {
         seconds: 9
     });
     let F = () => {
             const MQ = MN;
-            y && (y[MQ(3886)] = true);
+            y && (y.exitRequested = true);
         },
         H = () => {
             const MR = MN;
-            JT() || Mt(MR(1559), MR(1458), {
-                label: MR(3884),
+            JT() || Mt("The Glade", "Resume", {
+                label: "Leave the match",
                 onPick: F
             });
         };
@@ -728,42 +728,42 @@ async function g5(g, j) {
     }), u.onRestart = null, u.onPause = H, u.onExit = () => {
         const MU = MN;
         JT() || ST({
-            title: MU(2709),
-            body: MU(4141),
+            title: "Leave the match?",
+            body: "Your squad walks off. The glade goes to the machine.",
             buttons: [{
-                label: MU(771),
-                value: MU(1147),
-                variant: MU(681)
+                label: "LEAVE",
+                value: "leave",
+                variant: "primary"
             }, {
-                label: MU(2023),
-                value: MU(975)
+                label: "STAY",
+                value: "stay"
             }],
-            dismiss: MU(975)
-        })[MU(4353)](I => {
+            dismiss: "stay"
+        }).then(I => {
             const MV = MU;
-            I === MV(1147) && F();
+            I === "leave" && F();
         });
     }, y.onOver = I => {
         const MX = MN;
-        let K = I[MX(3913)],
-            L = y[MX(4675)](),
-            M = K[MX(708)] === I[MX(5588)] ? MX(659) : K[MX(708)] === null ? MX(4721) : MX(2123),
-            N = document[MX(2784)]('p');
-        N[MX(4920)] = K[MX(3895)] === MX(5464) ? MX(605) + L.a + MX(2455) + L.b + MX(1972) : K[MX(708)] === I[MX(5588)] ? MX(4469) + L.a + MX(4199) : MX(2419), ST({
+        let K = I.skirmish,
+            L = y.standing(),
+            M = K.winner === I.viewSide ? "VICTORY" : K.winner === null ? "A DRAW" : "DEFEAT",
+            N = document.createElement('p');
+        N.textContent = K.reason === "time" ? "The clock decided it: " + L.a + " of yours standing to " + L.b + " of theirs." : K.winner === I.viewSide ? "Their squad is gone. " + L.a + " of yours are still standing." : "Your squad is gone. The glade is theirs.", ST({
             title: M,
             body: N,
             buttons: [{
-                label: MX(543),
-                value: MX(3552),
-                variant: MX(681)
+                label: "AGAIN",
+                value: "again",
+                variant: "primary"
             }, {
-                label: MX(771),
-                value: MX(1147)
+                label: "LEAVE",
+                value: "leave"
             }],
-            dismiss: MX(1147)
-        })[MX(4353)](P => {
+            dismiss: "leave"
+        }).then(P => {
             const MY = MX;
-            y && (P === MY(3552) ? y[MY(4428)]() : y[MY(3886)] = true);
+            y && (P === "again" ? y.restart() : y.exitRequested = true);
         });
     }, await T1(() => y?.exitRequested ? (y = null, g.set(null), Ze(), zW(), G1(), q.onPause = null, u.onExit = u.onPause = null, u.setTools({
         restart: true,
@@ -1088,32 +1088,32 @@ async function m_(j, q, y) {
         world: Q.world,
         step: X => {
             const Nz = Nx;
-            H[Nz(1349)](Q[Nz(3300)]), JT() ? B1() : H1(), Q[Nz(5610)](X), F[Nz(1349)](Q[Nz(3300)]), F[Nz(4649)](Q[Nz(951)] ? {
-                kind: Nz(1949),
-                who: Q[Nz(951)]
-            } : !$[Nz(2661)] || Q[Nz(4439)] > u_ ? {
-                kind: Nz(1476)
+            H.update(Q.world), JT() ? B1() : H1(), Q.step(X), F.update(Q.world), F.setLink(Q.pausedBy ? {
+                kind: "away",
+                who: Q.pausedBy
+            } : !$.connected || Q.sinceSnap > u_ ? {
+                kind: "down"
             } : {
                 kind: 'ok'
             });
         },
         draw: (X, Y) => {
             const NA = Nx;
-            C[NA(2527)](Q[NA(3300)], A, X, Y, E[NA(5824)]), Qe(A, C[NA(1261)], Y, !st() && !Q[NA(5381)]);
+            C.draw(Q.world, A, X, Y, E.aim), Qe(A, C.windTime, Y, !st() && !Q.over);
         }
     }), Je(P), He(f.banner.fade), E.mode = "play";
     let R = () => {
             const NB = Nx;
-            I && (I[NB(3886)] = true);
+            I && (I.exitRequested = true);
         },
         S = () => {
             const NC = Nx;
-            $[NC(1147)](), R();
+            $.leave(), R();
         },
         U = () => {
             const ND = Nx;
-            JT() || Mt(ND(1559), ND(4159), {
-                label: ND(3884),
+            JT() || Mt("The Glade", "Back to it", {
+                label: "Leave the match",
                 onPick: S
             });
         };
@@ -1124,68 +1124,68 @@ async function m_(j, q, y) {
     }), F.onRestart = null, F.onPause = null, F.onExit = () => {
         const NE = Nx;
         JT() || ST({
-            title: NE(2709),
-            body: NE(5225),
+            title: "Leave the match?",
+            body: "Your squad walks off. The other player keeps the glade.",
             buttons: [{
-                label: NE(771),
-                value: NE(1147),
-                variant: NE(681)
+                label: "LEAVE",
+                value: "leave",
+                variant: "primary"
             }, {
-                label: NE(2023),
-                value: NE(975)
+                label: "STAY",
+                value: "stay"
             }],
-            dismiss: NE(975)
-        })[NE(4353)](X => {
+            dismiss: "stay"
+        }).then(X => {
             const NF = NE;
-            X === NF(1147) && S();
+            X === "leave" && S();
         });
     }, I.onPauseChange = () => {
         const NG = Nx;
-        !I || I[NG(5381)] || (I[NG(951)] ? (zW(), Go(NG(5568), I[NG(951)] + NG(4423), [{
-            label: NG(3884),
+        !I || I.over || (I.pausedBy ? (zW(), Go("HOLD POSITION", I.pausedBy + "'s wire is down", [{
+            label: "Leave the match",
             onPick: S
         }], true)) : zW());
     }, I.onOver = () => {
         const NH = Nx;
-        if (!I?.[NH(5381)] || M > 0) return;
-        let X = I[NH(5381)];
-        M = performance[NH(2864)](), zW(), $[NH(3606)](X[NH(2328)], X[NH(3895)], X[NH(4674)] === null || X[NH(4674)] ? X.a : X.b, X[NH(4674)] === null || X[NH(4674)] ? X.b : X.a, X[NH(4674)]);
-        let Y = document[NH(2784)](NH(991)),
-            a7 = document[NH(2784)]('p');
-        a7[NH(4920)] = X[NH(3895)] === NH(5231) ? X[NH(4674)] ? NH(1515) : NH(3023) : X[NH(3895)] === NH(5464) ? NH(605) + X.a + NH(2455) + X.b + NH(1972) : X[NH(4674)] ? NH(4469) + X.a + NH(4199) : NH(2419), Y[NH(2592)](a7);
-        let a8 = document[NH(2784)]('p');
-        a8[NH(2084)] = NH(5666);
-        let a9 = Math[NH(1959)](X[NH(4290)] / 60),
-            aj = String(X[NH(4290)] % 60)[NH(5898)](2, '0');
-        a8[NH(4920)] = NH(3407) + X[NH(3101)] + NH(3416) + X[NH(5421)] + NH(1026) + a9 + ':' + aj, Y[NH(2592)](a8);
-        let ak = X[NH(1469)] > 1;
+        if (!I?.over || M > 0) return;
+        let X = I.over;
+        M = performance.now(), zW(), $.reportResult(X.winnerName, X.reason, X.won === null || X.won ? X.a : X.b, X.won === null || X.won ? X.b : X.a, X.won);
+        let Y = document.createElement("div"),
+            a7 = document.createElement('p');
+        a7.textContent = X.reason === "forfeit" ? X.won ? "Their wire went dead and stayed dead. A walkover." : "Your wire was down too long. The glade goes to them." : X.reason === "time" ? "The clock decided it: " + X.a + " of yours standing to " + X.b + " of theirs." : X.won ? "Their squad is gone. " + X.a + " of yours are still standing." : "Your squad is gone. The glade is theirs.", Y.appendChild(a7);
+        let a8 = document.createElement('p');
+        a8.className = "mp-stats";
+        let a9 = Math.floor(X.seconds / 60),
+            aj = String(X.seconds % 60).padStart(2, '0');
+        a8.textContent = "KILLS " + X.kills + "  ·  LOST " + X.lost + "  ·  " + a9 + ':' + aj, Y.appendChild(a8);
+        let ak = X.rounds > 1;
         if (ak) {
-            let aw = document[NH(2784)]('p');
-            aw[NH(2084)] = NH(5666), aw[NH(4920)] = NH(483) + X[NH(1207)] + NH(2550) + X[NH(1469)], Y[NH(3091)](aw, Y[NH(803)]);
+            let aw = document.createElement('p');
+            aw.className = "mp-stats", aw.textContent = "ROUND " + X.round + " OF " + X.rounds, Y.insertBefore(aw, Y.firstChild);
         }
-        let aq = ak && !X[NH(5349)];
+        let aq = ak && !X.last;
         ST({
-            title: X[NH(4674)] === true ? NH(659) : X[NH(4674)] === null ? NH(4721) : NH(2123),
+            title: X.won === true ? "VICTORY" : X.won === null ? "A DRAW" : "DEFEAT",
             body: Y,
             buttons: aq ? [] : [{
-                label: NH(4136),
-                value: NH(866),
-                variant: NH(681)
+                label: "BACK TO THE LOBBY",
+                value: "room",
+                variant: "primary"
             }],
             autoClose: {
-                value: NH(866),
+                value: "room",
                 seconds: aq ? Fa : 10,
-                label: aq ? NH(5115) : void 0
+                label: aq ? "NEXT ROUND IN" : void 0
             }
-        })[NH(4353)](() => {
+        }).then(() => {
             L = true, aq || R();
         });
     }, $.onStart = X => {
         const NI = Nx;
-        X[NI(5649)] !== q[NI(5649)] && (K = X);
+        X.roundId !== q.roundId && (K = X);
     }, $.bindRound(q.roundId, X => {
         const NJ = Nx;
-        X.t === NJ(4880) ? R() : I?.[NJ(3504)](X);
+        X.t === "gone" ? R() : I?.handleMsg(X);
     });
     let V = await T1(() => I?.exitRequested || L && I?.over?.last ? "left" : L && K || K && !I?.over ? K : L && performance.now() - M > (Fa + d_) * 1000 ? "left" : null);
     return I = null, j.set(null), E.edgeScrollBlocked = false, $.onGameMsg = null, $.onStart = null, Ze(), F.setLink(null), F.hideClock(), zW(), G1(), E.onPause = null, F.onExit = null, F.setTools({
@@ -1352,7 +1352,7 @@ async function _5(K) {
         az = async () => {
             const NY = NX;
             try {
-                ax = await navigator[NY(1813)]?.[NY(2936)](NY(695)) ?? null;
+                ax = await navigator.wakeLock?.request("screen") ?? null;
             } catch {}
         };
     nt();
@@ -1364,29 +1364,29 @@ async function _5(K) {
         aE = !aC && _n(a8) === "reinforcements",
         aF = () => {
             const NZ = NX;
-            if (aC) return aD = [], A3(aA[NZ(2770)]);
-            let b4 = Hu(a8, aA[NZ(2770)] + (aE ? f[NZ(2624)][NZ(5068)] : 0));
-            return aD = b4[NZ(4157)](aA[NZ(2770)]), b4[NZ(4157)](0, aA[NZ(2770)]);
+            if (aC) return aD = [], A3(aA.squadSize);
+            let b4 = Hu(a8, aA.squadSize + (aE ? f.callin.reserves : 0));
+            return aD = b4.slice(aA.squadSize), b4.slice(0, aA.squadSize);
         },
         aG = () => {
             const O5 = NX;
             if (aC) return {
-                weapon: O5(777),
+                weapon: "basicRifle",
                 grenades: 0,
-                throwable: O5(5292),
+                throwable: "frag",
                 reserves: [],
                 packagesTaken: []
             };
-            let b4 = a8[O5(2396)][O5(2785)],
-                b7 = b4 !== O5(5591) && Ya(a8, b4),
+            let b4 = a8.loadout.throwable,
+                b7 = b4 !== "none" && Ya(a8, b4),
                 b8 = b7 ? gW(a8, ge[b4]) : 0;
             return {
                 weapon: li(a8),
-                grenades: Math[O5(3002)](0, Math[O5(544)](a8[O5(2396)][O5(3144)], b8)),
-                throwable: b7 ? b4 : O5(5292),
+                grenades: Math.max(0, Math.min(a8.loadout.take, b8)),
+                throwable: b7 ? b4 : "frag",
                 callIn: _n(a8),
                 reserves: aD,
-                packagesTaken: a8[O5(3184)][a7.id]?.[O5(884)]?.[ak] ?? []
+                packagesTaken: a8.records[a7.id]?.taken?.[ak] ?? []
             };
         },
         aH = false,
@@ -1394,9 +1394,9 @@ async function _5(K) {
             const O7 = NX;
             if (aH || aC) return;
             aH = true;
-            let b4 = a8[O7(2396)][O7(2785)];
-            if (b4 === O7(5591) || !Ya(a8, b4)) return;
-            let b7 = Math[O7(3002)](0, Math[O7(544)](a8[O7(2396)][O7(3144)], gW(a8, ge[b4])));
+            let b4 = a8.loadout.throwable;
+            if (b4 === "none" || !Ya(a8, b4)) return;
+            let b7 = Math.max(0, Math.min(a8.loadout.take, gW(a8, ge[b4])));
             b7 > 0 && Ka(a8, ge[b4], b7);
         };
     aq = new Or(aA, L, P, Q, ak, aF, aG);
@@ -1406,17 +1406,17 @@ async function _5(K) {
         name: "mission",
         get world() {
             const O8 = NX;
-            return aJ[O8(3300)];
+            return aJ.world;
         },
         step: b4 => {
             const O9 = NX;
-            Y[O9(1349)](aJ[O9(3300)]), aJ[O9(3300)][O9(5798)] === 0 && !JT() && vm(b4), U[O9(1309)](Q[O9(4392)]);
+            Y.update(aJ.world), aJ.world.phase === 0 && !JT() && vm(b4), U.setCallInArmed(Q.callInArmed);
             let b7 = JT();
-            b7 ? B1() : H1(), !(b7 || U[O9(4039)]) && (aJ[O9(5610)](b4), aK[O9(5610)](aJ[O9(3300)]), U[O9(1349)](aJ[O9(3300)]));
+            b7 ? B1() : H1(), !(b7 || U.briefingUp) && (aJ.step(b4), aK.step(aJ.world), U.update(aJ.world));
         },
         draw: (b4, b7) => {
             const Oj = NX;
-            P[Oj(2527)](aJ[Oj(3300)], L, b4, b7, Q[Oj(5824)]), Qe(L, P[Oj(1261)], b7, !st() && aJ[Oj(3300)][Oj(5798)] === 0);
+            P.draw(aJ.world, L, b4, b7, Q.aim), Qe(L, P.windTime, b7, !st() && aJ.world.phase === 0);
         }
     }), Je(aA), um(a7.id, ak, aB);
     let aL = a9.findIndex(b4 => b4.id === a7.id),
@@ -1424,12 +1424,12 @@ async function _5(K) {
         aN = () => {
             const Ok = NX;
             if (!aq) return;
-            let b4 = aq[Ok(3300)][Ok(5798)] === 1 ? Uu(ak, aj) : null;
-            b4 ? (ak = b4, zt(U1, b4), aq[Ok(3402)](b4)) : aq[Ok(4428)](), U[Ok(3902)](), aX();
+            let b4 = aq.world.phase === 1 ? Uu(ak, aj) : null;
+            b4 ? (ak = b4, zt(U1, b4), aq.setDifficulty(b4)) : aq.restart(), U.hideOverlay(), aX();
         },
         aO = b4 => {
             const Oq = NX;
-            (!aq || aq[Oq(3300)][Oq(5798)] !== 0) && !aq || aj[Oq(5073)](b4) && (ak = b4, zt(U1, b4), aq[Oq(3402)](b4), U[Oq(2978)](aq[Oq(3300)]));
+            (!aq || aq.world.phase !== 0) && !aq || aj.includes(b4) && (ak = b4, zt(U1, b4), aq.setDifficulty(b4), U.showBriefing(aq.world));
         },
         aP = aM ? aM.levels.findIndex(b4 => b4.id === a7.id) + 1 : 0;
     U.open({
@@ -1439,7 +1439,7 @@ async function _5(K) {
         record: aC ? null : a8.records[a7.id] ?? null,
         onNext: () => {
             const Ov = NX;
-            aq && (aq[Ov(1461)] = true);
+            aq && (aq.nextRequested = true);
         },
         onRetry: aN,
         onDifficulty: aO,
@@ -1447,11 +1447,11 @@ async function _5(K) {
         campaign: aC ? null : a8,
         onLoadout: aC ? null : () => {
             const Ow = NX;
-            aq && (aq[Ow(4428)](), U[Ow(2978)](aq[Ow(3300)]));
+            aq && (aq.restart(), U.showBriefing(aq.world));
         },
         onMissions: () => {
             const Ox = NX;
-            aq && (aq[Ox(3886)] = true);
+            aq && (aq.exitRequested = true);
         }
     }), U.setTools({
         restart: true,
@@ -1460,47 +1460,47 @@ async function _5(K) {
     }), U.onExit = () => {
         const Oz = NX;
         ST({
-            title: Oz(4084),
-            body: Oz(2512),
+            title: "Leave the mission?",
+            body: "The squad walks away. Progress on this attempt is lost.",
             buttons: [{
-                label: Oz(771),
-                value: Oz(1147),
-                variant: Oz(681)
+                label: "LEAVE",
+                value: "leave",
+                variant: "primary"
             }, {
-                label: Oz(2023),
-                value: Oz(975)
+                label: "STAY",
+                value: "stay"
             }],
-            dismiss: Oz(975)
-        })[Oz(4353)](b4 => {
+            dismiss: "stay"
+        }).then(b4 => {
             const OA = Oz;
-            b4 === OA(1147) && aq && (aq[OA(3886)] = true);
+            b4 === "leave" && aq && (aq.exitRequested = true);
         });
     };
     let aQ = async () => {
         const OB = NX;
-        mm(a7.id, ak, aB), await Om(f[OB(4315)][OB(3209)]), aq && ai(a8, aq[OB(3300)]), aq?.[OB(4428)](), U[OB(3902)](), zW(), aX();
+        mm(a7.id, ak, aB), await Om(f.banner.fade), aq && ai(a8, aq.world), aq?.restart(), U.hideOverlay(), zW(), aX();
     };
     U.onRestart = () => {
         const OC = NX;
         ST({
-            title: OC(5559),
-            body: OC(2228),
+            title: "Restart the mission?",
+            body: "Back to the drop, everyone on their feet. This attempt is lost.",
             buttons: [{
-                label: OC(745),
-                value: OC(4428),
-                variant: OC(681)
+                label: "RESTART",
+                value: "restart",
+                variant: "primary"
             }],
-            dismiss: OC(5233)
-        })[OC(4353)](b4 => {
+            dismiss: "cancel"
+        }).then(b4 => {
             const OD = OC;
-            b4 === OD(4428) && aQ();
+            b4 === "restart" && aQ();
         });
     };
     let aR = () => {
         const OE = NX;
-        !aq || JT() || U[OE(4039)] || aq[OE(3300)][OE(5798)] !== 0 || Mt(!aC && aP ? aP + '. ' + aA[OE(3918)] : aA[OE(3918)], OE(1458), {
-            label: OE(2365),
-            tone: OE(5135),
+        !aq || JT() || U.briefingUp || aq.world.phase !== 0 || Mt(!aC && aP ? aP + '. ' + aA.name : aA.name, "Resume", {
+            label: "Restart",
+            tone: "warn",
             key: 'R',
             onPick: () => {
                 aQ();
@@ -1510,26 +1510,26 @@ async function _5(K) {
     Q.onPause = aR, Q.modalOpen = JT, U.onPause = aR;
     let aS = () => {
         const OF = NX;
-        document[OF(1709)] && aR();
+        document.hidden && aR();
     };
     document.addEventListener("visibilitychange", aS), aw = () => document.removeEventListener("visibilitychange", aS), az(), aq.onCallIn = () => {
         const OG = NX;
-        let b4 = EW[OG(1541)];
-        b4 && aq && je(b4, Rm(aq[OG(3300)][OG(4350)]()), {
+        let b4 = EW.trumper;
+        b4 && aq && je(b4, Rm(aq.world.jitter()), {
             seconds: 3
         });
     }, U.onCallInPress = b4 => {
         const OH = NX;
         if (aq) {
-            if (aq[OH(3300)][OH(3479)] <= 0) {
-                CW(b4, OH(3746));
+            if (aq.world.callInsLeft <= 0) {
+                CW(b4, "no call-ins left");
                 return;
             }
-            Q[OH(4392)] ? Q[OH(1224)]() : Q[OH(1706)](), U[OH(1309)](Q[OH(4392)]);
+            Q.callInArmed ? Q.disarmCallIn() : Q.armCallIn(), U.setCallInArmed(Q.callInArmed);
         }
     }, aq.onArmCallIn = () => {
         const OI = NX;
-        let b4 = EW[OI(1541)];
+        let b4 = EW.trumper;
         b4 && je(b4, Am(), {
             sticky: true
         });
@@ -1548,47 +1548,47 @@ async function _5(K) {
     aq.onResolved = b4 => {
         const OJ = NX;
         if (aC) {
-            U[OJ(5317)](null, null, aA[OJ(4658)] ? C3(a7.id, b4, aA[OJ(4658)][OJ(856)]) : null), aa(a7.id, ak, aB, b4[OJ(5798)] === 1, aU(b4)), ua(b4[OJ(5798)] === 1);
+            U.close(null, null, aA.challenge ? C3(a7.id, b4, aA.challenge.score) : null), aa(a7.id, ak, aB, b4.phase === 1, aU(b4)), ua(b4.phase === 1);
             return;
         }
         ai(a8, b4);
-        let b7 = a8[OJ(3184)][a7.id]?.[OJ(884)]?.[ak] ?? [],
+        let b7 = a8.records[a7.id]?.taken?.[ak] ?? [],
             b8 = Gu(a8, {
-                won: b4[OJ(5798)] === 1,
+                won: b4.phase === 1,
                 missionId: a7.id,
-                missionName: aA[OJ(3918)],
+                missionName: aA.name,
                 difficulty: ak,
-                time: b4[OJ(5464)],
-                kills: b4[OJ(3101)],
-                crates: b4[OJ(2611)],
-                packagesFound: b4[OJ(5267)][OJ(588)]((b9, bj) => b9[OJ(884)] && !b7[OJ(5073)](bj) ? bj : -1)[OJ(3639)](b9 => b9 >= 0),
-                survived: b4[OJ(4874)][OJ(3639)](b9 => b9[OJ(1101)])[OJ(588)](b9 => b9[OJ(3918)]),
-                died: b4[OJ(4874)][OJ(3639)](b9 => !b9[OJ(1101)])[OJ(588)](b9 => b9[OJ(3918)])
+                time: b4.time,
+                kills: b4.kills,
+                crates: b4.cratesTaken,
+                packagesFound: b4.packages.map((b9, bj) => b9.taken && !b7.includes(bj) ? bj : -1).filter(b9 => b9 >= 0),
+                survived: b4.soldiers.filter(b9 => b9.alive).map(b9 => b9.name),
+                died: b4.soldiers.filter(b9 => !b9.alive).map(b9 => b9.name)
             });
-        U[OJ(5317)](a8[OJ(3184)][a7.id] ?? null, b8), aa(a7.id, ak, aB, b4[OJ(5798)] === 1, {
+        U.close(a8.records[a7.id] ?? null, b8), aa(a7.id, ak, aB, b4.phase === 1, {
             ...aU(b4),
-            bonds: b8[OJ(4422)][OJ(1199)],
-            balance: a8[OJ(4422)]
-        }), ua(b4[OJ(5798)] === 1);
+            bonds: b8.bonds.total,
+            balance: a8.bonds
+        }), ua(b4.phase === 1);
     }, o5, WW, ve, IW, nW;
     let aV = hT(aq.world);
     aV && L.centreOn(aV, aA);
     let aX = () => {
             const OK = NX;
-            MW(1), U[OK(2978)](aq[OK(3300)]), window[OK(1661)](OK(2082), aY, true), window[OK(1661)](OK(1777), aY, true);
+            MW(1), U.showBriefing(aq.world), window.addEventListener("pointerdown", aY, true), window.addEventListener("keydown", aY, true);
         },
         aY = b4 => {
             const OL = NX;
-            if (!aq || aq[OL(3300)][OL(5798)] !== 0 || JT()) return;
-            let b7 = b4[OL(5099)];
-            if (b7 instanceof Element && b7[OL(2325)](OL(3270))) return;
-            b4[OL(2670)](), b4[OL(5788)](), aI(), U[OL(3902)](), He(f[OL(4315)][OL(3209)]), aZ();
+            if (!aq || aq.world.phase !== 0 || JT()) return;
+            let b7 = b4.target;
+            if (b7 instanceof Element && b7.closest(".briefing-diff, .briefing-kit, .briefing-shop")) return;
+            b4.preventDefault(), b4.stopPropagation(), aI(), U.hideOverlay(), He(f.banner.fade), aZ();
             let b8 = Kl(aA);
-            b8 && je(b8[OL(4706)], b8[OL(5412)], b8[OL(2454)]);
+            b8 && je(b8.speaker, b8.text, b8.opts);
         },
         aZ = () => {
             const OM = NX;
-            window[OM(4704)](OM(2082), aY, true), window[OM(4704)](OM(1777), aY, true);
+            window.removeEventListener("pointerdown", aY, true), window.removeEventListener("keydown", aY, true);
         };
     aX();
     try {
@@ -1596,8 +1596,8 @@ async function _5(K) {
     } catch {}
     return T1(() => {
         const ON = NX;
-        let b4 = aq?.[ON(3886)] ? ON(4294) : aq?.[ON(1461)] ? ON(5856) : null;
-        return b4 ? (aq && ai(a8, aq[ON(3300)]), aq = null, K[ON(5635)](null), Ze(), U[ON(3902)](), U[ON(1136)](), zW(), aZ(), G1(), aw?.(), aw = null, Q[ON(2599)] = null, U[ON(4554)] = U[ON(3347)] = U[ON(2599)] = null, ax?.[ON(5414)]()[ON(2008)](() => {}), ax = null, b4) : null;
+        let b4 = aq?.exitRequested ? "menu" : aq?.nextRequested ? "next" : null;
+        return b4 ? (aq && ai(a8, aq.world), aq = null, K.set(null), Ze(), U.hideOverlay(), U.hideClock(), zW(), aZ(), G1(), aw?.(), aw = null, Q.onPause = null, U.onExit = U.onRestart = U.onPause = null, ax?.release().catch(() => {}), ax = null, b4) : null;
     });
 }
 async function f_() {
@@ -1613,9 +1613,9 @@ async function f_() {
         F = performance.now();
     ic(R => (C ?? E)?.step(R), R => {
         const OP = OO;
-        let S = performance[OP(2864)](),
-            U = Math[OP(544)](0.1, (S - F) / 1000);
-        F = S, (C ?? E)?.[OP(2527)](R, U);
+        let S = performance.now(),
+            U = Math.min(0.1, (S - F) / 1000);
+        F = S, (C ?? E)?.draw(R, U);
     });
     let H = Y3({
             shell: j,

@@ -58,48 +58,48 @@ var Df = c => ni(Va, Da(c)),
             let c = new WebSocket(wy());
             this.ws = c, c.onopen = () => {
                 const rA = rz;
-                if (this.ws !== c || !this[rA(1516)]) {
-                    c[rA(5317)]();
+                if (this.ws !== c || !this.wanted) {
+                    c.close();
                     return;
                 }
-                this[rA(2652)] = 500;
+                this.retryMs = 500;
                 let {
                     userId: d,
                     secret: g
                 } = oi();
-                c[rA(3677)](JSON[rA(512)]({
-                    t: rA(4144),
+                c.send(JSON.stringify({
+                    t: "hello",
                     userId: d,
                     secret: g,
-                    name: this[rA(3918)]() || rA(3866),
+                    name: this.name() || "SOLDIER",
                     v: Ba,
                     content: Ga
                 }));
             }, c.onmessage = d => {
                 const rB = rz;
-                if (this.ws !== c || !this[rB(1516)]) return;
+                if (this.ws !== c || !this.wanted) return;
                 let g;
                 try {
-                    g = JSON[rB(1241)](String(d[rB(548)]));
+                    g = JSON.parse(String(d.data));
                 } catch {
                     return;
                 }
-                if (g.t === rB(5526)) {
-                    this[rB(2111)] = true;
-                    let i = this[rB(5116)];
-                    this[rB(5116)] = [];
-                    for (let j of i) this[rB(3677)](j);
-                    this[rB(922)]?.();
+                if (g.t === "welcome") {
+                    this.greeted = true;
+                    let i = this.queue;
+                    this.queue = [];
+                    for (let j of i) this.send(j);
+                    this.onWelcome?.();
                     return;
                 }
-                if (g.t === rB(4021) && /out of date|one identity|who goes there/ [rB(4732)](g[rB(1937)])) {
-                    this[rB(1440)]?.(g), this[rB(5317)]();
+                if (g.t === "err" && /out of date|one identity|who goes there/ .test(g.msg)) {
+                    this.onMsg?.(g), this.close();
                     return;
                 }
-                this[rB(4801)](g, c);
+                this.deliver(g, c);
             }, c.onclose = () => {
                 const rC = rz;
-                this.ws === c && (this.ws = null, this[rC(2111)] = false, this[rC(1516)] && (this[rC(4247)]?.(), this[rC(5490)] = window[rC(2948)](() => this[rC(3133)](), this[rC(2652)]), this[rC(2652)] = Math[rC(544)](8000, this[rC(2652)] * 2)));
+                this.ws === c && (this.ws = null, this.greeted = false, this.wanted && (this.onDrop?.(), this.retryTimer = window.setTimeout(() => this.dial(), this.retryMs), this.retryMs = Math.min(8000, this.retryMs * 2)));
             };
         } deliver(c, d) {
             const rD = cX;
@@ -108,7 +108,7 @@ var Df = c => ni(Va, Da(c)),
                 let g = performance.now();
                 this.deliveryAt = Math.max(this.deliveryAt, g + this.impair.lag + Math.random() * this.impair.jitter), window.setTimeout(() => {
                     const rE = rD;
-                    this.ws === d && this[rE(1516)] && this[rE(1440)]?.(c);
+                    this.ws === d && this.wanted && this.onMsg?.(c);
                 }, this.deliveryAt - g);
                 return;
             }
@@ -203,13 +203,13 @@ var ri = c => location.origin + "/join/" + c,
             }
             this.conn = new ii(vn), this.conn.onMsg = c => this.receive(c), this.conn.onWelcome = () => {
                 const rO = rN;
-                this[rO(1874)] && this[rO(4680)][rO(3677)]({
-                    t: rO(4251),
-                    code: this[rO(1874)]
+                this.wantedCode && this.conn.send({
+                    t: "join",
+                    code: this.wantedCode
                 });
             }, this.conn.onDrop = () => {
                 const rP = rN;
-                this[rP(866)] && this[rP(4181)](FT(rP(3510))), this[rP(1952)]();
+                this.room && this.tell(FT("ownDrop")), this.changed();
             }, this.conn.open();
         }
         getconnected() {
@@ -619,8 +619,8 @@ function Vf(c) {
     const sM = cX;
     return ["frag", "smoke", "flash"].filter(d => {
         const sN = sM;
-        let g = bW[sN(502)](i => i.id === ge[d]);
-        return g?.[sN(5645)] && gW(c, g.id) > 0;
+        let g = bW.find(i => i.id === ge[d]);
+        return g?.ready && gW(c, g.id) > 0;
     });
 }
 
@@ -628,8 +628,8 @@ function Xa(c) {
     const sO = cX;
     return ["supplyDrop", "airstrike", "reinforcements"].filter(d => {
         const sP = sO;
-        let g = bW[sP(502)](i => i.id === d);
-        return g?.[sP(5645)] && gW(c, g.id) > 0;
+        let g = bW.find(i => i.id === d);
+        return g?.ready && gW(c, g.id) > 0;
     });
 }
 
@@ -703,12 +703,12 @@ function Iy(c, d, g) {
         u.appendChild(eT(xn(), 2)), u.appendChild(w("span", "ar-price-n", String(q))), p.appendChild(u);
         let v = Ja("BUY +1", "ar-buy", () => {
             const sV = sU;
-            if (c[sV(5645)]) {
-                if (d[sV(4422)] < q) {
-                    CW(v, sV(4587));
+            if (c.ready) {
+                if (d.bonds < q) {
+                    CW(v, "not enough war bonds");
                     return;
                 }
-                Hf(d, c.id) && (la(c.id, q, d[sV(4422)]), g());
+                Hf(d, c.id) && (la(c.id, q, d.bonds), g());
             }
         });
         return (!c.ready || d.bonds < q) && (v.setAttribute("aria-disabled", "true"), v.classList.add("off")), p.appendChild(v), j.appendChild(p), j;
@@ -724,11 +724,11 @@ function Iy(c, d, g) {
             C.appendChild(eT(Pe(true), 2, "ar-lock")), C.appendChild(eT(xn(), 2)), C.appendChild(w("span", "ar-price-n", String(A))), p.appendChild(C);
             let E = Ja("UNLOCK", "ar-buy", () => {
                 const sX = sU;
-                if (d[sX(4422)] < A) {
-                    CW(E, sX(4587));
+                if (d.bonds < A) {
+                    CW(E, "not enough war bonds");
                     return;
                 }
-                Gf(d, c.id) && (la(c.id, A, d[sX(4422)]), g());
+                Gf(d, c.id) && (la(c.id, A, d.bonds), g());
             });
             d.bonds < A && (E.setAttribute("aria-disabled", "true"), E.classList.add("off")), p.appendChild(E);
         }
@@ -760,19 +760,19 @@ function mi(c) {
         icon: Ke(A),
         panel: () => {
             const sZ = sY;
-            let C = w(sZ(991), sZ(2118)),
-                E = w(sZ(991), sZ(2093));
-            for (let F of bW[sZ(3639)](H => H[sZ(3385)] === v)) E[sZ(2592)](Iy(F, j, () => {
+            let C = w("div", "ar-panel"),
+                E = w("div", "ar-grid");
+            for (let F of bW.filter(H => H.category === v)) E.appendChild(Iy(F, j, () => {
                 const t7 = sZ;
-                m(), c[t7(2842)]?.();
+                m(), c.onBought?.();
             }));
-            return C[sZ(2592)](E), C;
+            return C.appendChild(E), C;
         }
     })));
     u.select(c.tab());
     for (let v of u.root.querySelectorAll(".ui-tab")) v.addEventListener("click", () => {
         const t8 = sY;
-        c[t8(1783)](v[t8(4592)].id);
+        c.onTab(v.dataset.id);
     });
     g.append(u.root, u.body);
 }
@@ -847,4 +847,4 @@ function Jf(q, A, F, H, K, L) {
                 const tx = b;
                 aH || (aH = true, MW(1), N.classList.add("leaving"), window.setTimeout(() => {
                     const tz = tx;
-                    bO(), bP[tz(549)](), bQ(), bD(), document[tz(4704)](tz(1777), bR), U[tz(4704)](tz(2082), bS), $[tz(5229)] = null, $[tz(3018)] = null, $[tz(5363)] = null, window[tz(4489)](bz), N[tz(1709)] = true, N[tz(5057)][tz(549)](tz(2559)), aG(bU);
+                    bO(), bP.remove(), bQ(), bD(), document.removeEventListener("keydown", bR), U.removeEventListener("pointerdown", bS), $.onChange = null, $.onStart = null, $.onJoin = null, window.clearInterval(bz), N.hidden = true, N.classList.remove("leaving"), aG(bU);

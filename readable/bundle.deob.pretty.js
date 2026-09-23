@@ -1393,7 +1393,7 @@ function ml(g, j) {
             if (K < 0 || L < 0 || K >= p || L >= q) return true;
             if (y[L * p + K]) return false;
             let M = TT[z(g, K, L)];
-            return M[dG(550)] && !M[dG(2958)];
+            return M.solid && !M.swim;
         },
         C = {
             x: Math.floor(j.x / g.tile),
@@ -1540,28 +1540,28 @@ function hl(c, d) {
     let g = c.buildings.filter(i => i.kind === "bunker");
     return g.length === 0 ? d : d.map(j => {
         const dL = dK;
-        if (j[dL(3554)] !== 0) return j;
-        let p = Math[dL(1959)](j.x / c[dL(5519)]),
-            q = Math[dL(1959)](j.y / c[dL(5519)]),
+        if (j.pad !== 0) return j;
+        let p = Math.floor(j.x / c.tile),
+            q = Math.floor(j.y / c.tile),
             v = null;
         for (let y of g) {
-            let A = y[dL(1688)][dL(588)](([L]) => L),
-                C = y[dL(1688)][dL(588)](([, L]) => L),
-                E = Math[dL(544)](...A),
-                F = Math[dL(3002)](...A),
-                H = Math[dL(544)](...C),
-                I = Math[dL(3002)](...C),
-                K = Math[dL(3002)](Math[dL(3002)](E - p, 0, p - F), Math[dL(3002)](H - q, 0, q - I));
+            let A = y.tiles.map(([L]) => L),
+                C = y.tiles.map(([, L]) => L),
+                E = Math.min(...A),
+                F = Math.max(...A),
+                H = Math.min(...C),
+                I = Math.max(...C),
+                K = Math.max(Math.max(E - p, 0, p - F), Math.max(H - q, 0, q - I));
             K > Y5 || v && v.d <= K || (v = {
                 d: K,
                 zone: {
-                    x: ((E + F) / 2 + 0.5) * c[dL(5519)],
-                    y: ((H + I) / 2 + 0.5) * c[dL(5519)],
-                    pad: (Math[dL(3002)](F - E, I - H) + 1) * c[dL(5519)] / 2
+                    x: ((E + F) / 2 + 0.5) * c.tile,
+                    y: ((H + I) / 2 + 0.5) * c.tile,
+                    pad: (Math.max(F - E, I - H) + 1) * c.tile / 2
                 }
             });
         }
-        return v ? v[dL(5069)] : j;
+        return v ? v.zone : j;
     });
 }
 var Yr = {
@@ -1994,8 +1994,8 @@ function Te(j, q = "level") {
                 verb: j.challenge.verb ?? "OVERRUN",
                 score: ((() => {
                     const dW = dV;
-                    if (j[dW(4658)][dW(856)][dW(488)] === 0) throw new Error(dW(660));
-                    return j[dW(4658)][dW(856)];
+                    if (j.challenge.score.length === 0) throw new Error("challenge: score must name at least one stat");
+                    return j.challenge.score;
                 })())
             } : null,
             sidePersonas: j.sidePersonas ? {
@@ -2269,7 +2269,7 @@ var $T = (c, d = 0.18) => c * (1 + (Math.random() * 2 - 1) * d),
                 freq: 420,
                 q: 0.4,
                 sweepTo: 55,
-                type: ez(3831)
+                type: "lowpass"
             }), L1(64, 0.8, 0.9);
         }, 60);
     },
@@ -2336,12 +2336,12 @@ var $T = (c, d = 0.18) => c * (1 + (Math.random() * 2 - 1) * d),
             noise: j
         } = c, l = d.currentTime + 0.12, m = (n, q, v, y, A, C, E) => {
             const eF = eE;
-            let F = d[eF(4325)]();
-            F[eF(3295)] = j, F[eF(4127)] = true, F[eF(490)] = Math[eF(3821)]() * 0.3, F[eF(3562)] = F[eF(490)] + 0.2;
-            let H = d[eF(908)]();
-            H[eF(2882)] = n, H[eF(4403)][eF(1958)](q, l), H[eF(4403)][eF(5124)](v, l + E), H.Q[eF(862)] = y;
-            let I = d[eF(4828)]();
-            I[eF(2515)][eF(1958)](0.0001, l), I[eF(2515)][eF(5124)](A, l + C), I[eF(2515)][eF(5124)](0.0005, l + E), F[eF(1334)](H)[eF(1334)](I)[eF(1334)](g), F[eF(5406)](l), F[eF(5799)](l + E + 0.05);
+            let F = d.createBufferSource();
+            F.buffer = j, F.loop = true, F.loopStart = Math.random() * 0.3, F.loopEnd = F.loopStart + 0.2;
+            let H = d.createBiquadFilter();
+            H.type = n, H.frequency.setValueAtTime(q, l), H.frequency.exponentialRampToValueAtTime(v, l + E), H.Q.value = y;
+            let I = d.createGain();
+            I.gain.setValueAtTime(0.0001, l), I.gain.exponentialRampToValueAtTime(A, l + C), I.gain.exponentialRampToValueAtTime(0.0005, l + E), F.connect(H).connect(I).connect(g), F.start(l), F.stop(l + E + 0.05);
         };
         m("lowpass", 500, 60, 0.6, 0.7, 0.02, 1.4), m("bandpass", 1400, 700, 1.4, 0.16, 0.18, 1.1), L1(60, 0.9, 0.65);
     },
@@ -2442,10 +2442,10 @@ var $T = (c, d = 0.18) => c * (1 + (Math.random() * 2 - 1) * d),
         } = c, i = d.currentTime;
         [523, 659, 784, 1047].forEach((j, l) => {
             const eL = eK;
-            let m = d[eL(1912)]();
-            m[eL(2882)] = eL(2912), m[eL(4403)][eL(862)] = j;
-            let p = d[eL(4828)]();
-            p[eL(2515)][eL(1958)](0, i + l * 0.11), p[eL(2515)][eL(4605)](0.16, i + l * 0.11 + 0.01), p[eL(2515)][eL(5124)](0.0005, i + l * 0.11 + 0.24), m[eL(1334)](p)[eL(1334)](g), m[eL(5406)](i + l * 0.11), m[eL(5799)](i + l * 0.11 + 0.26);
+            let m = d.createOscillator();
+            m.type = "square", m.frequency.value = j;
+            let p = d.createGain();
+            p.gain.setValueAtTime(0, i + l * 0.11), p.gain.linearRampToValueAtTime(0.16, i + l * 0.11 + 0.01), p.gain.exponentialRampToValueAtTime(0.0005, i + l * 0.11 + 0.24), m.connect(p).connect(g), m.start(i + l * 0.11), m.stop(i + l * 0.11 + 0.26);
         });
     },
     ms = () => {
@@ -2459,10 +2459,10 @@ var $T = (c, d = 0.18) => c * (1 + (Math.random() * 2 - 1) * d),
         } = c, i = d.currentTime;
         [392, 330, 262, 196].forEach((j, l) => {
             const eN = eM;
-            let m = d[eN(1912)]();
-            m[eN(2882)] = eN(4074), m[eN(4403)][eN(862)] = j;
-            let p = d[eN(4828)]();
-            p[eN(2515)][eN(1958)](0, i + l * 0.14), p[eN(2515)][eN(4605)](0.13, i + l * 0.14 + 0.02), p[eN(2515)][eN(5124)](0.0005, i + l * 0.14 + 0.3), m[eN(1334)](p)[eN(1334)](g), m[eN(5406)](i + l * 0.14), m[eN(5799)](i + l * 0.14 + 0.32);
+            let m = d.createOscillator();
+            m.type = "sawtooth", m.frequency.value = j;
+            let p = d.createGain();
+            p.gain.setValueAtTime(0, i + l * 0.14), p.gain.linearRampToValueAtTime(0.13, i + l * 0.14 + 0.02), p.gain.exponentialRampToValueAtTime(0.0005, i + l * 0.14 + 0.3), m.connect(p).connect(g), m.start(i + l * 0.14), m.stop(i + l * 0.14 + 0.32);
         });
     },
     fs = {};
@@ -3576,8 +3576,8 @@ function o1(c, d, g = null) {
     };
     return We.push(i), ro === 0 && (ro = window.setInterval(() => {
         const fS = fR;
-        if (!(so || We[fS(488)] === 0)) {
-            for (let j of [...We]) We[fS(5073)](j) && (j[fS(1551)] -= qt / 1000, !(j[fS(1551)] > 0) && (j[fS(1942)] === null ? We = We[fS(3639)](l => l !== j) : j[fS(1551)] += j[fS(1942)], j[fS(5903)]()));
+        if (!(so || We.length === 0)) {
+            for (let j of [...We]) We.includes(j) && (j.left -= qt / 1000, !(j.left > 0) && (j.every === null ? We = We.filter(l => l !== j) : j.left += j.every, j.run()));
         }
     }, qt)), i;
 }
@@ -3619,12 +3619,12 @@ function C4(c, d, g, j) {
     j.talk();
     let p = o1(Vl, () => {
         const fZ = fY;
-        if (l >= d[fZ(488)]) {
-            S4(p), j[fZ(5428)]();
+        if (l >= d.length) {
+            S4(p), j.rest();
             return;
         }
         let q = d[l++];
-        c[fZ(4920)] += q, !E4[fZ(4732)](q) && m++ % g[fZ(1010)] === 0 && G()[fZ(3218)] && O1(g);
+        c.textContent += q, !E4.test(q) && m++ % g.everyNth === 0 && G().sound && O1(g);
     }, Vl);
 }
 
@@ -3648,7 +3648,7 @@ function A4(c, d) {
         u = 0;
     return o1(qt / 1000, () => {
         const g8 = g7;
-        u += qt / 1000, !(u < m[g8(4372)]) && (u = 0, q++, q >= m[g8(4928)][g8(488)] && (q = 0, p && (p = false, m = j)), g(m[g8(4928)][q]));
+        u += qt / 1000, !(u < m.hold) && (u = 0, q++, q >= m.frames.length && (q = 0, p && (p = false, m = j)), g(m.frames[q]));
     }, qt / 1000), {
         talk: () => {
             const g9 = g7;
@@ -3656,7 +3656,7 @@ function A4(c, d) {
                 p = false;
                 return;
             }
-            m = l, p = false, q = 0, u = 0, g(l[g9(4928)][0]);
+            m = l, p = false, q = 0, u = 0, g(l.frames[0]);
         },
         rest: () => {
             m === l && (p = true);
@@ -3694,10 +3694,10 @@ function je(c, d, g = {}) {
     let q = g.delay ?? k4;
     o1(q, () => {
         const gk = gj;
-        j[gk(1709)] = false, requestAnimationFrame(() => {
+        j.hidden = false, requestAnimationFrame(() => {
             const gq = gk;
-            j[gq(5057)][gq(2129)]('in'), e1() && j[gq(5057)][gq(2129)](gq(501)), o1(e1() ? 0 : 0.26, () => C4(p, d, c[gq(1441)], l));
-        }), g[gk(4507)] || (o1(g[gk(4290)] ?? w4, $l), R4());
+            j.classList.add('in'), e1() && j.classList.add("still"), o1(e1() ? 0 : 0.26, () => C4(p, d, c.voice, l));
+        }), g.sticky || (o1(g.seconds ?? w4, $l), R4());
     });
 }
 var ql = 1;
@@ -3717,7 +3717,7 @@ function $l() {
     const gx = cX;
     ws(), rW && (rW.classList.remove('in'), ks = window.setTimeout(() => {
         const gz = gx;
-        rW && (rW[gz(1709)] = true);
+        rW && (rW.hidden = true);
     }, f.timing.commsExit));
 }
 
@@ -3795,17 +3795,17 @@ async function Es() {
     let c = Math.max(0, j4 - (performance.now() - zl));
     return new Promise(d => {
         const gH = gG;
-        window[gH(2948)](() => {
+        window.setTimeout(() => {
             const gI = gH;
-            let g = ee(gI(3999));
+            let g = ee("boot");
             if (!g) {
                 d();
                 return;
             }
-            g[gI(5057)][gI(2129)](gI(4880)), window[gI(2948)](() => {
+            g.classList.add("gone"), window.setTimeout(() => {
                 const gJ = gI;
-                g[gJ(549)](), d();
-            }, f[gI(1021)][gI(2986)]);
+                g.remove(), d();
+            }, f.timing.bootFade);
         }, c);
     });
 }
@@ -3819,10 +3819,10 @@ function L4(c = 2000) {
                 const gL = b;
                 window.clearTimeout(j), g();
             },
-            j = window[gM(2948)](i, c);
-        d[gM(1661)](gM(1785), i, {
+            j = window.setTimeout(i, c);
+        d.addEventListener("load", i, {
             once: true
-        }), d[gM(1661)](gM(2113), i, {
+        }), d.addEventListener("error", i, {
             once: true
         });
     });
@@ -3902,10 +3902,10 @@ function oc() {
     try {
         window.addEventListener("error", c => {
             const gS = gR;
-            Wc(gS(2113), c[gS(2113)] ?? c[gS(5577)], (c[gS(1531)] ?? '') + ':' + (c[gS(932)] ?? 0) + ':' + (c[gS(4096)] ?? 0));
+            Wc("error", c.error ?? c.message, (c.filename ?? '') + ':' + (c.lineno ?? 0) + ':' + (c.colno ?? 0));
         }), window.addEventListener("unhandledrejection", c => {
             const gU = gR;
-            Wc(gU(2249), c[gU(3895)]);
+            Wc("rejection", c.reason);
         });
     } catch {}
 }
@@ -3920,11 +3920,11 @@ function ic(c, d) {
             const gX = gV;
             if (!m) return;
             requestAnimationFrame(p);
-            let u = Math[gX(544)](0.25, (q - l) / 1000);
+            let u = Math.min(0.25, (q - l) / 1000);
             l = q, j += u;
             let v = 0;
-            for (; j >= g && v < f[gX(2908)];) c(g), j -= g, v++;
-            v === f[gX(2908)] && (j = 0), d(j / g);
+            for (; j >= g && v < f.MAX_STEPS_PER_FRAME;) c(g), j -= g, v++;
+            v === f.MAX_STEPS_PER_FRAME && (j = 0), d(j / g);
         };
     return requestAnimationFrame(p), () => {
         m = false;
@@ -5395,8 +5395,8 @@ function co(c) {
     const hj = cX;
     return c.filter(d => {
         const hk = hj;
-        let g = Kt(d[hk(5069)]);
-        return g[hk(3564)] === hk(4662) && !g[hk(864)];
+        let g = Kt(d.zone);
+        return g.roster === "campaign" && !g.dev;
     });
 }
 async function yd() {
@@ -6927,8 +6927,8 @@ function s1(c, d) {
     };
     return Z1.push(g), _u || (window.addEventListener("keydown", Gg, true), _u = true), () => {
         const jb = j9;
-        let i = Z1[jb(1773)](g);
-        i !== -1 && Z1[jb(5282)](i, 1);
+        let i = Z1.indexOf(g);
+        i !== -1 && Z1.splice(i, 1);
     };
 }
 var JT = () => Z1.length > 0,
@@ -7004,7 +7004,7 @@ function Su(c) {
         root: d,
         set(q, u) {
             const jD = jC;
-            p[jD(935)][jD(3904)] = Math[jD(3002)](0, Math[jD(544)](1, q)) * 100 + '%', u !== void 0 && (l[jD(4920)] = u);
+            p.style.width = Math.max(0, Math.min(1, q)) * 100 + '%', u !== void 0 && (l.textContent = u);
         }
     };
 }
@@ -7028,20 +7028,20 @@ function Eu(c) {
         root: d,
         setBadge(m) {
             const jG = jF;
-            l[jG(1709)] = m === null, m !== null && (l[jG(4920)] = m);
+            l.hidden = m === null, m !== null && (l.textContent = m);
         },
         setCooldown(m) {
             const jH = jF;
-            let p = Math[jH(3002)](0, Math[jH(544)](1, m));
-            g[jH(935)][jH(5209)] = p > 0.001 ? '1' : '0', g[jH(935)][jH(3412)] = jH(1100) + p * 360 + jH(1190);
+            let p = Math.max(0, Math.min(1, m));
+            g.style.opacity = p > 0.001 ? '1' : '0', g.style.background = "conic-gradient(rgba(10,13,5,0.72) " + p * 360 + "deg, transparent 0)";
         },
         setActive(m) {
             const jI = jF;
-            d[jI(5057)][jI(827)]('on', m);
+            d.classList.toggle('on', m);
         },
         setDisabled(m) {
             const jJ = jF;
-            d[jJ(5057)][jJ(827)](jJ(684), m), m ? d[jJ(4492)](jJ(4413), jJ(2588)) : d[jJ(822)](jJ(4413));
+            d.classList.toggle("off", m), m ? d.setAttribute("aria-disabled", "true") : d.removeAttribute("aria-disabled");
         }
     };
 }
@@ -7054,15 +7054,15 @@ function Mu(c) {
             label: l
         }) => {
             const jL = jK;
-            let m = w(jL(5291), jL(4460) + j);
-            return m[jL(2882)] = jL(5291), m[jL(4920)] = l, m[jL(4592)].id = j, m[jL(1661)](jL(5016), () => {
+            let m = w("button", "ui-seg diff-" + j);
+            return m.type = "button", m.textContent = l, m.dataset.id = j, m.addEventListener("click", () => {
                 const jM = jL;
-                i(j), c[jM(5229)](j);
-            }), d[jL(2592)](m), m;
+                i(j), c.onChange(j);
+            }), d.appendChild(m), m;
         }),
         i = j => {
             const jN = jK;
-            for (let l of g) l[jN(5057)][jN(827)]('on', l[jN(4592)].id === j);
+            for (let l of g) l.classList.toggle('on', l.dataset.id === j);
         };
     return i(c.value), {
         root: d,
@@ -7080,26 +7080,26 @@ function Cu(c) {
     let m = 0,
         p = () => {
             const jP = jO;
-            let v = Math[jP(1207)](m * 100) + '%';
-            j[jP(935)][jP(3904)] = v, l[jP(935)][jP(1551)] = v;
+            let v = Math.round(m * 100) + '%';
+            j.style.width = v, l.style.left = v;
         },
         q = v => {
             const jQ = jO;
-            m = Math[jQ(1207)](Math[jQ(3002)](0, Math[jQ(544)](1, v)) * 20) / 20, p();
+            m = Math.round(Math.max(0, Math.min(1, v)) * 20) / 20, p();
         };
     q(c.value);
     let u = v => {
         const jR = jO;
-        let y = g[jR(2491)](),
+        let y = g.getBoundingClientRect(),
             A = m;
-        q((v[jR(4043)] - y[jR(1551)]) / y[jR(3904)]), m !== A && c[jR(5229)](m);
+        q((v.clientX - y.left) / y.width), m !== A && c.onChange(m);
     };
     return d.addEventListener("pointerdown", v => {
         const jS = jO;
-        d[jS(4293)](v[jS(4984)]), u(v);
+        d.setPointerCapture(v.pointerId), u(v);
     }), d.addEventListener("pointermove", v => {
         const jU = jO;
-        d[jU(3130)](v[jU(4984)]) && u(v);
+        d.hasPointerCapture(v.pointerId) && u(v);
     }), {
         root: d,
         set: q
@@ -7141,8 +7141,8 @@ function Ru(c) {
     let g = document.createElement("input");
     g.id = "confirm-input", g.className = "confirm-input", g.type = "text", g.value = c.value ?? '', c.maxLength !== void 0 && (g.maxLength = c.maxLength), c.placeholder !== void 0 && (g.placeholder = c.placeholder), d.appendChild(g), g.addEventListener("keydown", l => {
         const jZ = jY;
-        if (l[jZ(2547)] !== jZ(1227)) return;
-        l[jZ(2670)](), document[jZ(546)](jZ(2422))?.[jZ(5016)]();
+        if (l.key !== "Enter") return;
+        l.preventDefault(), document.querySelector(".confirm-btn.primary")?.click();
     });
     let i = ST({
         title: c.title,
@@ -7156,7 +7156,7 @@ function Ru(c) {
     });
     return window.setTimeout(() => {
         const k5 = jY;
-        g[k5(3930)](), g[k5(2264)]();
+        g.focus(), g.select();
     }, 0), i.then(l => l === 'ok' && g.value.trim() || null);
 }
 
@@ -7170,7 +7170,7 @@ function ST(c) {
         A.className = "confirm-card panel-scroll", q.appendChild(A);
         let C = P => {
                 const k8 = k7;
-                Au--, window[k8(4489)](L), N(), q[k8(549)](), j(P);
+                Au--, window.clearInterval(L), N(), q.remove(), j(P);
             },
             E = document.createElement("div");
         if (E.className = "confirm-title", E.textContent = c.title, A.appendChild(E), c.dismiss !== void 0) {
@@ -7200,8 +7200,8 @@ function ST(c) {
             a9 && (a9.className = "confirm-count", F.appendChild(a9));
             let aj = () => {
                 const k9 = k7;
-                let ak = Y?.[k9(546)](k9(2725));
-                ak && (ak[k9(4920)] = a8 + ' (' + a7 + ')'), a9 && (a9[k9(4920)] = ((X ?? '') + ' ' + a7)[k9(2762)]());
+                let ak = Y?.querySelector(".fx-btn-label");
+                ak && (ak.textContent = a8 + ' (' + a7 + ')'), a9 && (a9.textContent = ((X ?? '') + ' ' + a7).trim());
             };
             aj(), L = window.setInterval(() => {
                 const kj = k7;
@@ -7209,14 +7209,14 @@ function ST(c) {
                     aj();
                     return;
                 }
-                window[kj(4489)](L), C(U);
+                window.clearInterval(L), C(U);
             }, 1000);
         }
         let M = c.dismiss,
             N = s1("confirm", M !== void 0 ? () => C(M) : () => {});
         q.addEventListener("pointerdown", ak => {
             const kk = k7;
-            ak[kk(5099)] === q && c[kk(1158)] !== void 0 && C(c[kk(1158)]);
+            ak.target === q && c.dismiss !== void 0 && C(c.dismiss);
         }), document.body.appendChild(q), (I ?? H)?.focus();
     });
 }
@@ -7348,7 +7348,7 @@ function zg(c) {
         g = [],
         j = (q, u, v) => {
             const kC = kB;
-            u > 0 && v > 0 && g[kC(3087)]({
+            u > 0 && v > 0 && g.push({
                 source: q,
                 count: u,
                 bonds: u * v
@@ -7409,11 +7409,11 @@ function Bu() {
             taken: ((() => {
                 const kE = kD;
                 let q = {};
-                for (let [u, v] of Object[kE(5413)](p[kE(884)] ?? {})) {
+                for (let [u, v] of Object.entries(p.taken ?? {})) {
                     let y = Ys(u);
-                    if (!y || !Array[kE(4562)](v)) continue;
-                    let A = [...new Set(v[kE(588)](C => Math[kE(1959)](Number(C)))[kE(3639)](C => Number[kE(2895)](C) && C >= 0))];
-                    A[kE(488)] > 0 && (q[y] = A);
+                    if (!y || !Array.isArray(v)) continue;
+                    let A = [...new Set(v.map(C => Math.floor(Number(C))).filter(C => Number.isFinite(C) && C >= 0))];
+                    A.length > 0 && (q[y] = A);
                 }
                 return q;
             })())
@@ -7432,13 +7432,13 @@ function Bu() {
             stock: ((() => {
                 const kF = kD;
                 let q = {},
-                    u = d[kF(2586)];
-                if (u && typeof u == kF(3028))
-                    for (let [v, y] of Object[kF(5413)](u)) {
-                        let A = Math[kF(1959)](Number(y));
-                        Number[kF(2895)](A) && A > 0 && (q[v] = A);
+                    u = d.stock;
+                if (u && typeof u == "object")
+                    for (let [v, y] of Object.entries(u)) {
+                        let A = Math.floor(Number(y));
+                        Number.isFinite(A) && A > 0 && (q[v] = A);
                     }
-                for (let C of $g) q[C] === void 0 && Array[kF(4562)](d[kF(2582)]) && d[kF(2582)][kF(5073)](C) && (q[C] = Kg);
+                for (let C of $g) q[C] === void 0 && Array.isArray(d.unlocked) && d.unlocked.includes(C) && (q[C] = Kg);
                 return q;
             })()),
             loadout: {
@@ -7503,23 +7503,23 @@ function Gu(j, q) {
         time: L
     } = q, N = new Map(j.squad.map(aA => [aA.name, aA])), P = q.survived.map(aA => {
         const kL = kK;
-        let aB = N[kL(778)](aA),
-            aC = aB?.[kL(1348)] ?? 0;
+        let aB = N.get(aA),
+            aC = aB?.missions ?? 0;
         return {
             name: aA,
             missions: A ? aC + 1 : aC,
             promoted: A && ne(aC + 1) > ne(aC),
-            own: !!aB?.[kL(2138)]
+            own: !!aB?.own
         };
     }), Q = q.died.map(aA => {
         const kM = kK;
-        let aB = N[kM(778)](aA);
+        let aB = N.get(aA);
         return {
             name: aA,
-            missions: aB?.[kM(1348)] ?? 0,
+            missions: aB?.missions ?? 0,
             mission: H,
             difficulty: K,
-            own: !!aB?.[kM(2138)]
+            own: !!aB?.own
         };
     }), S = j.records[F], U = S?.bestTime ?? 1 / 0, V = S?.bestHome ?? 0, X = !!S?.clears.includes(K), Y = q.packagesFound ?? [], a7 = zg({
         won: A,
@@ -7776,14 +7776,14 @@ function Zu(c = 20000) {
                 g();
                 return;
             }
-            if (ET || (ET = new Audio(i), ET[lx(4127)] = true, ET[lx(1505)] = lx(1887), ET[lx(1709)] = true, document[lx(1463)][lx(2592)](ET)), ET[lx(5751)] >= 4) {
+            if (ET || (ET = new Audio(i), ET.loop = true, ET.preload = "auto", ET.hidden = true, document.body.appendChild(ET)), ET.readyState >= 4) {
                 g();
                 return;
             }
-            let j = window[lx(2948)](() => g(), c);
-            ET[lx(1661)](lx(1630), () => {
+            let j = window.setTimeout(() => g(), c);
+            ET.addEventListener("canplaythrough", () => {
                 const lz = lx;
-                window[lz(2511)](j), g();
+                window.clearTimeout(j), g();
             }, {
                 once: true
             });
@@ -7858,8 +7858,8 @@ function nt() {
         p = () => {
             const lF = lE;
             if (!(d !== Yu || et)) {
-                if (m++, c[lF(2734)] = Math[lF(3002)](0, j * (1 - m / g)), m < g) {
-                    window[lF(2948)](p, l / g);
+                if (m++, c.volume = Math.max(0, j * (1 - m / g)), m < g) {
+                    window.setTimeout(p, l / g);
                     return;
                 }
                 l1();
@@ -7903,13 +7903,13 @@ function Wm(c) {
         const lI = lH;
         let j = sn(),
             l = ot();
-        d[lI(5057)][lI(827)]('on', j && !l), d[lI(5057)][lI(827)](lI(3577), l), d[lI(4492)](lI(4892), String(j)), d[lI(3984)] = j ? l ? lI(5441) : Xu() === lI(5892) ? lI(1403) : lI(807) : lI(3323), d[lI(4492)](lI(5246), d[lI(3984)]), d[lI(5582)] = j ? Wb : eb;
+        d.classList.toggle('on', j && !l), d.classList.toggle("blocked", l), d.setAttribute("aria-pressed", String(j)), d.title = j ? l ? "Start the music  (M)" : Xu() === "synth" ? "Music on — house march  (M)" : "Music on  (M)" : "Music off  (M)", d.setAttribute("aria-label", d.title), d.innerHTML = j ? Wb : eb;
     };
     d.addEventListener("click", ea);
     let i = tt(g);
     return g(), c.appendChild(d), () => {
         const lJ = lH;
-        i(), d[lJ(549)]();
+        i(), d.remove();
     };
 }
 var em = ["review", "armoury", "offer"],
@@ -8379,8 +8379,8 @@ async function rt(c, d = {}) {
         let l = y => {
                 const mD = mC;
                 if (y === void 0) return null;
-                let A = Math[mD(1207)](y);
-                return Number[mD(2895)](A) && A >= 1 && A <= 5 ? A : false;
+                let A = Math.round(y);
+                return Number.isFinite(A) && A >= 1 && A <= 5 ? A : false;
             },
             m = c.kind === "mission" ? l(c.fun) : null,
             p = c.kind === "mission" ? l(c.hard) : null;
@@ -8459,7 +8459,7 @@ function Po({
         let P = w("div", "dsp-actions"),
             Q = a8 => {
                 const mI = mH;
-                q || (q = true, a7(), U(), S(), F[mI(549)](), j(a8));
+                q || (q = true, a7(), U(), S(), F.remove(), j(a8));
             },
             R = g(P, Q);
         R.classList.add("dsp-body"), H.append(R, P);
@@ -8470,7 +8470,7 @@ function Po({
             Y = 0,
             a7 = () => {
                 const mJ = mH;
-                window[mJ(4489)](X), window[mJ(4489)](Y), K[mJ(935)][mJ(4584)](mJ(5863), '0');
+                window.clearInterval(X), window.clearInterval(Y), K.style.setProperty("--dsp-face-f", '0');
             };
         if (e1()) N.textContent = c;
         else {
@@ -8479,12 +8479,12 @@ function Po({
             X = window.setInterval(() => {
                 const mK = mH;
                 let ak = c[a8];
-                N[mK(4920)] = c[mK(4157)](0, ++a8), A[mK(1441)] && !hb[mK(4732)](ak) && ++a9 % (A[mK(1441)][mK(1010)] ?? 1) === 0 && O1(A[mK(1441)]), a8 >= c[mK(488)] && a7();
+                N.textContent = c.slice(0, ++a8), A.voice && !hb.test(ak) && ++a9 % (A.voice.everyNth ?? 1) === 0 && O1(A.voice), a8 >= c.length && a7();
             }, pb);
             let aj = 0;
             Y = window.setInterval(() => {
                 const mL = mH;
-                K[mL(935)][mL(4584)](mL(5863), String(V[aj++ % V[mL(488)]] ?? 0));
+                K.style.setProperty("--dsp-face-f", String(V[aj++ % V.length] ?? 0));
             }, fb);
         }
         document.body.appendChild(F), requestAnimationFrame(() => F.classList.add('in')), P.querySelector("button")?.focus();
@@ -8522,73 +8522,73 @@ function ga({
                 content: S,
                 buttons: U
             } = R();
-            L[mN(4814)](S), v[mN(4814)](...U), U[0]?.[mN(3930)]();
+            L.replaceChildren(S), v.replaceChildren(...U), U[0]?.focus();
         },
         N = () => {
             const mO = mM;
-            let R = w(mO(991));
-            R[mO(2592)](w('h2', mO(5270), E[mO(5021)]));
-            let S = w('ul', mO(2337));
-            for (let U of E[mO(3119)]) S[mO(2592)](w('li', '', U));
-            return R[mO(2592)](S), F && R[mO(2592)](w('p', mO(5857), mO(2696) + F)), {
+            let R = w("div");
+            R.appendChild(w('h2', "dsp-headline", E.headline));
+            let S = w('ul', "dsp-list");
+            for (let U of E.bullets) S.appendChild(w('li', '', U));
+            return R.appendChild(S), F && R.appendChild(w('p', "dsp-price", "Full game -- " + F)), {
                 content: R,
-                buttons: [IT(E[mO(4184)][mO(5937)](mO(4991), F), mO(1641), () => {
+                buttons: [IT(E.cta.replace("{price}", F), "dsp-go primary", () => {
                     const mP = mO;
-                    ZT(mP(4603), {
+                    ZT("purchase_intent_clicked", {
                         ...I,
                         ...H
                     }), M(P);
-                }), IT(E[mO(5390)], mO(3508), () => {
+                }), IT(E.decline, "dsp-go dark", () => {
                     const mQ = mO;
-                    ZT(mQ(4236), {
+                    ZT("purchase_intent_declined", {
                         ...I,
                         ...H
-                    }), q(mQ(3703));
+                    }), q("declined");
                 })]
             };
         },
         P = () => {
             const mR = mM;
-            let R = w(mR(991));
-            R[mR(1643)](w('h2', mR(5270), E[mR(2545)][mR(5021)]), w('p', mR(2063), E[mR(2545)][mR(2277)]));
+            let R = w("div");
+            R.append(w('h2', "dsp-headline", E.reveal.headline), w('p', "dsp-plain", E.reveal.sub));
             let S = !Sm(),
-                U = w(mR(1869), mR(5040));
-            U[mR(2882)] = mR(5557), U[mR(1675)] = mR(4149), U[mR(4472)] = mR(5557), U[mR(4492)](mR(5246), mR(2702));
+                U = w("input", "dsp-input");
+            U.type = "email", U.placeholder = "you@example.com", U.autocomplete = "email", U.setAttribute("aria-label", "Email address");
             let V = false;
-            U[mR(3345)] = () => {
+            U.oninput = () => {
                 const mS = mR;
-                V || !U[mS(862)] || (V = true, ZT(mS(3719), I));
-            }, S && R[mR(1643)](w('p', mR(3816), E[mR(2545)][mR(1684)]), U);
-            let X = w(mR(1468), mR(2158));
-            X[mR(1197)] = 3, X[mR(2367)] = 2000, X[mR(1675)] = mR(4501), X[mR(4492)](mR(5246), E[mR(2545)][mR(3828)]), R[mR(1643)](w('p', mR(3816), E[mR(2545)][mR(3828)]), X);
-            let Y = w('p', mR(4745));
-            R[mR(2592)](Y);
-            let a7 = IT(mR(1604), mR(1641), () => {
+                V || !U.value || (V = true, ZT("email_entered", I));
+            }, S && R.append(w('p', "dsp-plain dsp-question", E.reveal.ask), U);
+            let X = w("textarea", "dsp-box");
+            X.rows = 3, X.maxLength = 2000, X.placeholder = "Optional.", X.setAttribute("aria-label", E.reveal.comment), R.append(w('p', "dsp-plain dsp-question", E.reveal.comment), X);
+            let Y = w('p', "dsp-note");
+            R.appendChild(Y);
+            let a7 = IT("Keep me posted", "dsp-go primary", () => {
                 const mU = mR;
-                let a8 = S ? U[mU(862)][mU(2762)]() : '',
-                    a9 = X[mU(862)][mU(2762)]();
+                let a8 = S ? U.value.trim() : '',
+                    a9 = X.value.trim();
                 if (!a8 && !a9) {
-                    q(mU(2144));
+                    q("nothing");
                     return;
                 }
-                a7[mU(1894)] = true, Y[mU(4920)] = mU(1167), rt({
-                    kind: mU(4326),
+                a7.disabled = true, Y.textContent = "Sending...", rt({
+                    kind: "offer",
                     email: a8,
                     comment: a9
-                }, H)[mU(4353)](aj => {
+                }, H).then(aj => {
                     const mV = mU;
                     if (!aj) {
-                        a7[mV(1894)] = false, Y[mV(4920)] = mV(5914);
+                        a7.disabled = false, Y.textContent = "That did not get through. Your words are still here if you want to try again.";
                         return;
                     }
-                    a8 && ZT(mV(2369), I), a9 && ZT(mV(4604), I), M(Q);
+                    a8 && ZT("email_submitted", I), a9 && ZT("comment_submitted", I), M(Q);
                 });
             });
             return {
                 content: R,
-                buttons: [a7, IT(E[mR(2545)][mR(4637)], mR(3508), () => {
+                buttons: [a7, IT(E.reveal.back, "dsp-go dark", () => {
                     const mX = mR;
-                    ZT(mX(5312), I), q(mX(5538));
+                    ZT("dialog_closed", I), q("closed");
                 })]
             };
         },
@@ -8596,7 +8596,7 @@ function ga({
             content: w('p', "dsp-headline", E.reveal.thanks),
             buttons: [IT(E.reveal.back, "dsp-go primary", () => {
                 const mY = mM;
-                ZT(mY(1428), I), q(mY(3238));
+                ZT("returned_to_game", I), q("sent");
             })]
         });
     return ZT("offer_viewed", {
@@ -8633,9 +8633,9 @@ function Pm(c, d, g) {
     let i = w("button", "demand-cta");
     return i.type = "button", i.appendChild(w('i', "demand-cta-star")), i.appendChild(w("span", '', bb)), i.addEventListener("click", () => {
         const n8 = n7;
-        ZT(n8(3473), {
-            source: n8(2839)
-        }), Lo(n8(2839), d, g);
+        ZT("demand_cta_clicked", {
+            source: "home_cta"
+        }), Lo("home_cta", d, g);
     }), c.appendChild(i), ZT("demand_cta_impression", {
         source: "home_cta"
     }), () => i.remove();
@@ -8651,12 +8651,12 @@ function Lm(c) {
             const ng = n9;
             if (!g) {
                 if (g = true, !l) {
-                    d[ng(549)]();
+                    d.remove();
                     return;
                 }
-                d[ng(1894)] = true, d[ng(5057)][ng(2129)](ng(1193)), d[ng(1661)](ng(3534), () => d[ng(549)](), {
+                d.disabled = true, d.classList.add("going"), d.addEventListener("animationend", () => d.remove(), {
                     once: true
-                }), window[ng(2948)](() => d[ng(549)](), 700);
+                }), window.setTimeout(() => d.remove(), 700);
             }
         };
     d.addEventListener("click", () => {
@@ -8667,7 +8667,7 @@ function Lm(c) {
     });
     return ot() ? (c.appendChild(d), () => {
         const nj = n9;
-        j(), d[nj(549)]();
+        j(), d.remove();
     }) : (j(), () => {});
 }
 var vb = () => document.getElementById("blackout"),
@@ -8693,7 +8693,7 @@ function Om(c) {
         let i = performance.now(),
             j = () => {
                 const nw = nq;
-                let l = Math[nw(544)](1, (performance[nw(2864)]() - i) / (c * 1000));
+                let l = Math.min(1, (performance.now() - i) / (c * 1000));
                 if (MW(g + (1 - g) * l), l >= 1) {
                     MW(1), d();
                     return;
@@ -8715,7 +8715,7 @@ function He(c) {
         let i = performance.now(),
             j = () => {
                 const nz = nx;
-                let l = Math[nz(544)](1, (performance[nz(2864)]() - i) / (c * 1000));
+                let l = Math.min(1, (performance.now() - i) / (c * 1000));
                 if (MW(g * (1 - l)), l >= 1) {
                     MW(0), d();
                     return;
@@ -8793,21 +8793,21 @@ function Fo(c, {
         m = c[0].id,
         p = c.map(u => {
             const nG = nF;
-            let v = w(nG(5291), nG(1900));
-            return v[nG(2882)] = nG(5291), v[nG(4592)].id = u.id, u[nG(5223)] && v[nG(2592)](eT(u[nG(5223)], 1)), v[nG(2592)](w(nG(4768), nG(1649), u[nG(1693)])), v[nG(1661)](nG(5016), () => q(u.id)), g[nG(2592)](v), v;
+            let v = w("button", "ui-tab");
+            return v.type = "button", v.dataset.id = u.id, u.icon && v.appendChild(eT(u.icon, 1)), v.appendChild(w("span", "ui-tab-label", u.label)), v.addEventListener("click", () => q(u.id)), g.appendChild(v), v;
         });
 
     function q(u) {
         const nH = nF;
         m = u;
-        for (let y of p) y[nH(5057)][nH(827)]('on', y[nH(4592)].id === u);
+        for (let y of p) y.classList.toggle('on', y.dataset.id === u);
         if (d) {
-            for (let [A, C] of l) C[nH(5057)][nH(827)](nH(4756), A !== u);
+            for (let [A, C] of l) C.classList.toggle("ui-tab-off", A !== u);
             return;
         }
-        j[nH(4920)] = '';
-        let v = l[nH(778)](u);
-        v || (v = c[nH(502)](E => E.id === u)[nH(1585)](), l[nH(5635)](u, v)), j[nH(2592)](v);
+        j.textContent = '';
+        let v = l.get(u);
+        v || (v = c.find(E => E.id === u).panel(), l.set(u, v)), j.appendChild(v);
     }
     if (d)
         for (let u of c) {
@@ -8841,21 +8841,21 @@ function Ho(d, g, j = {}) {
     q.className = "sheet-card panel-scroll";
     let u = () => {
         const nJ = nI;
-        E(), m[nJ(1709)] = true, m[nJ(4920)] = '', Bo = null, g?.();
+        E(), m.hidden = true, m.textContent = '', Bo = null, g?.();
     };
     q.append(...d(u)), p.appendChild(q);
     let v = document.createElement("button");
     v.type = "button", v.className = "hud-tool t-close frame-door", v.title = "Close", v.setAttribute("aria-label", "Close"), v.addEventListener("click", u), p.appendChild(v), De(m, p), m.hidden = false;
     let y = F => {
         const nK = nI;
-        F[nK(5099)] === m && u();
+        F.target === m && u();
     };
     m.addEventListener("pointerdown", y);
     let A = Q1(m),
         C = s1("sheet", u),
         E = () => {
             const nL = nI;
-            m[nL(4704)](nL(2082), y), C(), A();
+            m.removeEventListener("pointerdown", y), C(), A();
         };
     Bo = u, q.querySelector("button")?.focus();
 }
@@ -8881,7 +8881,7 @@ function Go(c, d, g, i = false) {
                 key: q.key,
                 onClick: () => {
                     const nN = nM;
-                    j(), q[nN(3899)]();
+                    j(), q.onPick();
                 }
             });
             q.primary ? (u.classList.add("sheet-primary"), m.appendChild(u)) : (p || (p = document.createElement("div"), p.className = "sheet-split", m.appendChild(p)), p.appendChild(u));
@@ -8919,32 +8919,32 @@ function Vo() {
         F.className = "sheet-rows";
         let H = (az, aA, aB, aC, aD) => {
                 const nQ = nP;
-                let aE = document[nQ(2784)](nQ(991));
-                aE[nQ(2084)] = nQ(3398);
-                let aF = document[nQ(2784)](nQ(991));
-                aF[nQ(2084)] = nQ(1077), aF[nQ(2592)](Object[nQ(4640)](document[nQ(2784)]('b'), {
+                let aE = document.createElement("div");
+                aE.className = "sheet-row";
+                let aF = document.createElement("div");
+                aF.className = "sheet-row-text", aF.appendChild(Object.assign(document.createElement('b'), {
                     textContent: az
-                })), aF[nQ(2592)](Object[nQ(4640)](document[nQ(2784)](nQ(4768)), {
+                })), aF.appendChild(Object.assign(document.createElement("span"), {
                     textContent: aA
-                })), aE[nQ(2592)](aF), aE[nQ(2592)](Mu({
+                })), aE.appendChild(aF), aE.appendChild(Mu({
                     options: aB,
                     value: aC,
                     onChange: aD
-                })[nQ(2106)]), F[nQ(2592)](aE);
+                }).root), F.appendChild(aE);
             },
             K = (az, aA, aB, aC) => {
                 const nR = nP;
-                let aD = document[nR(2784)](nR(991));
-                aD[nR(2084)] = nR(3398);
-                let aE = document[nR(2784)](nR(991));
-                aE[nR(2084)] = nR(1077), aE[nR(2592)](Object[nR(4640)](document[nR(2784)]('b'), {
+                let aD = document.createElement("div");
+                aD.className = "sheet-row";
+                let aE = document.createElement("div");
+                aE.className = "sheet-row-text", aE.appendChild(Object.assign(document.createElement('b'), {
                     textContent: az
-                })), aE[nR(2592)](Object[nR(4640)](document[nR(2784)](nR(4768)), {
+                })), aE.appendChild(Object.assign(document.createElement("span"), {
                     textContent: aA
-                })), aD[nR(2592)](aE), aD[nR(2592)](Cu({
+                })), aD.appendChild(aE), aD.appendChild(Cu({
                     value: aB,
                     onChange: aC
-                })[nR(2106)]), F[nR(2592)](aD);
+                }).root), F.appendChild(aD);
             },
             L = F;
         H("Edge scroll", "Push the pointer at the screen edge to pan.", [{
@@ -9025,8 +9025,8 @@ function Vo() {
             a8 = () => {
                 const nS = nP;
                 let az = U();
-                for (let [aA, aB] of a7) aB[nS(4920)] = Y(aA), aB[nS(5057)][nS(549)](nS(1228)), aB[nS(5057)][nS(827)](nS(1338), az && aA[nS(2372)] === nS(3782));
-                az ? P[nS(4492)](nS(4413), nS(2588)) : P[nS(822)](nS(4413));
+                for (let [aA, aB] of a7) aB.textContent = Y(aA), aB.classList.remove("listening"), aB.classList.toggle("clash", az && aA.kind === "cluster");
+                az ? P.setAttribute("aria-disabled", "true") : P.removeAttribute("aria-disabled");
             },
             a9 = new Set(Object.values(W1).flatMap(az => az.codes.map(aA => aA.replace(/^Key/, '').toLowerCase())));
         for (let az of Q) {
@@ -9039,20 +9039,20 @@ function Vo() {
                 S[az.id] = rl(S[az.id]), X(), a8(), U() && CW(P, V);
             }) : aB.addEventListener("click", () => {
                 const nU = nP;
-                aB[nU(4920)] = nU(4431), aB[nU(5057)][nU(2129)](nU(1228));
+                aB.textContent = "PRESS A KEY", aB.classList.add("listening");
                 let aC = aF => {
                         const nV = nU;
-                        !(aF[nV(488)] > 1 && ![nV(2446), nV(676), nV(5090)][nV(5073)](aF)) && !a9[nV(1328)](aF) && (S[az.id] = aF, X()), a8();
+                        !(aF.length > 1 && !["escape", "tab", "enter"].includes(aF)) && !a9.has(aF) && (S[az.id] = aF, X()), a8();
                     },
                     aD = null,
                     aE = aF => {
                         const nX = nU;
-                        aF[nX(2670)](), aF[nX(5788)](), window[nX(4704)](nX(1777), aE, true), aD?.(), aC(aF[nX(2547)][nX(2676)]());
+                        aF.preventDefault(), aF.stopPropagation(), window.removeEventListener("keydown", aE, true), aD?.(), aC(aF.key.toLowerCase());
                     };
-                aD = s1(nU(2296), () => {
+                aD = s1("rebind", () => {
                     const nY = nU;
-                    window[nY(4704)](nY(1777), aE, true), aD?.(), aC(nY(2446));
-                }), window[nU(1661)](nU(1777), aE, true);
+                    window.removeEventListener("keydown", aE, true), aD?.(), aC("escape");
+                }), window.addEventListener("keydown", aE, true);
             }), aA.appendChild(aB), N.appendChild(aA);
         }
         a8(), F = document.createElement("div"), F.className = "sheet-rows";
@@ -9096,7 +9096,7 @@ function Vo() {
         let ax = document.createElement("div");
         return ax.className = "sheet-actions sheet-foot", P.addEventListener("click", () => {
             const nZ = nP;
-            if (P[nZ(3171)](nZ(4413)) === nZ(2588)) {
+            if (P.getAttribute("aria-disabled") === "true") {
                 CW(P, V);
                 return;
             }
@@ -9154,14 +9154,14 @@ function Vm() {
     let c = document.createElement("div");
     return c.className = "changelog", c.innerHTML = Hm().map(d => {
         const og = o9;
-        let g = d[og(2651)] === og(2830) ? og(3466) : '',
-            i = d[og(3215)] ? og(2403) + Cb(d[og(3215)]) + og(4602) : '',
-            j = d[og(5413)][og(588)](l => {
+        let g = d.version === "0.3.0" ? "<span class=\"changelog-here\">you are here</span>" : '',
+            i = d.date ? "<span class=\"changelog-when\">" + Cb(d.date) + "</span>" : '',
+            j = d.entries.map(l => {
                 const oj = og;
-                let m = l[oj(4394)] ? Mb[l[oj(4394)]] : void 0;
-                return m ? oj(600) + m[oj(5647)] + oj(1948) + m[oj(1693)] + oj(2879) + l[oj(4260)] + oj(5097) : oj(2517) + l[oj(4260)] + oj(5097);
-            })[og(4251)]('');
-        return og(1308) + d[og(2651)] + og(4602) + i + g + og(1866) + j + og(4529);
+                let m = l.tag ? Mb[l.tag] : void 0;
+                return m ? "<li class=\"changelog-entry " + m.cls + "\"><span class=\"changelog-tag\">" + m.label + "</span><span>" + l.html + "</span></li>" : "<li class=\"changelog-entry is-note\"><span>" + l.html + "</span></li>";
+            }).join('');
+        return "<section class=\"changelog-release\"><h3><span class=\"changelog-version\">v" + d.version + "</span>" + i + g + "</h3><ul>" + j + "</ul></section>";
     }).join(''), ST({
         title: "What has changed",
         body: c,
@@ -9504,7 +9504,7 @@ function op(c, d) {
         [14, 10]
     ].forEach(([l, m], o) => {
         const oP = oO;
-        h(i, l, 8 + o * 2, m, 2, j[oP(2845)][0]), o < 4 && h(i, l, 8 + o * 2, o === 0 ? m : 2, 2, j[oP(2263)]);
+        h(i, l, 8 + o * 2, m, 2, j.wood[0]), o < 4 && h(i, l, 8 + o * 2, o === 0 ? m : 2, 2, j.edge);
     }), h(i, 12, 23, 5, 1, j.wood[2]), h(i, 18, 24, 5, 1, j.wood[2]), h(i, 25, 20, 3, 1, j.wood[2]), h(i, 13 + d, 18, 7, 1, j.stone[1]), h(i, 18, 20, 3, 1, j.stone[1]), h(i, 6, 16, 3, 3, j.wood[0]), h(i, 27, 11, 4, 2, j.wood[0]), i.clearRect(4, 19, 2, 2), i.clearRect(25, 7, 2, 2);
     for (let [l, m] of [
             [10, 16],
@@ -10120,13 +10120,13 @@ function Ko(g = 0) {
             for (let X = 0; X < j; X++) {
                 if (Uo[V][X] !== '#' || ya(X, V, ...C).d <= 4.2) continue;
                 let Y = ((X - E[0]) * (E[2] - E[0]) + (V - E[1]) * (E[3] - E[1])) / ((E[2] - E[0]) ** 2 + (E[3] - E[1]) ** 2);
-                Math[pC(4348)](Y - U) > 0.028 || k(A, X, V, pC(5659));
+                Math.abs(Y - U) > 0.028 || k(A, X, V, "#d8d2b4");
             }
     };
     F(0.22), F(0.33), F(0.7), F(0.81);
     let H = (U, V) => {
         const pD = pB;
-        h(A, U - 1, V, 3, 1, pD(2386)), h(A, U, V - 1, 1, 3, pD(2386)), k(A, U - 1, V - 1, pD(529)), k(A, U + 1, V + 1, pD(529));
+        h(A, U - 1, V, 3, 1, "#e8e4cc"), h(A, U, V - 1, 1, 3, "#e8e4cc"), k(A, U - 1, V - 1, "#a89f80"), k(A, U + 1, V + 1, "#a89f80");
     };
     H(7, 8), H(27, 21), h(A, 19, 9, 3, 3, he.deep), h(A, 19, 9, 2, 1, "#8a9a6a");
     let I = 29,
@@ -10420,7 +10420,7 @@ function Nb() {
     ].forEach(([g, j], l) => {
         const pT = pS;
         let m = 9 + l;
-        h(d, g, m, j, 1, YW[pT(1463)]), h(d, g, m, Math[pT(3002)](2, Math[pT(1207)](j / 3)), 1, YW[pT(596)]), h(d, g + j - 2, m, 2, 1, YW[pT(5931)]);
+        h(d, g, m, j, 1, YW.body), h(d, g, m, Math.max(2, Math.round(j / 3)), 1, YW.lit), h(d, g + j - 2, m, 2, 1, YW.dark);
     });
     for (let g = 12; g < 25; g += 4) h(d, 3, g, 13, 1, YW.dark);
     for (let i = 5; i < 16; i += 4) h(d, i, 10, 1, 16, YW.dark);
@@ -10470,16 +10470,16 @@ function Xp(c, d, g, j, m) {
         [p - 16, 33]
     ].forEach(([v, y], A) => {
         const pY = pX;
-        h(c, v, A, y, 1, lt[pY(1463)]), h(c, v, A, Math[pY(3002)](2, Math[pY(1207)](y / 3)), 1, lt[pY(596)]), h(c, v + y - 4, A, 4, 1, lt[pY(5931)]);
+        h(c, v, A, y, 1, lt.body), h(c, v, A, Math.max(2, Math.round(y / 3)), 1, lt.lit), h(c, v + y - 4, A, 4, 1, lt.dark);
     });
     for (let v = 2; v < 16; v++) k(c, p - 6, v, lt.dark), k(c, p + 5, v, lt.dark);
     h(c, p - 16, q, 33, 1, lt.dark);
     let r = (y, A, C) => {
             const pZ = pX;
-            let E = Math[pZ(3002)](Math[pZ(4348)](A - y), C - q);
+            let E = Math.max(Math.abs(A - y), C - q);
             for (let F = 0; F <= E; F++) {
                 let H = F / E;
-                k(c, Math[pZ(1207)](y + (A - y) * H), Math[pZ(1207)](q + (C - q) * H), g);
+                k(c, Math.round(y + (A - y) * H), Math.round(q + (C - q) * H), g);
             }
         },
         u = Math.floor(m / 2);
@@ -10592,7 +10592,7 @@ function zb(c) {
         let {
             c: i,
             g: j
-        } = O(c[qj(5595)], c[qj(647)]);
+        } = O(c.cellW, c.cellH);
         return UW(j, c, g), i;
     });
 }
@@ -10686,8 +10686,8 @@ function ty(j) {
                 P = M.a + 0.22 * K(M.nA, M.pA);
             return {
                 lr: H * M.r * (1 + 0.15 * K(M.nR, M.pR)),
-                lx: Yo + Math[qv(4513)](P) * N,
-                ly: I + Math[qv(527)](P) * N
+                lx: Yo + Math.cos(P) * N,
+                ly: I + Math.sin(P) * N
             };
         }).sort((M, N) => M.ly - N.ly);
     for (let {
@@ -10881,7 +10881,7 @@ function fy(j, q, A) {
         let Q = (K ? 2 : 1) + M;
         h(E, 3, Q, 2, 2, j.body), k(E, 3, Q - 1, j.comb), P ? k(E, 5, 2 + M, j.wing) : k(E, 4, Q + 1, j.legs), N = () => {
             const qD = qC;
-            k(E, 3, 6 + M, j[qD(5309)]), k(E, 5, 6 + M, j[qD(5309)]);
+            k(E, 3, 6 + M, j.legs), k(E, 5, 6 + M, j.legs);
         };
     } else {
         let R = H > 0 ? 1 : -1,
@@ -10897,7 +10897,7 @@ function fy(j, q, A) {
             a9 = L * R;
         N = () => {
             const qE = qC;
-            k(E, a8 + Math[qE(3002)](0, a9), 6 + M, j[qE(5309)]), k(E, a8 + 2 + Math[qE(544)](0, a9), 6 + M, j[qE(5309)]);
+            k(E, a8 + Math.max(0, a9), 6 + M, j.legs), k(E, a8 + 2 + Math.min(0, a9), 6 + M, j.legs);
         };
     }
     return B(C, j.outline), N(), C;
@@ -11403,48 +11403,48 @@ var Df = c => ni(Va, Da(c)),
             let c = new WebSocket(wy());
             this.ws = c, c.onopen = () => {
                 const rA = rz;
-                if (this.ws !== c || !this[rA(1516)]) {
-                    c[rA(5317)]();
+                if (this.ws !== c || !this.wanted) {
+                    c.close();
                     return;
                 }
-                this[rA(2652)] = 500;
+                this.retryMs = 500;
                 let {
                     userId: d,
                     secret: g
                 } = oi();
-                c[rA(3677)](JSON[rA(512)]({
-                    t: rA(4144),
+                c.send(JSON.stringify({
+                    t: "hello",
                     userId: d,
                     secret: g,
-                    name: this[rA(3918)]() || rA(3866),
+                    name: this.name() || "SOLDIER",
                     v: Ba,
                     content: Ga
                 }));
             }, c.onmessage = d => {
                 const rB = rz;
-                if (this.ws !== c || !this[rB(1516)]) return;
+                if (this.ws !== c || !this.wanted) return;
                 let g;
                 try {
-                    g = JSON[rB(1241)](String(d[rB(548)]));
+                    g = JSON.parse(String(d.data));
                 } catch {
                     return;
                 }
-                if (g.t === rB(5526)) {
-                    this[rB(2111)] = true;
-                    let i = this[rB(5116)];
-                    this[rB(5116)] = [];
-                    for (let j of i) this[rB(3677)](j);
-                    this[rB(922)]?.();
+                if (g.t === "welcome") {
+                    this.greeted = true;
+                    let i = this.queue;
+                    this.queue = [];
+                    for (let j of i) this.send(j);
+                    this.onWelcome?.();
                     return;
                 }
-                if (g.t === rB(4021) && /out of date|one identity|who goes there/ [rB(4732)](g[rB(1937)])) {
-                    this[rB(1440)]?.(g), this[rB(5317)]();
+                if (g.t === "err" && /out of date|one identity|who goes there/ .test(g.msg)) {
+                    this.onMsg?.(g), this.close();
                     return;
                 }
-                this[rB(4801)](g, c);
+                this.deliver(g, c);
             }, c.onclose = () => {
                 const rC = rz;
-                this.ws === c && (this.ws = null, this[rC(2111)] = false, this[rC(1516)] && (this[rC(4247)]?.(), this[rC(5490)] = window[rC(2948)](() => this[rC(3133)](), this[rC(2652)]), this[rC(2652)] = Math[rC(544)](8000, this[rC(2652)] * 2)));
+                this.ws === c && (this.ws = null, this.greeted = false, this.wanted && (this.onDrop?.(), this.retryTimer = window.setTimeout(() => this.dial(), this.retryMs), this.retryMs = Math.min(8000, this.retryMs * 2)));
             };
         } deliver(c, d) {
             const rD = cX;
@@ -11453,7 +11453,7 @@ var Df = c => ni(Va, Da(c)),
                 let g = performance.now();
                 this.deliveryAt = Math.max(this.deliveryAt, g + this.impair.lag + Math.random() * this.impair.jitter), window.setTimeout(() => {
                     const rE = rD;
-                    this.ws === d && this[rE(1516)] && this[rE(1440)]?.(c);
+                    this.ws === d && this.wanted && this.onMsg?.(c);
                 }, this.deliveryAt - g);
                 return;
             }
@@ -11548,13 +11548,13 @@ var ri = c => location.origin + "/join/" + c,
             }
             this.conn = new ii(vn), this.conn.onMsg = c => this.receive(c), this.conn.onWelcome = () => {
                 const rO = rN;
-                this[rO(1874)] && this[rO(4680)][rO(3677)]({
-                    t: rO(4251),
-                    code: this[rO(1874)]
+                this.wantedCode && this.conn.send({
+                    t: "join",
+                    code: this.wantedCode
                 });
             }, this.conn.onDrop = () => {
                 const rP = rN;
-                this[rP(866)] && this[rP(4181)](FT(rP(3510))), this[rP(1952)]();
+                this.room && this.tell(FT("ownDrop")), this.changed();
             }, this.conn.open();
         }
         getconnected() {
@@ -11964,8 +11964,8 @@ function Vf(c) {
     const sM = cX;
     return ["frag", "smoke", "flash"].filter(d => {
         const sN = sM;
-        let g = bW[sN(502)](i => i.id === ge[d]);
-        return g?.[sN(5645)] && gW(c, g.id) > 0;
+        let g = bW.find(i => i.id === ge[d]);
+        return g?.ready && gW(c, g.id) > 0;
     });
 }
 
@@ -11973,8 +11973,8 @@ function Xa(c) {
     const sO = cX;
     return ["supplyDrop", "airstrike", "reinforcements"].filter(d => {
         const sP = sO;
-        let g = bW[sP(502)](i => i.id === d);
-        return g?.[sP(5645)] && gW(c, g.id) > 0;
+        let g = bW.find(i => i.id === d);
+        return g?.ready && gW(c, g.id) > 0;
     });
 }
 
@@ -12048,12 +12048,12 @@ function Iy(c, d, g) {
         u.appendChild(eT(xn(), 2)), u.appendChild(w("span", "ar-price-n", String(q))), p.appendChild(u);
         let v = Ja("BUY +1", "ar-buy", () => {
             const sV = sU;
-            if (c[sV(5645)]) {
-                if (d[sV(4422)] < q) {
-                    CW(v, sV(4587));
+            if (c.ready) {
+                if (d.bonds < q) {
+                    CW(v, "not enough war bonds");
                     return;
                 }
-                Hf(d, c.id) && (la(c.id, q, d[sV(4422)]), g());
+                Hf(d, c.id) && (la(c.id, q, d.bonds), g());
             }
         });
         return (!c.ready || d.bonds < q) && (v.setAttribute("aria-disabled", "true"), v.classList.add("off")), p.appendChild(v), j.appendChild(p), j;
@@ -12069,11 +12069,11 @@ function Iy(c, d, g) {
             C.appendChild(eT(Pe(true), 2, "ar-lock")), C.appendChild(eT(xn(), 2)), C.appendChild(w("span", "ar-price-n", String(A))), p.appendChild(C);
             let E = Ja("UNLOCK", "ar-buy", () => {
                 const sX = sU;
-                if (d[sX(4422)] < A) {
-                    CW(E, sX(4587));
+                if (d.bonds < A) {
+                    CW(E, "not enough war bonds");
                     return;
                 }
-                Gf(d, c.id) && (la(c.id, A, d[sX(4422)]), g());
+                Gf(d, c.id) && (la(c.id, A, d.bonds), g());
             });
             d.bonds < A && (E.setAttribute("aria-disabled", "true"), E.classList.add("off")), p.appendChild(E);
         }
@@ -12105,19 +12105,19 @@ function mi(c) {
         icon: Ke(A),
         panel: () => {
             const sZ = sY;
-            let C = w(sZ(991), sZ(2118)),
-                E = w(sZ(991), sZ(2093));
-            for (let F of bW[sZ(3639)](H => H[sZ(3385)] === v)) E[sZ(2592)](Iy(F, j, () => {
+            let C = w("div", "ar-panel"),
+                E = w("div", "ar-grid");
+            for (let F of bW.filter(H => H.category === v)) E.appendChild(Iy(F, j, () => {
                 const t7 = sZ;
-                m(), c[t7(2842)]?.();
+                m(), c.onBought?.();
             }));
-            return C[sZ(2592)](E), C;
+            return C.appendChild(E), C;
         }
     })));
     u.select(c.tab());
     for (let v of u.root.querySelectorAll(".ui-tab")) v.addEventListener("click", () => {
         const t8 = sY;
-        c[t8(1783)](v[t8(4592)].id);
+        c.onTab(v.dataset.id);
     });
     g.append(u.root, u.body);
 }
@@ -12192,7 +12192,7 @@ function Jf(q, A, F, H, K, L) {
                 const tx = b;
                 aH || (aH = true, MW(1), N.classList.add("leaving"), window.setTimeout(() => {
                     const tz = tx;
-                    bO(), bP[tz(549)](), bQ(), bD(), document[tz(4704)](tz(1777), bR), U[tz(4704)](tz(2082), bS), $[tz(5229)] = null, $[tz(3018)] = null, $[tz(5363)] = null, window[tz(4489)](bz), N[tz(1709)] = true, N[tz(5057)][tz(549)](tz(2559)), aG(bU);
+                    bO(), bP.remove(), bQ(), bD(), document.removeEventListener("keydown", bR), U.removeEventListener("pointerdown", bS), $.onChange = null, $.onStart = null, $.onJoin = null, window.clearInterval(bz), N.hidden = true, N.classList.remove("leaving"), aG(bU);
                 }, f.timing.frontFade));
             },
             aJ = bU => aI({
@@ -12217,309 +12217,309 @@ function Jf(q, A, F, H, K, L) {
                 for (let [bV, bX] of Object.entries(aK)) bX.hidden = bV !== bU;
                 bU === "armoury" && bC(), bU === "select" && aM(), bU !== "intro" && dm(bU), aK[bU].querySelector("button")?.focus();
             };
-        aC[tC(4097)] = () => {
+        aC.onclick = () => {
             const tD = tC;
-            N[tD(5057)][tD(4578)](tD(2636)) && aN(tD(2729));
+            N.classList.contains("on-select") && aN("intro");
         };
-        let aO = document[tC(4309)](tC(3996));
-        aO && (aO[tC(4097)] = bU => {
+        let aO = document.getElementById("privacy-link");
+        aO && (aO.onclick = bU => {
             const tE = tC;
-            bU[tE(2670)](), Bm();
+            bU.preventDefault(), Bm();
         });
-        let aP = document[tC(4309)](tC(2457)),
-            aQ = document[tC(4309)](tC(4954));
-        aP && (aP[tC(4920)] = tC(3784), aP[tC(1709)] = false, aQ && (aQ[tC(1709)] = false), Gm() && (aP[tC(1894)] = false, aP[tC(3984)] = tC(1696), aP[tC(4097)] = () => {
+        let aP = document.getElementById("front-version"),
+            aQ = document.getElementById("front-version-sep");
+        aP && (aP.textContent = "v0.3.0", aP.hidden = false, aQ && (aQ.hidden = false), Gm() && (aP.disabled = false, aP.title = "What has changed", aP.onclick = () => {
             Vm();
         }));
         let aR = co(q),
-            aS = A && aR[tC(764)](bU => bU.id === A && aE[tC(1543)][tC(1328)](bU.id)) ? A : null,
-            aU = aR[tC(502)](bU => aE[tC(1543)][tC(1328)](bU.id) && !K[tC(3184)][bU.id]);
-        aA[tC(4920)] = '';
+            aS = A && aR.some(bU => bU.id === A && aE.open.has(bU.id)) ? A : null,
+            aU = aR.find(bU => aE.open.has(bU.id) && !K.records[bU.id]);
+        aA.textContent = '';
         let aV = bU => {
                 const tF = tC;
-                let bV = w(tF(991), tF(1143) + bU);
-                return aA[tF(2592)](bV), bV;
+                let bV = w("div", "intro-row " + bU);
+                return aA.appendChild(bV), bV;
             },
-            aX = aV(tC(587)),
-            aY = aV(tC(3487)),
-            aZ = aV(tC(3155));
-        aX[tC(2592)](RW(tC(1548), tC(681), () => {
+            aX = aV("intro-row-play"),
+            aY = aV("intro-row-pair"),
+            aZ = aV("intro-row-net");
+        aX.appendChild(RW("PLAY NOW", "primary", () => {
             const tG = tC;
-            let bU = aU?.id ?? aS ?? aR[tG(502)](bV => aE[tG(1543)][tG(1328)](bV.id))?.id;
+            let bU = aU?.id ?? aS ?? aR.find(bV => aE.open.has(bV.id))?.id;
             bU && aJ(bU);
-        })), aY[tC(2592)](RW(tC(3954), '', () => aN(tC(2264)))), aY[tC(2592)](RW(tC(1330), '', () => aN(tC(2109))));
-        let b4 = RW(tC(913), tC(5931), () => {
+        })), aY.appendChild(RW("MAP SELECT", '', () => aN("select"))), aY.appendChild(RW("ARMOURY", '', () => aN("armoury")));
+        let b4 = RW("MULTIPLAYER", "dark", () => {
             const tH = tC;
-            aN(tH(2736)), $[tH(866)] || $[tH(5368)]();
+            aN("lobby"), $.room || $.list();
         });
-        b4[tC(716)](eT(Ie(true), 2, tC(2626))), b4[tC(2592)](eT(Ie(true), 2, tC(2626))), aZ[tC(2592)](b4);
+        b4.prepend(eT(Ie(true), 2, "intro-star")), b4.appendChild(eT(Ie(true), 2, "intro-star")), aZ.appendChild(b4);
         let b7 = false,
             b8 = () => {
                 const tI = tC;
-                b7 || (b7 = true, $[tI(5368)](), bx(), window[tI(2948)](() => {
+                b7 || (b7 = true, $.list(), bx(), window.setTimeout(() => {
                     b7 = false, bx();
                 }, 500));
             },
-            b9 = bU => Math[tC(1207)](bU / 60) + tC(5418) + (bU === 60 ? '' : 'S'),
+            b9 = bU => Math.round(bU / 60) + " MINUTE" + (bU === 60 ? '' : 'S'),
             bj = bU => {
                 const tJ = tC;
-                let bV = w(tJ(991), tJ(4638)),
+                let bV = w("div", "lb-settings"),
                     bX = (c8, c9, cj, ck) => {
                         const tK = tJ;
                         ST({
                             title: c8,
                             body: c9,
-                            buttons: cj[tK(588)](([cq, cw]) => ({
+                            buttons: cj.map(([cq, cw]) => ({
                                 label: cq,
                                 value: cw
                             })),
-                            dismiss: tK(5233)
-                        })[tK(4353)](cq => {
+                            dismiss: "cancel"
+                        }).then(cq => {
                             const tL = tK;
-                            cq !== tL(5233) && ck(cq);
+                            cq !== "cancel" && ck(cq);
                         });
                     },
-                    bY = lo[tJ(3639)](c8 => aT[c8]?.[tJ(3362)] === tJ(3913)),
+                    bY = lo.filter(c8 => aT[c8]?.objective === "skirmish"),
                     bZ = [
-                        [tJ(1366), pi(bU[tJ(1364)]), () => bX(tJ(1366), tJ(3264), bY[tJ(588)](c8 => [pi(c8), c8]), c8 => $[tJ(4438)]({
+                        ["MAP", pi(bU.mapId), () => bX("MAP", "Where the next game is fought.", bY.map(c8 => [pi(c8), c8]), c8 => $.settings({
                             mapId: c8
                         }))],
-                        [tJ(4656), b9(bU[tJ(4290)]), () => bX(tJ(4656), tJ(3614), jf[tJ(588)](c8 => [b9(c8), String(c8)]), c8 => $[tJ(4438)]({
+                        ["DURATION", b9(bU.seconds), () => bX("DURATION", "How long the next game runs.", jf.map(c8 => [b9(c8), String(c8)]), c8 => $.settings({
                             seconds: Number(c8)
                         }))],
-                        [tJ(2424), bU[tJ(5805)][tJ(4303)](), () => bX(tJ(2424), tJ(4688), [
-                            [tJ(1324), tJ(3913)]
+                        ["MODE", bU.mode.toUpperCase(), () => bX("MODE", "Skirmish for now. More coming soon.", [
+                            ["SKIRMISH", "skirmish"]
                         ], () => {})],
-                        [tJ(2072), bU[tJ(617)][tJ(4303)](), () => bX(tJ(2072), tJ(5705), [
-                            [tJ(4440), tJ(1306)],
-                            [tJ(774), tJ(4032)]
-                        ], c8 => $[tJ(4438)]({
+                        ["VISIBILITY", bU.visibility.toUpperCase(), () => bX("VISIBILITY", "Public games are listed in the lobby. Private ones need the code.", [
+                            ["PRIVATE", "private"],
+                            ["PUBLIC", "public"]
+                        ], c8 => $.settings({
                             visibility: c8
                         }))],
-                        [tJ(2873), bU[tJ(2883)] ? 'ON' : tJ(5556), () => bX(tJ(2873), tJ(4215), [
+                        ["FOG OF WAR", bU.fog ? 'ON' : "OFF", () => bX("FOG OF WAR", "With it on, you only see what your own men can see.", [
                             ['ON', 'on'],
-                            [tJ(5556), tJ(684)]
-                        ], c8 => $[tJ(4438)]({
+                            ["OFF", "off"]
+                        ], c8 => $.settings({
                             fog: c8 === 'on'
                         }))],
-                        [tJ(1631), bU[tJ(3470)] ? 'ON' : tJ(5556), () => bX(tJ(1631), tJ(5713), [
+                        ["EDGE MOVEMENT", bU.edgeScroll ? 'ON' : "OFF", () => bX("EDGE MOVEMENT", "Push the pointer at the edge of the screen to scroll.", [
                             ['ON', 'on'],
-                            [tJ(5556), tJ(684)]
-                        ], c8 => $[tJ(4438)]({
+                            ["OFF", "off"]
+                        ], c8 => $.settings({
                             edgeScroll: c8 === 'on'
                         }))],
-                        [tJ(4757), String(bU[tJ(1469)]), () => bX(tJ(4757), tJ(3128), Pf[tJ(588)](c8 => [String(c8), String(c8)]), c8 => $[tJ(4438)]({
+                        ["ROUNDS", String(bU.rounds), () => bX("ROUNDS", "How many rounds a match is. The winner of the match takes the point.", Pf.map(c8 => [String(c8), String(c8)]), c8 => $.settings({
                             rounds: Number(c8)
                         }))],
-                        [tJ(1347), String(Math[tJ(544)](bU[tJ(1490)], Yf(bU[tJ(1364)]))), () => bX(tJ(1347), tJ(4151), Lf[tJ(3639)](c8 => c8 <= Yf(bU[tJ(1364)]))[tJ(588)](c8 => [String(c8), String(c8)]), c8 => $[tJ(4438)]({
+                        ["MEN PER SIDE", String(Math.min(bU.squad, Yf(bU.mapId))), () => bX("MEN PER SIDE", "How many men each squad fields. The ground caps it.", Lf.filter(c8 => c8 <= Yf(bU.mapId)).map(c8 => [String(c8), String(c8)]), c8 => $.settings({
                             squad: Number(c8)
                         }))]
                     ],
                     c7 = {
-                        MAP: eT(Ue(tJ(588)), 1),
-                        DURATION: eT(Ue(tJ(4888)), 1),
-                        MODE: eT(Ue(tJ(5313)), 1),
+                        MAP: eT(Ue("map"), 1),
+                        DURATION: eT(Ue("clock"), 1),
+                        MODE: eT(Ue("flag"), 1),
                         VISIBILITY: eT(Pe(false), 1),
-                        'FOG\x20OF\x20WAR': eT(Ue(tJ(3309)), 1),
-                        'EDGE\x20MOVEMENT': eT(Ue(tJ(2820)), 1),
-                        ROUNDS: eT(Ue(tJ(4888)), 1),
-                        'MEN\x20PER\x20SIDE': eT(Ue(tJ(5313)), 1)
+                        'FOG\x20OF\x20WAR': eT(Ue("cloud"), 1),
+                        'EDGE\x20MOVEMENT': eT(Ue("arrows"), 1),
+                        ROUNDS: eT(Ue("clock"), 1),
+                        'MEN\x20PER\x20SIDE': eT(Ue("flag"), 1)
                     };
                 for (let [c8, c9, cj] of bZ) {
-                    let ck = w(tJ(5291), tJ(4883));
-                    ck[tJ(2882)] = tJ(5291), ck[tJ(2592)](c7[c8]), ck[tJ(2592)](w(tJ(4768), tJ(2482), c8)), ck[tJ(2592)](w(tJ(4768), tJ(2348), c9)), ck[tJ(4097)] = cj, bV[tJ(2592)](ck);
+                    let ck = w("button", "lb-set");
+                    ck.type = "button", ck.appendChild(c7[c8]), ck.appendChild(w("span", "lb-set-k", c8)), ck.appendChild(w("span", "lb-set-v", c9)), ck.onclick = cj, bV.appendChild(ck);
                 }
                 return bV;
             },
             bk = bU => () => {
                 const tM = tC;
-                $[tM(1620)]({
-                    seconds: f[tM(3913)][tM(4290)],
+                $.create({
+                    seconds: f.skirmish.seconds,
                     visibility: bU
                 });
             },
             bq = () => {
                 const tN = tC;
-                ak[tN(4920)] = '';
-                let bU = w(tN(991), tN(1396));
-                bU[tN(2592)](w(tN(4768), void 0, tN(3771)));
-                let bV = w(tN(5291), b7 ? tN(4938) : tN(2322));
-                bV[tN(2882)] = tN(5291), bV[tN(3984)] = tN(783), bV[tN(2592)](eT(Zt(tN(4428)), 2)), bV[tN(4097)] = b8, bU[tN(2592)](bV), ak[tN(2592)](bU);
-                let bX = w(tN(991), tN(2062));
-                b7 && bX[tN(5057)][tN(2129)](tN(4808));
-                for (let bZ of $[tN(1653)]) {
-                    let c7 = w(tN(991), bZ[tN(782)] ? tN(5420) : tN(1860));
-                    c7[tN(2592)](w(tN(991), tN(2135)));
-                    let c8 = w(tN(991), tN(1303));
-                    c8[tN(2592)](w(tN(4768), tN(3164), bZ[tN(3918)])), c8[tN(2592)](w(tN(4768), tN(2384), bZ[tN(5805)][tN(4303)]())), c8[tN(2592)](w(tN(4768), tN(2384), pi(bZ[tN(1364)]))), c7[tN(2592)](c8);
-                    let c9 = w(tN(991), tN(1892));
-                    c9[tN(2592)](w(tN(4768), tN(4946), bZ[tN(5210)] + tN(1527) + bZ[tN(1668)])), bZ[tN(782)] ? c9[tN(2592)](RW(tN(2990), '', () => $[tN(4251)](bZ[tN(1443)], tN(5368)))) : c9[tN(2592)](w(tN(4768), tN(4153), tN(1946))), c7[tN(2592)](c9), bX[tN(2592)](c7);
+                ak.textContent = '';
+                let bU = w("div", "lb-games-head");
+                bU.appendChild(w("span", void 0, "PUBLIC GAMES"));
+                let bV = w("button", b7 ? "lb-refresh busy" : "lb-refresh");
+                bV.type = "button", bV.title = "Refresh", bV.appendChild(eT(Zt("restart"), 2)), bV.onclick = b8, bU.appendChild(bV), ak.appendChild(bU);
+                let bX = w("div", "lb-games-list");
+                b7 && bX.classList.add("busy");
+                for (let bZ of $.games) {
+                    let c7 = w("div", bZ.joinable ? "lb-game" : "lb-game full");
+                    c7.appendChild(w("div", "lb-game-map"));
+                    let c8 = w("div", "lb-game-body");
+                    c8.appendChild(w("span", "lb-game-name", bZ.name)), c8.appendChild(w("span", "lb-game-meta", bZ.mode.toUpperCase())), c8.appendChild(w("span", "lb-game-meta", pi(bZ.mapId))), c7.appendChild(c8);
+                    let c9 = w("div", "lb-game-tail");
+                    c9.appendChild(w("span", "lb-game-count", bZ.players + " / " + bZ.capacity)), bZ.joinable ? c9.appendChild(RW("JOIN", '', () => $.join(bZ.code, "list"))) : c9.appendChild(w("span", "lb-game-status", "IN PLAY")), c7.appendChild(c9), bX.appendChild(c7);
                 }
-                let bY = w(tN(991), tN(3503));
-                $[tN(1653)][tN(488)] ? bY[tN(4920)] = tN(1426) : (bY[tN(5057)][tN(2129)](tN(2270)), bY[tN(2592)](w(tN(4768), void 0, tN(3596))), bY[tN(2592)](RW(tN(1031), '', bk(tN(4032))))), bX[tN(2592)](bY), ak[tN(2592)](bX);
+                let bY = w("div", "lb-end");
+                $.games.length ? bY.textContent = "NO MORE GAMES" : (bY.classList.add("empty"), bY.appendChild(w("span", void 0, "NO GAMES OPEN")), bY.appendChild(RW("START ONE", '', bk("public")))), bX.appendChild(bY), ak.appendChild(bX);
             },
             bw = () => {
                 const tO = tC;
-                a9[tO(4920)] = '', aj[tO(4920)] = '';
-                let bU = $[tO(866)],
-                    bV = bU?.[tO(3084)][0]?.[tO(3918)];
-                if (a9[tO(2592)](w(tO(4768), tO(4963), bU ? bU[tO(3918)] : tO(3812))), a9[tO(2592)](aL(() => {
+                a9.textContent = '', aj.textContent = '';
+                let bU = $.room,
+                    bV = bU?.seats[0]?.name;
+                if (a9.appendChild(w("span", "ar-title", bU ? bU.name : "MULTIPLAYER LOBBY")), a9.appendChild(aL(() => {
                         const tP = tO;
-                        if (!$[tP(866)]) {
-                            aN(tP(2729));
+                        if (!$.room) {
+                            aN("intro");
                             return;
                         }
-                        $[tP(1147)](), bx();
+                        $.leave(), bx();
                     })), bU) {
-                    let cq = w(tO(4768), tO(1088));
-                    cq[tO(2592)](eT(bU[tO(617)] === tO(1306) ? Pe(false) : Na(), 1)), cq[tO(2592)](w(tO(4768), void 0, bU[tO(617)][tO(4303)]() + tO(4857) + bU[tO(1443)])), a9[tO(2592)](cq), a9[tO(2592)](w(tO(4768), tO(1919), bU[tO(5805)][tO(4303)]() + tO(1102) + pi(bU[tO(1364)])));
+                    let cq = w("span", "ar-bonds");
+                    cq.appendChild(eT(bU.visibility === "private" ? Pe(false) : Na(), 1)), cq.appendChild(w("span", void 0, bU.visibility.toUpperCase() + " GAME · " + bU.code)), a9.appendChild(cq), a9.appendChild(w("span", "lb-sub", bU.mode.toUpperCase() + " · " + pi(bU.mapId)));
                 }
-                if (aq[tO(5057)][tO(827)](tO(5451), !!bU), ak[tO(1709)] = !!bU, ak[tO(4920)] = '', !bU) {
+                if (aq.classList.toggle("in-room", !!bU), ak.hidden = !!bU, ak.textContent = '', !bU) {
                     bq();
-                    let cw = w(tO(991), tO(4758));
-                    cw[tO(2592)](w(tO(4768), tO(4557), tO(4332)));
-                    let cx = w(tO(991), tO(2067));
-                    cx[tO(2592)](eT(Ve(true), 1, tO(1728))), cx[tO(2592)](w(tO(4768), tO(2648), vn()));
-                    let cz = w(tO(5291), tO(5608));
-                    cz[tO(2882)] = tO(5291), cz[tO(3984)] = tO(890), cz[tO(2592)](eT(Zt(tO(5815)), 2)), cx[tO(2592)](cz), cz[tO(4097)] = () => {
+                    let cw = w("div", "lb-box");
+                    cw.appendChild(w("span", "lb-box-label", "PLAYING AS:"));
+                    let cx = w("div", "lb-box-row");
+                    cx.appendChild(eT(Ve(true), 1, "lb-avatar-plate")), cx.appendChild(w("span", "lb-who", vn()));
+                    let cz = w("button", "lb-pencil");
+                    cz.type = "button", cz.title = "Change your name", cz.appendChild(eT(Zt("pencil"), 2)), cx.appendChild(cz), cz.onclick = () => {
                         const tQ = tO;
                         Ru({
-                            title: tQ(1342),
-                            label: tQ(5687),
+                            title: "YOUR NAME",
+                            label: "What the other lot will call you",
                             value: vn(),
-                            placeholder: tQ(3866),
+                            placeholder: "SOLDIER",
                             maxLength: 12
-                        })[tQ(4353)](cF => {
+                        }).then(cF => {
                             const tR = tQ;
-                            cF !== null && (Df(cF), $[tR(1871)](), bx());
+                            cF !== null && (Df(cF), $.rename(), bx());
                         });
-                    }, cw[tO(2592)](cx), aj[tO(2592)](cw);
+                    }, cw.appendChild(cx), aj.appendChild(cw);
                     let cA = (cF, cG, cH, cI) => {
                         const tS = tO;
-                        let cJ = RW('', tS(5034), cI);
-                        cJ[tS(4920)] = '', cJ[tS(2592)](cH);
-                        let cK = w(tS(991), tS(5902));
-                        return cK[tS(2592)](w(tS(4768), tS(4063), cF)), cK[tS(2592)](w(tS(4768), tS(5419), cG)), cJ[tS(2592)](cK), cJ;
+                        let cJ = RW('', "lb-door", cI);
+                        cJ.textContent = '', cJ.appendChild(cH);
+                        let cK = w("div", "lb-card-text");
+                        return cK.appendChild(w("span", "fx-btn-label", cF)), cK.appendChild(w("span", "lb-box-sub", cG)), cJ.appendChild(cK), cJ;
                     };
-                    aj[tO(2592)](cA(tO(1262), tO(5930), eT(Na(), 2, tO(2193)), bk(tO(4032)))), aj[tO(2592)](cA(tO(1868), tO(2002), eT(Pe(true), 2, tO(2193)), bk(tO(1306))));
-                    let cB = w(tO(991), tO(4758));
-                    cB[tO(2592)](w(tO(4768), tO(4590), tO(3346))), cB[tO(2592)](w(tO(4768), tO(5419), tO(2771)));
-                    let cC = w(tO(991), tO(5184)),
-                        cD = w(tO(1869), tO(2954));
-                    cD[tO(4592)][tO(3296)] = tO(5695), cD[tO(2367)] = 6, cD[tO(1675)] = tO(4138);
+                    aj.appendChild(cA("CREATE PUBLIC GAME", "Anyone can join", eT(Na(), 2, "lb-card-icon"), bk("public"))), aj.appendChild(cA("CREATE PRIVATE GAME", "Invite your friends", eT(Pe(true), 2, "lb-card-icon"), bk("private")));
+                    let cB = w("div", "lb-box");
+                    cB.appendChild(w("span", "lb-box-title", "JOIN WITH CODE")), cB.appendChild(w("span", "lb-box-sub", "Enter a join code"));
+                    let cC = w("div", "lb-join"),
+                        cD = w("input", "lb-input");
+                    cD.dataset.keep = "join-code", cD.maxLength = 6, cD.placeholder = "e.g. H7KD2P";
                     let cE = () => {
                         const tT = tO;
-                        cD[tT(862)][tT(2762)]() && $[tT(4251)](cD[tT(862)]);
+                        cD.value.trim() && $.join(cD.value);
                     };
-                    cD[tO(5374)] = cF => {
+                    cD.onkeydown = cF => {
                         const tU = tO;
-                        cF[tU(2547)] === tU(1227) && cE();
-                    }, cC[tO(2592)](cD), cC[tO(2592)](RW(tO(2990), '', cE)), cB[tO(2592)](cC), $[tO(4961)] && cB[tO(2592)](w(tO(991), tO(762), $[tO(4961)][tO(4303)]())), aj[tO(2592)](cB), aw[tO(4920)] = '';
+                        cF.key === "Enter" && cE();
+                    }, cC.appendChild(cD), cC.appendChild(RW("JOIN", '', cE)), cB.appendChild(cC), $.lastError && cB.appendChild(w("div", "lb-err", $.lastError.toUpperCase())), aj.appendChild(cB), aw.textContent = '';
                     return;
                 }
-                let bX = w(tO(991), tO(902));
+                let bX = w("div", "lb-slots");
                 for (let cF = 0; cF < 2; cF++) {
-                    let cG = bU[tO(3084)][cF],
-                        cH = w(tO(991), tO(3912));
-                    cG?.[tO(5645)] && cH[tO(5057)][tO(2129)](tO(5645)), cG && !cG[tO(2661)] && cH[tO(5057)][tO(2129)](tO(1949)), cH[tO(2592)](w(tO(4768), tO(5953), cF === bU[tO(3034)] ? tO(880) : tO(3193) + (cF + 1))), cH[tO(2592)](eT(cG ? Ve(true) : Rf(), 1, tO(2955)));
-                    let cI = w(tO(991), tO(4849));
+                    let cG = bU.seats[cF],
+                        cH = w("div", "lb-slot");
+                    cG?.ready && cH.classList.add("ready"), cG && !cG.connected && cH.classList.add("away"), cH.appendChild(w("span", "lb-box-label lb-slot-label", cF === bU.you ? "YOUR SQUAD" : "SLOT " + (cF + 1))), cH.appendChild(eT(cG ? Ve(true) : Rf(), 1, "lb-avatar"));
+                    let cI = w("div", "lb-slot-body");
                     if (cG) {
-                        let cJ = w(tO(991), tO(5843));
-                        if (cJ[tO(2592)](w(tO(4768), void 0, cG[tO(3918)] + (cF === bU[tO(3034)] ? tO(3057) : ''))), cI[tO(2592)](cJ), cF === 0 && cI[tO(2592)](w(tO(4768), tO(4156), tO(1627))), bU[tO(3084)][tO(764)](cL => cL[tO(5708)] > 0)) {
-                            let cL = w(tO(4768), tO(3117));
-                            cL[tO(2592)](w(tO(4768), tO(5552), tO(1472) + cG[tO(5708)])), cI[tO(2592)](cL);
+                        let cJ = w("div", "lb-slot-name");
+                        if (cJ.appendChild(w("span", void 0, cG.name + (cF === bU.you ? " (YOU)" : ''))), cI.appendChild(cJ), cF === 0 && cI.appendChild(w("span", "lb-host", "HOST")), bU.seats.some(cL => cL.wins > 0)) {
+                            let cL = w("span", "lb-slot-state");
+                            cL.appendChild(w("span", "lb-wins", "WON " + cG.wins)), cI.appendChild(cL);
                         }
-                        cH[tO(2592)](cI);
-                        let cK = cG[tO(2661)] ? cG[tO(5645)] ? tO(5532) : tO(781) : tO(1082);
-                        if (cF === bU[tO(3034)]) {
-                            let cM = RW(cG[tO(5645)] ? tO(5532) : tO(5013), cG[tO(5645)] ? '' : tO(681), () => $[tO(5645)](!cG[tO(5645)]));
-                            cM[tO(5057)][tO(2129)](tO(1380), tO(3131)), cH[tO(2592)](cM);
-                        } else cH[tO(2592)](w(tO(991), tO(3376), cK));
-                        bX[tO(2592)](cH);
+                        cH.appendChild(cI);
+                        let cK = cG.connected ? cG.ready ? "READY" : "NOT READY" : "WIRE DOWN";
+                        if (cF === bU.you) {
+                            let cM = RW(cG.ready ? "READY" : "ARE YOU READY?", cG.ready ? '' : "primary", () => $.ready(!cG.ready));
+                            cM.classList.add("lb-ready", "lb-actline"), cH.appendChild(cM);
+                        } else cH.appendChild(w("div", "lb-actline lb-status", cK));
+                        bX.appendChild(cH);
                         continue;
                     } else {
-                        cI[tO(2592)](w(tO(4768), tO(5843), tO(2596))), cI[tO(2592)](w(tO(4768), tO(3117), tO(3557)));
-                        let cN = w(tO(991), tO(873)),
-                            cO = w(tO(4768), tO(4318), ri(bU[tO(1443)])),
-                            cP = w(tO(991), tO(5436));
-                        cP[tO(2592)](cO), cP[tO(2592)](RW(tO(2211), tO(4218), () => {
+                        cI.appendChild(w("span", "lb-slot-name", "WAITING FOR ANOTHER SOLDIER...")), cI.appendChild(w("span", "lb-slot-state", "INVITE YOUR FRIEND"));
+                        let cN = w("div", "lb-invite"),
+                            cO = w("span", "lb-url", ri(bU.code)),
+                            cP = w("div", "lb-invite-row");
+                        cP.appendChild(cO), cP.appendChild(RW("COPY LINK", "lb-copy", () => {
                             const tV = tO;
-                            navigator[tV(4019)]?.[tV(2253)](ri(bU[tV(1443)])), cO[tV(4920)] = tV(4569), window[tV(2948)](() => {
+                            navigator.clipboard?.writeText(ri(bU.code)), cO.textContent = "COPIED", window.setTimeout(() => {
                                 const tW = tV;
-                                cO[tW(4920)] = ri(bU[tW(1443)]);
+                                cO.textContent = ri(bU.code);
                             }, 900);
-                        })), cN[tO(2592)](cP);
-                        let cQ = w(tO(991), tO(1640));
-                        cQ[tO(2592)](w(tO(4768), tO(3117), tO(5855))), cQ[tO(2592)](w(tO(4768), tO(602), bU[tO(1443)])), cN[tO(2592)](cQ), cH[tO(2592)](cI), cH[tO(2592)](cN), bX[tO(2592)](cH);
+                        })), cN.appendChild(cP);
+                        let cQ = w("div", "lb-orcode");
+                        cQ.appendChild(w("span", "lb-slot-state", "OR CODE:")), cQ.appendChild(w("span", "lb-code", bU.code)), cN.appendChild(cQ), cH.appendChild(cI), cH.appendChild(cN), bX.appendChild(cH);
                         continue;
                     }
-                    cH[tO(2592)](cI), bX[tO(2592)](cH);
+                    cH.appendChild(cI), bX.appendChild(cH);
                 }
-                aj[tO(2592)](bX);
-                let bY = w(tO(991), tO(3983));
-                bU[tO(1364)] in aT || Iu(bU[tO(1364)]);
+                aj.appendChild(bX);
+                let bY = w("div", "lb-lower");
+                bU.mapId in aT || Iu(bU.mapId);
                 let bZ = bj(bU);
-                bY[tO(2592)](bZ);
-                let c7 = w(tO(991), tO(5327)),
-                    c8 = w(tO(991), tO(2016));
-                for (let cR of $[tO(5433)]) {
-                    let cS = w(tO(991), tO(4129) + cR[tO(2372)]);
-                    cR[tO(2372)] === tO(671) ? (cS[tO(2592)](w(tO(4768), tO(608) + (cR[tO(2677)] ?? tO(2732)), '<' + (cR[tO(1566)] ?? '?') + '>')), cS[tO(2592)](w(tO(4768), tO(5388), cR[tO(5412)]))) : cS[tO(2592)](w(tO(4768), tO(5388), cR[tO(5412)])), c8[tO(2592)](cS);
+                bY.appendChild(bZ);
+                let c7 = w("div", "lb-feedbox"),
+                    c8 = w("div", "lb-feed");
+                for (let cR of $.feed) {
+                    let cS = w("div", "lb-line " + cR.kind);
+                    cR.kind === "chat" ? (cS.appendChild(w("span", "lb-nick " + (cR.colour ?? "green"), '<' + (cR.from ?? '?') + '>')), cS.appendChild(w("span", "lb-said", cR.text))) : cS.appendChild(w("span", "lb-said", cR.text)), c8.appendChild(cS);
                 }
-                c7[tO(2592)](c8);
-                let c9 = w(tO(991), tO(5183)),
-                    cj = w(tO(1869), tO(2954));
-                cj[tO(4592)][tO(3296)] = tO(671), cj[tO(2367)] = ei, cj[tO(1675)] = tO(3063);
+                c7.appendChild(c8);
+                let c9 = w("div", "lb-say"),
+                    cj = w("input", "lb-input");
+                cj.dataset.keep = "chat", cj.maxLength = ei, cj.placeholder = "TYPE A MESSAGE...";
                 let ck = () => {
                     const tX = tO;
-                    let cU = cj[tX(862)];
-                    cU[tX(2762)]() && (cj[tX(862)] = '', $[tX(2057)](cU));
+                    let cU = cj.value;
+                    cU.trim() && (cj.value = '', $.say(cU));
                 };
-                cj[tO(5374)] = cU => {
+                cj.onkeydown = cU => {
                     const tY = tO;
-                    cU[tY(2547)] === tY(1227) && ck();
-                }, c9[tO(2592)](cj), c9[tO(2592)](RW(tO(5473), tO(4218), ck)), c7[tO(2592)](c9), bY[tO(2592)](c7), aj[tO(2592)](bY), c8[tO(1041)] = c8[tO(3988)], aw[tO(4920)] = '';
+                    cU.key === "Enter" && ck();
+                }, c9.appendChild(cj), c9.appendChild(RW("SEND", "lb-copy", ck)), c7.appendChild(c9), bY.appendChild(c7), aj.appendChild(bY), c8.scrollTop = c8.scrollHeight, aw.textContent = '';
             },
             bx = () => {
                 const tZ = tC;
-                let bU = document[tZ(5067)],
-                    bV = [...a8[tZ(823)](tZ(1869))][tZ(588)](bX => ({
-                        keep: bX[tZ(4592)][tZ(3296)],
-                        value: bX[tZ(862)],
-                        at: bX[tZ(1152)] ?? bX[tZ(862)][tZ(488)],
+                let bU = document.activeElement,
+                    bV = [...a8.querySelectorAll("input")].map(bX => ({
+                        keep: bX.dataset.keep,
+                        value: bX.value,
+                        at: bX.selectionStart ?? bX.value.length,
                         had: bX === bU
                     }));
                 bw();
                 for (let bX of bV) {
-                    if (!bX[tZ(3296)]) continue;
-                    let bY = a8[tZ(546)](tZ(952) + bX[tZ(3296)] + '"]');
-                    bY && (bX[tZ(862)] && (bY[tZ(862)] = bX[tZ(862)]), bX[tZ(5907)] && (bY[tZ(3930)](), bY[tZ(2295)](bX.at, bX.at)));
+                    if (!bX.keep) continue;
+                    let bY = a8.querySelector("input[data-keep=\"" + bX.keep + '"]');
+                    bY && (bX.value && (bY.value = bX.value), bX.had && (bY.focus(), bY.setSelectionRange(bX.at, bX.at)));
                 }
             };
-        $[tC(5229)] = bx, $[tC(5363)] = () => rs(), $[tC(866)] || $[tC(5368)]();
-        let bz = window[tC(4524)](() => {
+        $.onChange = bx, $.onJoin = () => rs(), $.room || $.list();
+        let bz = window.setInterval(() => {
             const u7 = tC;
-            !$[u7(866)] && !a8[u7(1709)] && $[u7(5368)]();
+            !$.room && !a8.hidden && $.list();
         }, 5000);
-        $[tC(3018)] = bU => aI({
+        $.onStart = bU => aI({
             net: bU
         }), bx();
         let bA = Ff();
-        bA && history[tC(842)](null, '', '/');
-        let bB = bA ?? $[tC(2130)];
-        $[tC(866)] ? aN(tC(2736)) : bB && (aN(tC(2736)), Bf(bB)[tC(4353)](bU => {
+        bA && history.replaceState(null, '', '/');
+        let bB = bA ?? $.rememberedCode;
+        $.room ? aN("lobby") : bB && (aN("lobby"), Bf(bB).then(bU => {
             const u8 = tC;
             if (!bU) {
-                $[u8(5617)](u8(4125));
+                $.note("that muster has stood down");
                 return;
             }
-            $[u8(4251)](bB, u8(3353));
+            $.join(bB, "link");
         }));
         let bC = () => mi({
                 head: Y,
                 list: a7,
                 campaign: K,
-                closeButton: aL(() => aN(tC(2729))),
+                closeButton: aL(() => aN("intro")),
                 tab: () => X,
                 onTab: bU => {
                     X = bU;
@@ -12532,81 +12532,81 @@ function Jf(q, A, F, H, K, L) {
                     difficulty: aD
                 });
             };
-        aB[tC(1709)] = false, aB[tC(4920)] = '', aB[tC(2592)](w(tC(4768), tC(4963), tC(3954)));
-        let bF = q[tC(3639)](bU => K[tC(3184)][bU.id])[tC(488)],
-            bG = q[tC(1799)]((bU, bV) => bU + oe(K[tC(3184)][bV.id]), 0);
-        aB[tC(2592)](w(tC(4768), tC(1088), tC(576) + bF + '/' + q[tC(488)] + tC(5064) + bG)), aB[tC(2592)](aL(() => aN(tC(2729))));
-        let bH = bU => aF[tC(764)](bV => bV[tC(5069)].id === bU) && (aE[tC(1432)][tC(778)](bU)?.[tC(5746)] ?? 0) === 0,
-            bI = Py() ?? aF[0]?.[tC(5069)].id ?? '';
-        bH(bI) || (bI = aF[tC(502)](bU => bH(bU[tC(5069)].id))?.[tC(5069)].id ?? '');
+        aB.hidden = false, aB.textContent = '', aB.appendChild(w("span", "ar-title", "MAP SELECT"));
+        let bF = q.filter(bU => K.records[bU.id]).length,
+            bG = q.reduce((bU, bV) => bU + oe(K.records[bV.id]), 0);
+        aB.appendChild(w("span", "ar-bonds", "MISSIONS " + bF + '/' + q.length + " · STARS " + bG)), aB.appendChild(aL(() => aN("intro")));
+        let bH = bU => aF.some(bV => bV.zone.id === bU) && (aE.byZone.get(bU)?.starsNeeded ?? 0) === 0,
+            bI = Py() ?? aF[0]?.zone.id ?? '';
+        bH(bI) || (bI = aF.find(bU => bH(bU.zone.id))?.zone.id ?? '');
         let bJ = () => {
                 const u9 = tC;
-                for (let bU of ax[u9(5509)]) bU[u9(5057)][u9(827)]('on', bU[u9(4592)][u9(1419)] === bI);
+                for (let bU of ax.children) bU.classList.toggle('on', bU.dataset.group === bI);
             },
             bK = () => {
                 const uj = tC;
-                let bU = aF[uj(502)](bX => bX[uj(5069)].id === bI);
-                if (az[uj(4920)] = '', !bU) return;
-                let bV = aE[uj(1432)][uj(778)](bU[uj(5069)].id)?.[uj(5746)] ?? 0;
-                for (let bX of bU[uj(2218)]) {
-                    let bY = aE[uj(1543)][uj(1328)](bX.id),
-                        bZ = K[uj(3184)][bX.id],
-                        c7 = w(uj(5291), bY ? uj(5812) : uj(2799));
-                    c7[uj(2882)] = uj(5291), bY || c7[uj(4492)](uj(4413), uj(2588)), c7[uj(4592)].id = bX.id;
-                    let c8 = bU[uj(2218)][uj(1773)](bX) + 1;
-                    c7[uj(2592)](w(uj(4768), uj(4525), String(c8)[uj(5898)](2, '0')));
-                    let c9 = w(uj(4768), uj(1790));
-                    c9[uj(2592)](w(uj(4768), uj(5321), bX[uj(3918)][uj(4303)]()));
+                let bU = aF.find(bX => bX.zone.id === bI);
+                if (az.textContent = '', !bU) return;
+                let bV = aE.byZone.get(bU.zone.id)?.starsNeeded ?? 0;
+                for (let bX of bU.levels) {
+                    let bY = aE.open.has(bX.id),
+                        bZ = K.records[bX.id],
+                        c7 = w("button", bY ? "fx-card" : "fx-card locked");
+                    c7.type = "button", bY || c7.setAttribute("aria-disabled", "true"), c7.dataset.id = bX.id;
+                    let c8 = bU.levels.indexOf(bX) + 1;
+                    c7.appendChild(w("span", "fx-card-num", String(c8).padStart(2, '0')));
+                    let c9 = w("span", "fx-card-body");
+                    c9.appendChild(w("span", "fx-card-name", bX.name.toUpperCase()));
                     let cj = Ny(bX);
-                    cj && c9[uj(2592)](w(uj(4768), uj(2347), cj)), c7[uj(2592)](c9);
-                    let ck = w(uj(4768), uj(579));
-                    bY ? ck[uj(2592)](Oy(oe(bZ))) : ck[uj(2592)](w('i', uj(2757))), c7[uj(2592)](ck), c7[uj(1661)](uj(5016), () => {
+                    cj && c9.appendChild(w("span", "fx-card-desc", cj)), c7.appendChild(c9);
+                    let ck = w("span", "fx-card-tail");
+                    bY ? ck.appendChild(Oy(oe(bZ))) : ck.appendChild(w('i', "fx-lock")), c7.appendChild(ck), c7.addEventListener("click", () => {
                         const uk = uj;
-                        bY ? bE(bX) : CW(c7, bV > 0 ? bV + uk(3613) : uk(5964));
-                    }), az[uj(2592)](c7);
+                        bY ? bE(bX) : CW(c7, bV > 0 ? bV + " stars needed" : "clear another mission first");
+                    }), az.appendChild(c7);
                 }
             },
             bL = bU => {
                 const uq = tC;
-                let bV = w('i', uq(4177));
-                return bV[uq(935)][uq(1807)] = uq(1422) + bU + ')', bV;
+                let bV = w('i', "fx-group-scene");
+                return bV.style.backgroundImage = "var(--sk-theatre-" + bU + ')', bV;
             },
             bM = bU => {
                 const uw = tC;
                 let bV = Ao[bU.id];
                 if (!bV) return;
-                let bX = RW('', uw(1731), () => {
+                let bX = RW('', "fx-group future", () => {
                     const ux = uw;
-                    ZT(ux(4908), {
+                    ZT("future_zone_clicked", {
                         source: bV,
                         zone: bU.id
                     }), Lo(bV, K, q, {
                         zone: bU.id
                     });
                 });
-                bX[uw(4592)][uw(1291)] = bU.id, bX[uw(4920)] = '', bX[uw(2592)](bL(bU.id));
-                let bY = w(uw(4768), uw(2003));
-                bY[uw(2592)](w(uw(4768), uw(1049), bU[uw(3918)][uw(4303)]())), bX[uw(2592)](bY), bX[uw(2592)](w('i', uw(4195))), ax[uw(2592)](bX);
+                bX.dataset.future = bU.id, bX.textContent = '', bX.appendChild(bL(bU.id));
+                let bY = w("span", "fx-group-body");
+                bY.appendChild(w("span", "fx-group-name", bU.name.toUpperCase())), bX.appendChild(bY), bX.appendChild(w('i', "fx-group-lock")), ax.appendChild(bX);
             };
-        ax[tC(4920)] = '';
+        ax.textContent = '';
         for (let bU of $t) {
-            let bV = aF[tC(502)](cj => cj[tC(5069)].id === bU.id);
+            let bV = aF.find(cj => cj.zone.id === bU.id);
             if (!bV) {
-                bU[tC(1291)] && bM(bU);
+                bU.future && bM(bU);
                 continue;
             }
-            let bX = bV[tC(2218)][tC(3639)](cj => K[tC(3184)][cj.id])[tC(488)],
-                bY = aE[tC(1432)][tC(778)](bV[tC(5069)].id)?.[tC(5746)] ?? 0,
+            let bX = bV.levels.filter(cj => K.records[cj.id]).length,
+                bY = aE.byZone.get(bV.zone.id)?.starsNeeded ?? 0,
                 bZ = bY > 0,
-                c7 = RW('', tC(2177) + (bZ ? tC(3104) : ''), () => {
+                c7 = RW('', "fx-group" + (bZ ? " shut" : ''), () => {
                     const uz = tC;
-                    bI = bV[uz(5069)].id, bZ || Ly(bI), bJ(), bK();
+                    bI = bV.zone.id, bZ || Ly(bI), bJ(), bK();
                 });
-            c7[tC(4592)][tC(1419)] = bV[tC(5069)].id, c7[tC(4920)] = '', c7[tC(2592)](bL(bV[tC(5069)].id));
-            let c8 = w(tC(4768), tC(2003));
-            c8[tC(2592)](w(tC(4768), tC(1049), bV[tC(5069)][tC(3918)][tC(4303)]()));
-            let c9 = w(tC(4768), tC(810));
-            bZ ? c9[tC(2592)](w(tC(4768), tC(3736), aE[tC(5644)] + tC(2550) + bY + tC(2558))) : (c9[tC(2592)](w(tC(4768), tC(3736), bV[tC(2218)][tC(488)] + tC(5773) + (bV[tC(2218)][tC(488)] === 1 ? '' : 'S'))), c9[tC(2592)](w(tC(4768), tC(2828), bX + '/' + bV[tC(2218)][tC(488)]))), c8[tC(2592)](c9), c7[tC(2592)](c8), ax[tC(2592)](c7);
+            c7.dataset.group = bV.zone.id, c7.textContent = '', c7.appendChild(bL(bV.zone.id));
+            let c8 = w("span", "fx-group-body");
+            c8.appendChild(w("span", "fx-group-name", bV.zone.name.toUpperCase()));
+            let c9 = w("span", "fx-group-meta");
+            bZ ? c9.appendChild(w("span", "fx-group-count", aE.stars + " OF " + bY + " STARS")) : (c9.appendChild(w("span", "fx-group-count", bV.levels.length + " MISSION" + (bV.levels.length === 1 ? '' : 'S'))), c9.appendChild(w("span", "fx-group-done", bX + '/' + bV.levels.length))), c8.appendChild(c9), c7.appendChild(c8), ax.appendChild(c7);
         }
         let bN = false;
         aM = () => {
@@ -12615,36 +12615,36 @@ function Jf(q, A, F, H, K, L) {
                 bN = true;
                 for (let cj of hd()) {
                     let ck = Ao[cj.id];
-                    ck && ZT(uA(3472), {
+                    ck && ZT("future_zone_impression", {
                         source: ck,
                         zone: cj.id
                     });
                 }
             }
-        }, document[tC(4309)](tC(2310))[tC(4920)] = '', bJ(), bK();
+        }, document.getElementById("select-foot").textContent = '', bJ(), bK();
         let bO = Wm(N),
-            bP = w(tC(5291), tC(3774));
-        bP[tC(2882)] = tC(5291), bP[tC(3984)] = tC(1234), bP[tC(4492)](tC(5246), tC(1234)), bP[tC(1661)](tC(5016), () => Vo()), N[tC(2592)](bP);
+            bP = w("button", "corner-tool front-gear");
+        bP.type = "button", bP.title = "Settings", bP.setAttribute("aria-label", "Settings"), bP.addEventListener("click", () => Vo()), N.appendChild(bP);
         let bQ = Pm(N, K, q);
-        L && aN(L), N[tC(1709)] = false, requestAnimationFrame(() => N[tC(5057)][tC(2129)]('in')), window[tC(2948)](() => MW(0), 340), aN(L ?? ($[tC(866)] || bB ? tC(2736) : tC(2729)));
+        L && aN(L), N.hidden = false, requestAnimationFrame(() => N.classList.add('in')), window.setTimeout(() => MW(0), 340), aN(L ?? ($.room || bB ? "lobby" : "intro"));
         let bR = cj => {
             const uB = tC;
             if (!aH && !xu()) {
-                if (cj[uB(2547)] === 'm' || cj[uB(2547)] === 'M') {
+                if (cj.key === 'm' || cj.key === 'M') {
                     ea();
                     return;
                 }
-                cj[uB(2547)] === uB(2034) && N[uB(5057)][uB(4578)](uB(2636)) && aN(uB(2729));
+                cj.key === "Escape" && N.classList.contains("on-select") && aN("intro");
             }
         };
-        document[tC(1661)](tC(1777), bR);
+        document.addEventListener("keydown", bR);
         let bS = cj => {
             const uC = tC;
-            if (aH || !N[uC(5057)][uC(4578)](uC(2636))) return;
-            let ck = cj[uC(5099)];
-            ck && (ck[uC(2325)](uC(3352)) || aN(uC(2729)));
+            if (aH || !N.classList.contains("on-select")) return;
+            let ck = cj.target;
+            ck && (ck.closest("#select-frame, #lobby-frame, #armoury-frame, #front-logo") || aN("intro"));
         };
-        U[tC(1661)](tC(2082), bS);
+        U.addEventListener("pointerdown", bS);
     });
 }
 var Dy = 3;
@@ -12694,10 +12694,10 @@ function kn({
         v = () => {
             const uG = uF;
             let y = m || j;
-            q[uG(4667)]((A, C) => {
+            q.forEach((A, C) => {
                 const uH = uG;
-                A[uH(3476)][uH(5057)][uH(827)]('on', C < y), A[uH(4492)](uH(2584), String(C + 1 === j));
-            }), p[uG(5057)][uG(827)](uG(4965), j > 0), u[uG(4920)] = j ? j + uG(3493) + Za : d;
+                A.firstElementChild.classList.toggle('on', C < y), A.setAttribute("aria-checked", String(C + 1 === j));
+            }), p.classList.toggle("picked", j > 0), u.textContent = j ? j + " out of " + Za : d;
         };
     for (let y = 1; y <= Za; y++) {
         let A = w("button", "dsp-star");
@@ -12719,9 +12719,9 @@ function kn({
         value: () => j,
         disable: () => {
             const uI = uF;
-            q[uI(4667)](C => {
+            q.forEach(C => {
                 const uJ = uI;
-                C[uJ(1894)] = true;
+                C.disabled = true;
             });
         }
     };
@@ -12742,7 +12742,7 @@ function Qf({
             prompt: "Pick a star.",
             onChange: C => {
                 const uL = uK;
-                A[uL(1894)] = C === 0;
+                A.disabled = C === 0;
             }
         });
     p.append(q.row, q.hint);
@@ -12753,28 +12753,28 @@ function Qf({
     p.appendChild(y);
     let A = IT("Send", "dsp-go primary", () => {
         const uM = uK;
-        let C = q[uM(862)]();
-        C !== 0 && (A[uM(1894)] = true, y[uM(4920)] = uM(1167), rt({
-            kind: uM(4106),
+        let C = q.value();
+        C !== 0 && (A.disabled = true, y.textContent = "Sending...", rt({
+            kind: "review",
             stars: C,
-            comment: v[uM(862)]
+            comment: v.value
         }, {
             ...Ro(d, g),
             stars: C
-        })[uM(4353)](E => {
+        }).then(E => {
             const uN = uM;
             if (E) {
-                j(uN(4764), uN(5351) + C);
+                j("continue", "sent:" + C);
                 return;
             }
-            A[uN(1894)] = false, y[uN(4920)] = uN(5914);
+            A.disabled = false, y.textContent = "That did not get through. Your words are still here if you want to try again.";
         }));
     });
     return A.disabled = true, m.append(A, IT("Not now", "dsp-go dark", () => {
         const uO = uK;
-        hW(uO(2338), {
-            stars: q[uO(862)]() || null
-        }), j(uO(4764), uO(3051));
+        hW("feedback_skipped", {
+            stars: q.value() || null
+        }), j("continue", "skipped");
     })), jo() || (y.textContent = "The line is down, so this would not reach anybody. No harm done.", A.disabled = true, q.disable()), p;
 }
 var Hy = {
@@ -13022,7 +13022,7 @@ function gi(g, j = {}) {
         K = new Set();
     if (E.forEach((L, M) => {
             const vA = vz;
-            let N = (o0[L] ?? o0[' '])[vA(3916)]('/'),
+            let N = (o0[L] ?? o0[' ']).split('/'),
                 P = 2 + M * 12;
             for (let Q = 0; Q < 13; Q++) {
                 let R = N[Q] ?? '';
@@ -13031,7 +13031,7 @@ function gi(g, j = {}) {
                         for (let U = 0; U <= 1; U++) {
                             let V = P + S + U,
                                 X = V * 4096 + 2 + Q;
-                            K[vA(1328)](X) || (K[vA(2129)](X), I[vA(3087)]([V, 2 + Q]));
+                            K.has(X) || (K.add(X), I.push([V, 2 + Q]));
                         }
             }
         }), y) {
@@ -13342,8 +13342,8 @@ function m0(K, L, U) {
         aw = new Map(),
         ax = aN => {
             const vL = vK;
-            let aO = aw[vL(778)](aN);
-            return aO || (aO = new KT(aj, a7, a8, Y, aN, 3), aw[vL(5635)](aN, aO)), aO;
+            let aO = aw.get(aN);
+            return aO || (aO = new KT(aj, a7, a8, Y, aN, 3), aw.set(aN, aO)), aO;
         };
     for (let aN of new Set(U.material)) ax(zT(a9, aN).scale);
     let az = new KT(aj, a7, a8, Y, 0.38, 2),
@@ -13383,7 +13383,7 @@ function m0(K, L, U) {
         const vM = vK;
         let bw = bk + (az.at(bk, bq) - 0.5) * 2 * ie + (aC.at(bk, bq) - 0.5) * 7,
             bx = bq + (aA.at(bk, bq) - 0.5) * 2 * ie + (aC.at(bk + 43, bq + 91) - 0.5) * 7;
-        return wW(aJ, U[vM(3904)], U[vM(2900)], Y, bw, bx) < -0.02;
+        return wW(aJ, U.width, U.height, Y, bw, bx) < -0.02;
     };
     for (let bk = 0; bk < L.height; bk++)
         for (let bq = 0; bq < L.width; bq++) {
@@ -13492,10 +13492,10 @@ function Qy(q, A, F, H, K, L, N, P, Q) {
                 aA = 7 + (aq >> ax * 3 + 2 & 7);
             for (let aB = 0; aB < aA; aB++) {
                 let aC = aB / aA,
-                    aD = Math[vQ(1207)](aj + Math[vQ(527)](az) * aB * (0.35 + aC * 0.75)),
-                    aE = ak - Math[vQ(1207)](aB * (0.94 - Math[vQ(4348)](Math[vQ(527)](az)) * 0.3));
+                    aD = Math.round(aj + Math.sin(az) * aB * (0.35 + aC * 0.75)),
+                    aE = ak - Math.round(aB * (0.94 - Math.abs(Math.sin(az)) * 0.3));
                 if (aE < 0 || aE >= F || aD < 0 || aD >= A || !a7(aD, aE) || aC < 0.45 && aD + 1 < A && !a7(aD + 1, aE)) break;
-                q[aE * A + aD] = iW(Q[vQ(3566)], aC * Y * 1.3, aD, aE), aC < 0.45 && aD + 1 < A && (q[aE * A + aD + 1] = iW(Q[vQ(3566)], aC * Y, aD + 1, aE));
+                q[aE * A + aD] = iW(Q.scrub, aC * Y * 1.3, aD, aE), aC < 0.45 && aD + 1 < A && (q[aE * A + aD + 1] = iW(Q.scrub, aC * Y, aD + 1, aE));
             }
         }
     }, a9 = 11;
@@ -13598,8 +13598,8 @@ function nv(K, L, Q, U) {
     let Y = L.tile,
         a7 = (a8, a9) => {
             const vV = vU;
-            let aj = a8[Math[vV(3002)](0, Math[vV(544)](a8[vV(488)] - 1, a9))];
-            return vV(3343) + (aj & 255) + ',' + (aj >> 8 & 255) + ',' + (aj >> 16 & 255) + ')';
+            let aj = a8[Math.max(0, Math.min(a8.length - 1, a9))];
+            return "rgb(" + (aj & 255) + ',' + (aj >> 8 & 255) + ',' + (aj >> 16 & 255) + ')';
         };
     for (let a8 = 0; a8 < L.height; a8++)
         for (let a9 = 0; a9 < L.width; a9++) {
@@ -13618,12 +13618,12 @@ function nv(K, L, Q, U) {
                     aB = !(az >= aA),
                     aC = (aL, aM) => {
                         const vX = vU;
-                        let aN = (Math[vX(4833)](aL + 14201, 2654435761) ^ Math[vX(4833)](aM + 40503, 1597334677)) >>> 0;
-                        return aN ^= aN >>> 15, aN = Math[vX(4833)](aN, 2246822519) >>> 0, aN ^= aN >>> 13, aN >>> 0;
+                        let aN = (Math.imul(aL + 14201, 2654435761) ^ Math.imul(aM + 40503, 1597334677)) >>> 0;
+                        return aN ^= aN >>> 15, aN = Math.imul(aN, 2246822519) >>> 0, aN ^= aN >>> 13, aN >>> 0;
                     },
                     aD = aL => {
                         const vY = vU;
-                        let aM = Math[vY(1959)](aL / 24) * 24,
+                        let aM = Math.floor(aL / 24) * 24,
                             aN = aM;
                         for (;;) {
                             let aO = 3 + aC(aN, 1) % 3;
@@ -13636,13 +13636,13 @@ function nv(K, L, Q, U) {
                     aG = (aL, aM) => {
                         const vZ = vU;
                         let aN = aC(aL, aE),
-                            aO = Math[vZ(3002)](1, Math[vZ(1959)](aF / 3)),
+                            aO = Math.max(1, Math.floor(aF / 3)),
                             aP = aN % 3 === 0 ? aE + aO + (aN >>> 8) % aO : -1;
                         return aP < 0 || aM < aP ? [aE, aP < 0 ? aF : aP - aE] : [aP, aE + aF - aP];
                     },
                     aH = (aL, aM, aN, aO) => {
                         const w1 = vU;
-                        aN <= 0 || (K[w1(2754)] = aO, aB ? K[w1(3797)](aM, aL, aN, 1) : K[w1(3797)](aL, aM, 1, aN));
+                        aN <= 0 || (K.fillStyle = aO, aB ? K.fillRect(aM, aL, aN, 1) : K.fillRect(aL, aM, 1, aN));
                     },
                     aI = aB ? ak : aq;
                 for (let aL = 0; aL < Y; aL++) {
@@ -13745,25 +13745,25 @@ function nv(K, L, Q, U) {
                             for (let [cA, cB] of [
                                     [7, 6],
                                     [12, 11]
-                                ]) cw(bQ), (bL || bP) && K[w7(3797)](ck, cq + cA, bZ, 2), (bM || bP) && K[w7(3797)](ck + bZ, cq + cA, bZ, 2), cw(bR), (bL || bP) && K[w7(3797)](ck, cq + cB, bZ, 1), (bM || bP) && K[w7(3797)](ck + bZ, cq + cB, bZ, 1);
+                                ]) cw(bQ), (bL || bP) && K.fillRect(ck, cq + cA, bZ, 2), (bM || bP) && K.fillRect(ck + bZ, cq + cA, bZ, 2), cw(bR), (bL || bP) && K.fillRect(ck, cq + cB, bZ, 1), (bM || bP) && K.fillRect(ck + bZ, cq + cB, bZ, 1);
                             for (let [cC, cD] of [
                                     [0, bN],
                                     [bZ, bO]
-                                ]) cD && (cw(bQ), K[w7(3797)](ck + bZ - 2, cq + cC, 3, bZ), cw(bR), K[w7(3797)](ck + bZ - 2, cq + cC, 1, bZ));
+                                ]) cD && (cw(bQ), K.fillRect(ck + bZ - 2, cq + cC, 3, bZ), cw(bR), K.fillRect(ck + bZ - 2, cq + cC, 1, bZ));
                             let cx = (bN || bO) && (bL || bM),
-                                cz = [bN, bO, bL, bM][w7(3639)](Boolean)[w7(488)] <= 1;
-                            if (cx || cz || bP) cw(bS), K[w7(3797)](ck + bZ - 1, cq + 3, 3, 12), cw(bU), K[w7(3797)](ck + bZ - 1, cq + 3, 1, 12);
+                                cz = [bN, bO, bL, bM].filter(Boolean).length <= 1;
+                            if (cx || cz || bP) cw(bS), K.fillRect(ck + bZ - 1, cq + 3, 3, 12), cw(bU), K.fillRect(ck + bZ - 1, cq + 3, 1, 12);
                             else {
                                 if (bL || bM) {
                                     cw(bS);
-                                    for (let cE = 1; cE < Y; cE += 5) K[w7(3797)](ck + cE, cq + 3, 2, 12);
+                                    for (let cE = 1; cE < Y; cE += 5) K.fillRect(ck + cE, cq + 3, 2, 12);
                                     cw(bU);
-                                    for (let cF = 1; cF < Y; cF += 5) K[w7(3797)](ck + cF, cq + 3, 1, 12);
+                                    for (let cF = 1; cF < Y; cF += 5) K.fillRect(ck + cF, cq + 3, 1, 12);
                                 } else {
                                     cw(bS);
-                                    for (let cG = 1; cG < Y; cG += 5) K[w7(3797)](ck + bZ - 3, cq + cG, 6, 3);
+                                    for (let cG = 1; cG < Y; cG += 5) K.fillRect(ck + bZ - 3, cq + cG, 6, 3);
                                     cw(bU);
-                                    for (let cH = 1; cH < Y; cH += 5) K[w7(3797)](ck + bZ - 3, cq + cH, 6, 1);
+                                    for (let cH = 1; cH < Y; cH += 5) K.fillRect(ck + bZ - 3, cq + cH, 6, 1);
                                 }
                             }
                         };
@@ -14125,9 +14125,9 @@ function xi(q, F, H, K = 3000, L = false, N = 1) {
             const wM = wL;
             let az = ax % P,
                 aA = (ax - az) / P,
-                aB = Math[wM(4348)](az - X),
-                aC = Math[wM(4348)](aA - Y);
-            return aB + aC + (Math[wM(1686)] - 2) * Math[wM(544)](aB, aC);
+                aB = Math.abs(az - X),
+                aC = Math.abs(aA - Y);
+            return aB + aC + (Math.SQRT2 - 2) * Math.min(aB, aC);
         };
     a7[U] = 0, aj.push(U, ak(U));
     let aq = 0;
@@ -16795,18 +16795,18 @@ function Fh(c) {
     }
     return d.map(q => {
         const AJ = AI;
-        if (q[AJ(488)] < 2) return q;
-        let u = q[AJ(1799)]((E, F) => E + F.x, 0) / q[AJ(488)],
-            v = q[AJ(1799)]((E, F) => E + F.y, 0) / q[AJ(488)],
+        if (q.length < 2) return q;
+        let u = q.reduce((E, F) => E + F.x, 0) / q.length,
+            v = q.reduce((E, F) => E + F.y, 0) / q.length,
             y = q[0];
-        for (let E of q) Math[AJ(4786)](E.x - u, E.y - v) > Math[AJ(4786)](y.x - u, y.y - v) && (y = E);
+        for (let E of q) Math.hypot(E.x - u, E.y - v) > Math.hypot(y.x - u, y.y - v) && (y = E);
         let A = [y],
-            C = new Set(q[AJ(3639)](F => F !== y));
-        for (; C[AJ(4996)] > 0;) {
-            let F = A[A[AJ(488)] - 1],
+            C = new Set(q.filter(F => F !== y));
+        for (; C.size > 0;) {
+            let F = A[A.length - 1],
                 H = null;
-            for (let I of C)(!H || Math[AJ(4786)](I.x - F.x, I.y - F.y) < Math[AJ(4786)](H.x - F.x, H.y - F.y)) && (H = I);
-            A[AJ(3087)](H), C[AJ(3073)](H);
+            for (let I of C)(!H || Math.hypot(I.x - F.x, I.y - F.y) < Math.hypot(H.x - F.x, H.y - F.y)) && (H = I);
+            A.push(H), C.delete(H);
         }
         return A;
     });
@@ -16868,18 +16868,18 @@ function Hh(c, d, g) {
     const AM = cX;
     return c.buildings.map((j, l) => {
         const AN = AM;
-        let m = j[AN(2372)] === AN(3301) ? f[AN(3517)][AN(5596)] : f[AN(3517)][AN(564)];
+        let m = j.kind === "hut" ? f.building.hutHp : f.building.factoryHp;
         return {
-            indestructible: c[AN(4012)] || c[AN(1616)] || c[AN(4052)][AN(5073)](AN(1873)) && j[AN(2372)] === AN(1873) || c[AN(4052)][AN(5073)](AN(3328)) && c[AN(5155)] !== null && j[AN(2411)] === AN(3154),
+            indestructible: c.arena || c.unlevellable || c.indestructible.includes("bunker") && j.kind === "bunker" || c.indestructible.includes("wave-spawners") && c.waves !== null && j.role === "spawner",
             damageStage: 0,
             ruinAge: 0,
             id: l,
-            kind: j[AN(2372)],
-            role: j[AN(2411)],
-            owner: j[AN(4829)],
-            tiles: j[AN(1688)],
+            kind: j.kind,
+            role: j.role,
+            owner: j.owner,
+            tiles: j.tiles,
             centre: {
-                ...j[AN(5673)]
+                ...j.centre
             },
             x0: j.x0,
             y0: j.y0,
@@ -16888,7 +16888,7 @@ function Hh(c, d, g) {
             hp: m,
             maxHp: m,
             standing: true,
-            spawnTimer: f[AN(3517)][AN(4968)] * d[AN(4968)] * (0.4 + g() * 0.8),
+            spawnTimer: f.building.spawnInterval * d.spawnInterval * (0.4 + g() * 0.8),
             spawned: 0,
             flash: 0
         };
@@ -16954,7 +16954,7 @@ function BW(j, q, A, C, F = 0) {
         R = A && A.length > 0 ? Math.min(j.squadSize, A.length) : j.squadSize,
         S = j.playerSpawns.slice(0, R).map((aj, ak) => {
             const AR = AQ;
-            let aq = N[ak % N[AR(488)]];
+            let aq = N[ak % N.length];
             return _1(M, aj, Q(ak), aq);
         }),
         U = Bh(j, H, M, L),
@@ -18336,10 +18336,10 @@ function u3(g, j, m = "#12180c") {
     let A = [];
     u.forEach((C, E) => {
         const CY = CX;
-        let F = (d3[C] ?? d3[' '])[CY(3916)]('/'),
+        let F = (d3[C] ?? d3[' ']).split('/'),
             H = 1 + E * 4;
         for (let I = 0; I < 5; I++)
-            for (let K = 0; K < 3; K++) F[I][K] === '#' && A[CY(3087)]([H + K, 1 + I]);
+            for (let K = 0; K < 3; K++) F[I][K] === '#' && A.push([H + K, 1 + I]);
     }), y.fillStyle = m;
     for (let [C, E] of A)
         for (let F = -1; F <= 1; F++)
@@ -18603,14 +18603,14 @@ var Qi = class {
                 S = (E + H) / 2,
                 U = (X, Y) => {
                     const DJ = DI;
-                    let a7 = Math[DJ(3002)](M, Math[DJ(544)](P, X.x)),
-                        a8 = Math[DJ(3002)](N, Math[DJ(544)](Q, X.y)),
-                        a9 = Math[DJ(4953)](X.y - S, X.x - R),
-                        aj = (Math[DJ(1207)](a9 * 16 / (Math.PI * 2)) % 16 + 16) % 16,
-                        ak = this[DJ(704)](Y, aj),
+                    let a7 = Math.max(M, Math.min(P, X.x)),
+                        a8 = Math.max(N, Math.min(Q, X.y)),
+                        a9 = Math.atan2(X.y - S, X.x - R),
+                        aj = (Math.round(a9 * 16 / (Math.PI * 2)) % 16 + 16) % 16,
+                        ak = this.guideArrow(Y, aj),
                         aq = aj * Math.PI * 2 / 16,
-                        aw = [0, 2, 4, 2][(this[DJ(5464)] * 5 | 0) % 4];
-                    I[DJ(5206)](ak, Math[DJ(1207)](a7 + Math[DJ(4513)](aq) * aw - ak[DJ(3904)] / 2), Math[DJ(1207)](a8 + Math[DJ(527)](aq) * aw - ak[DJ(2900)] / 2));
+                        aw = [0, 2, 4, 2][(this.time * 5 | 0) % 4];
+                    I.drawImage(ak, Math.round(a7 + Math.cos(aq) * aw - ak.width / 2), Math.round(a8 + Math.sin(aq) * aw - ak.height / 2));
                 },
                 V = X => X.x < M || X.x > P || X.y < N || X.y > Q;
             if (!j.map.arena) {
@@ -18818,13 +18818,13 @@ var tr = class {
                 K = mf(j.theme),
                 L = (Q, R, S, U) => {
                     const Ez = Ex;
-                    A[Ez(2754)] = K;
-                    for (let V = Math[Ez(1207)](R - U); V <= R + U; V++) {
+                    A.fillStyle = K;
+                    for (let V = Math.round(R - U); V <= R + U; V++) {
                         let X = (V - R) / U,
-                            Y = Math[Ez(1730)](Math[Ez(3002)](0, 1 - X * X)) * S;
-                        for (let a7 = Math[Ez(1207)](Q - Y); a7 <= Q + Y; a7++) {
-                            let a8 = 1 - Math[Ez(4786)]((a7 - Q) / S, X);
-                            qW(a7, V) > a8 * 1.15 || A[Ez(3797)](a7, V, 1, 1);
+                            Y = Math.sqrt(Math.max(0, 1 - X * X)) * S;
+                        for (let a7 = Math.round(Q - Y); a7 <= Q + Y; a7++) {
+                            let a8 = 1 - Math.hypot((a7 - Q) / S, X);
+                            qW(a7, V) > a8 * 1.15 || A.fillRect(a7, V, 1, 1);
                         }
                     }
                 },
@@ -19214,7 +19214,7 @@ var nr = class {
             let g = c;
             this.on(document, "contextmenu", i => {
                 const F9 = F8;
-                i[F9(5099)]?.[F9(2325)]?.(F9(1275)) || i[F9(2670)]();
+                i.target?.closest?.("input, textarea, a[href], [contenteditable=\"\"], [contenteditable=\"true\"]") || i.preventDefault();
             }), this.on(g, "pointerdown", i => this.onDown(i)), this.on(window, "pointermove", i => this.onMove(i)), this.on(window, "pointerup", i => this.onUp(i, false)), this.on(window, "pointercancel", i => this.onUp(i, true)), this.on(g, "pointerenter", () => this.emit({
                 k: "enter"
             })), this.on(g, "pointerleave", () => this.emit({
@@ -19298,13 +19298,13 @@ var nr = class {
             };
             j !== "mouse" && (l.longPressTimer = window.setTimeout(() => {
                 const Fx = Fw;
-                let p = this[Fx(894)][Fx(778)](yt(c[Fx(4984)], c[Fx(5291)]));
-                !p || p[Fx(2035)] || !p[Fx(2179)] || (p[Fx(2179)] = false, this[Fx(1596)]({
-                    k: Fx(1529),
+                let p = this.active.get(yt(c.pointerId, c.button));
+                !p || p.dragging || !p.tappable || (p.tappable = false, this.emit({
+                    k: "longpress",
                     at: {
                         ...p.at
                     },
-                    kind: p[Fx(2372)]
+                    kind: p.kind
                 }));
             }, 420)), this.active.set(yt(c.pointerId, c.button), l), this.emit({
                 k: "down",
@@ -20137,23 +20137,23 @@ function x3(c, d) {
         m = '',
         p = () => {
             const H5 = H2;
-            cancelAnimationFrame(l), g[H5(549)]();
+            cancelAnimationFrame(l), g.remove();
         },
         q = () => {
             const H7 = H2;
-            if (!c[H7(3400)]) {
+            if (!c.isConnected) {
                 p();
                 return;
             }
-            let v = c[H7(1752)] !== null,
-                y = c[H7(2491)](),
-                A = g[H7(2491)](),
-                C = y[H7(2706)] - A[H7(2900)] - cr,
-                E = Math[H7(1207)](C >= 0 ? C : y[H7(4229)] + cr),
-                F = Math[H7(1207)](Math[H7(544)](Math[H7(3002)](cr, y[H7(1551)] + y[H7(3904)] / 2 - A[H7(3904)] / 2), window[H7(2901)] - A[H7(3904)] - cr)),
-                H = Math[H7(1207)](y[H7(1551)] + y[H7(3904)] / 2 - F),
+            let v = c.offsetParent !== null,
+                y = c.getBoundingClientRect(),
+                A = g.getBoundingClientRect(),
+                C = y.top - A.height - cr,
+                E = Math.round(C >= 0 ? C : y.bottom + cr),
+                F = Math.round(Math.min(Math.max(cr, y.left + y.width / 2 - A.width / 2), window.innerWidth - A.width - cr)),
+                H = Math.round(y.left + y.width / 2 - F),
                 I = v + '|' + F + '|' + E + '|' + H + '|' + (C < 0);
-            I !== m && (m = I, g[H7(1709)] = !v, g[H7(935)][H7(1551)] = F + 'px', g[H7(935)][H7(2706)] = E + 'px', g[H7(5057)][H7(827)](H7(5028), C < 0), j[H7(935)][H7(4584)](H7(1603), H + 'px')), l = requestAnimationFrame(q);
+            I !== m && (m = I, g.hidden = !v, g.style.left = F + 'px', g.style.top = E + 'px', g.classList.toggle("below", C < 0), j.style.setProperty("--tail-x", H + 'px')), l = requestAnimationFrame(q);
         };
     return q(), p;
 }
@@ -20179,7 +20179,7 @@ async function k3(d) {
     let y = null,
         A = () => {
             const H9 = H8;
-            y && (y[H9(1894)] = !j[H9(862)]() && !m[H9(862)]() && !u[H9(862)][H9(2762)]());
+            y && (y.disabled = !j.value() && !m.value() && !u.value.trim());
         };
     for (u.addEventListener("input", A);;) {
         let C = ST({
@@ -20228,11 +20228,11 @@ function w3(c, d, g = {}) {
     let p = Math.max(1, Math.round(dr / 40));
     for (let q = 1; q <= p; q++) j.push(window.setTimeout(() => {
         const Hn = Hk;
-        l || (c[Hn(4920)] = String(Math[Hn(1207)](d * q / p)));
+        l || (c.textContent = String(Math.round(d * q / p)));
     }, E2 + dr * q / p));
     return j.push(window.setTimeout(() => {
         const Hq = Hk;
-        l || g[Hq(4169)]?.();
+        l || g.onTick?.();
     }, E2 + dr)), j.push(window.setTimeout(m, E2 + dr + 120)), m;
 }
 var WG = f.fx.popupLife;
@@ -20277,14 +20277,14 @@ var ur = class {
             I.className = "result-stats";
             let K = (U, V) => {
                 const HA = Hx;
-                let X = document[HA(2784)](HA(991));
-                X[HA(2084)] = HA(3156), X[HA(2592)](Object[HA(4640)](document[HA(2784)](HA(4768)), {
-                    className: HA(530),
+                let X = document.createElement("div");
+                X.className = "result-stat", X.appendChild(Object.assign(document.createElement("span"), {
+                    className: "result-stat-k",
                     textContent: U
-                })), X[HA(2592)](Object[HA(4640)](document[HA(2784)](HA(4768)), {
-                    className: HA(5554),
+                })), X.appendChild(Object.assign(document.createElement("span"), {
+                    className: "result-stat-v",
                     textContent: V
-                })), I[HA(2592)](X);
+                })), I.appendChild(X);
             };
             if (A) {
                 j.map.objective !== "covert" && !j.map.nokill && K("kills", j.kills + " / " + j.enemyTotal), j.packages.length > 0 && K("packages", j.packages.filter(V => V.taken).length + " / " + j.packages.length);
@@ -20323,7 +20323,7 @@ var ur = class {
                     }),
                     aj = () => {
                         const HB = Hx;
-                        a9(), window[HB(4704)](HB(2082), aj, true), window[HB(4704)](HB(1777), aj, true);
+                        a9(), window.removeEventListener("pointerdown", aj, true), window.removeEventListener("keydown", aj, true);
                     };
                 window.addEventListener("pointerdown", aj, true), window.addEventListener("keydown", aj, true), this.stopTally = aj;
             }
@@ -20346,15 +20346,15 @@ var ur = class {
                 })), P.appendChild(Q), F.append(H, P), jo()) {
                 let ak = IT("Feedback", "result-rate dark", () => {
                     const HC = Hx;
-                    this[HC(3671)]?.(), this[HC(3671)] = null, k3({
-                        mission: j[HC(588)].id,
-                        difficulty: j[HC(4418)],
-                        outcome: A ? HC(4674) : HC(5421),
+                    this.stopCallout?.(), this.stopCallout = null, k3({
+                        mission: j.map.id,
+                        difficulty: j.difficulty,
+                        outcome: A ? "won" : "lost",
                         seconds: L,
-                        lost: j[HC(4874)][HC(488)] - C[HC(488)]
-                    })[HC(4353)](aq => {
+                        lost: j.soldiers.length - C.length
+                    }).then(aq => {
                         const HD = HC;
-                        aq && (ak[HD(1894)] = true, ak[HD(546)](HD(2725))[HD(4920)] = HD(5475));
+                        aq && (ak.disabled = true, ak.querySelector(".fx-btn-label").textContent = "Thanks");
                     });
                 });
                 F.appendChild(ak);
@@ -20533,15 +20533,15 @@ function hr(d) {
         p = d.options.length < 2,
         q = A => {
             const HJ = HI;
-            let C = w(HJ(5291), HJ(5162) + (A < 0 ? HJ(4748) : HJ(5856)));
-            return C[HJ(2882)] = HJ(5291), C[HJ(4920)] = A < 0 ? '‹' : '›', C[HJ(4492)](HJ(5246), A < 0 ? HJ(1146) + d[HJ(1693)] : HJ(1809) + d[HJ(1693)]), p && C[HJ(4492)](HJ(4413), HJ(2588)), C[HJ(1661)](HJ(5016), () => {
+            let C = w("button", "bl-arrow " + (A < 0 ? "prev" : "next"));
+            return C.type = "button", C.textContent = A < 0 ? '‹' : '›', C.setAttribute("aria-label", A < 0 ? "Previous " + d.label : "Next " + d.label), p && C.setAttribute("aria-disabled", "true"), C.addEventListener("click", () => {
                 const HK = HJ;
                 if (p) {
-                    CW(C, d[HK(612)]);
+                    CW(C, d.emptyHint);
                     return;
                 }
-                let E = d[HK(625)][HK(488)];
-                d[HK(3899)]((d.at + A + E) % E);
+                let E = d.options.length;
+                d.onPick((d.at + A + E) % E);
             }), C;
         };
     j.appendChild(q(-1));
@@ -20559,16 +20559,16 @@ function hr(d) {
             F = w("div", "bl-rock"),
             H = I => {
                 const HL = HI;
-                let K = w(HL(5291), HL(4018));
-                K[HL(2882)] = HL(5291), K[HL(4920)] = I < 0 ? '−' : '+', K[HL(4492)](HL(5246), I < 0 ? HL(3095) : HL(3336));
-                let L = I < 0 ? E[HL(862)] <= 0 : E[HL(862)] >= E[HL(3002)];
-                return L && K[HL(4492)](HL(4413), HL(2588)), K[HL(1661)](HL(5016), () => {
+                let K = w("button", "bl-step");
+                K.type = "button", K.textContent = I < 0 ? '−' : '+', K.setAttribute("aria-label", I < 0 ? "One fewer" : "One more");
+                let L = I < 0 ? E.value <= 0 : E.value >= E.max;
+                return L && K.setAttribute("aria-disabled", "true"), K.addEventListener("click", () => {
                     const HM = HL;
                     if (L) {
-                        CW(K, I < 0 ? E[HM(2443)][HM(5591)] : E[HM(2443)][HM(4160)]);
+                        CW(K, I < 0 ? E.hint.none : E.hint.all);
                         return;
                     }
-                    E[HM(1129)](E[HM(862)] + I);
+                    E.onSet(E.value + I);
                 }), K;
             };
         F.appendChild(H(-1)), F.appendChild(w("span", "bl-count", String(E.value))), F.appendChild(H(1)), y.appendChild(F);
@@ -20623,8 +20623,8 @@ function k6(j, q, A) {
         X = (a7, a8, a9) => a8[a9]?.locked ? (A2.set(a7, a9), q(), true) : (A2.delete(a7), false),
         Y = (a7, a8, a9) => {
             const HO = HN;
-            let aj = A2[HO(778)](a7);
-            return aj !== void 0 && aj < a9[HO(488)] && a9[aj]?.[HO(924)] ? aj : a8;
+            let aj = A2.get(a7);
+            return aj !== void 0 && aj < a9.length && a9[aj]?.locked ? aj : a8;
         };
     return [...A ? [] : [hr({
         label: "WEAPON",
@@ -20633,7 +20633,7 @@ function k6(j, q, A) {
         emptyHint: V,
         onPick: a7 => {
             const HP = HN;
-            X(HP(3036), E, a7) || (Wt(j, HP(2903), C[a7]), q());
+            X("WEAPON", E, a7) || (Wt(j, "weapon", C[a7]), q());
         }
     })], hr({
         icon: 1,
@@ -20643,10 +20643,10 @@ function k6(j, q, A) {
         emptyHint: V,
         onPick: a7 => {
             const HQ = HN;
-            if (X(HQ(1204), K, a7)) return;
-            Wt(j, HQ(2785), a7 === 0 ? HQ(5591) : H[a7 - 1]);
+            if (X("THROWABLE", K, a7)) return;
+            Wt(j, "throwable", a7 === 0 ? "none" : H[a7 - 1]);
             let a8 = a7 === 0 ? 0 : gW(j, ge[H[a7 - 1]]);
-            Wt(j, HQ(3144), a8), q();
+            Wt(j, "take", a8), q();
         },
         rocker: R ? {
             value: U,
@@ -20657,7 +20657,7 @@ function k6(j, q, A) {
             },
             onSet: a7 => {
                 const HR = HN;
-                Wt(j, HR(3144), a7), q();
+                Wt(j, "take", a7), q();
             }
         } : void 0
     }), hr({
@@ -20668,7 +20668,7 @@ function k6(j, q, A) {
         emptyHint: V,
         onPick: a7 => {
             const HS = HN;
-            X(HS(2017), N, a7) || (Wt(j, HS(2624), a7 === 0 ? HS(5591) : M[a7 - 1]), q());
+            X("CALL-IN", N, a7) || (Wt(j, "callin", a7 === 0 ? "none" : M[a7 - 1]), q());
         }
     })];
 }
@@ -20697,7 +20697,7 @@ var gr = class {
                     for (let P = 0; P <= qT.indexOf(L); P++) N.appendChild(w('i', "fx-star on"));
                     M.appendChild(N), M.appendChild(w("span", "briefing-diff-name", QW[L].name.toUpperCase())), M.title = QW[L].blurb, K || M.addEventListener("click", () => {
                         const HU = HT;
-                        L !== g[HU(4418)] && j[HU(5189)]?.(L);
+                        L !== g.difficulty && j.onDifficulty?.(L);
                     }), I.appendChild(M);
                 }
                 q.appendChild(I), j.campaign && Vu(j.campaign, g.difficulty, j.difficulties) && (q.appendChild(w('p', "briefing-rung-note", jm())), $u(j.campaign));
@@ -20709,7 +20709,7 @@ var gr = class {
                 let R = w("button", "briefing-shop");
                 R.type = "button", R.appendChild(w("span", "briefing-shop-label", "THE ARMOURY")), R.addEventListener("click", () => {
                     const HV = HT;
-                    zf(j[HV(4662)], j[HV(2164)]);
+                    zf(j.campaign, j.onLoadout);
                 }), q.appendChild(R);
             }
             let H = w("button", "briefing-go");
@@ -20730,7 +20730,7 @@ var gr = class {
                 i = [];
             c.forEach((j, l) => {
                 const HY = HX;
-                l > 0 && i[HY(3087)](w(HY(4768), HY(1138), c[HY(488)] === 2 ? 'vs' : '·')), i[HY(3087)](g(j));
+                l > 0 && i.push(w("span", "ab-vs", c.length === 2 ? 'vs' : '·')), i.push(g(j));
             }), i.push(w("span", "ab-keys", 'C ' + (d ? "free" : "lock") + " · H hide")), this.paint("viewport", c.map(j => j.up + '/' + j.lost).join(' ') + ' ' + d, i);
         } showScore(c) {
             const I5 = cX;
@@ -20881,8 +20881,8 @@ var gr = class {
             this.mission.className = "hud-mission", this.roster.className = "hud-roster", this.objective.className = "hud-objective", this.loadout.className = "hud-loadout-row";
             let c = (p, ...q) => {
                 const ID = IC;
-                let u = document[ID(2784)](ID(991));
-                return u[ID(2084)] = p, u[ID(1643)](...q), u;
+                let u = document.createElement("div");
+                return u.className = p, u.append(...q), u;
             };
             this.goal.className = "hud-goal";
             let d = document.createElement("div");
@@ -20895,8 +20895,8 @@ var gr = class {
             l.className = "hud-tools";
             let m = (p, q, u) => {
                 const IE = IC;
-                let v = document[IE(2784)](IE(5291));
-                return v[IE(2882)] = IE(5291), v[IE(2084)] = IE(1612) + p, v[IE(3984)] = q, v[IE(4492)](IE(5246), q), v[IE(1661)](IE(5016), u), v;
+                let v = document.createElement("button");
+                return v.type = "button", v.className = "hud-tool " + p, v.title = q, v.setAttribute("aria-label", q), v.addEventListener("click", u), v;
             };
             this.toolButtons = {
                 exit: m("t-exit", "Leave the mission", () => this.onExit?.()),
@@ -20923,11 +20923,11 @@ var gr = class {
             let d = this.mine(c);
             this.plates.length === d.length && this.plates.every((g, i) => g.name === d[i].name) || (this.roster.textContent = '', this.plates = d.map(g => {
                 const IJ = II;
-                let i = tn(g[IJ(3918)], Du(g[IJ(793)]));
-                return ne(g[IJ(793)]) >= 3 && i[IJ(5057)][IJ(2129)](IJ(2257)), g[IJ(2138)] && i[IJ(5057)][IJ(2129)](IJ(2138)), i[IJ(3984)] = Nu(g[IJ(793)]) + IJ(1720) + g[IJ(793)] + IJ(2520) + (g[IJ(793)] === 1 ? '' : 's') + IJ(3453), this[IJ(3564)][IJ(2592)](i), {
+                let i = tn(g.name, Du(g.rank));
+                return ne(g.rank) >= 3 && i.classList.add("vet"), g.own && i.classList.add("own"), i.title = Nu(g.rank) + " — " + g.rank + " mission" + (g.rank === 1 ? '' : 's') + " survived", this.roster.appendChild(i), {
                     root: i,
                     alive: true,
-                    name: g[IJ(3918)]
+                    name: g.name
                 };
             }));
         } flashLoadout() {
@@ -20942,18 +20942,18 @@ var gr = class {
             this.loadoutKey = g;
             let j = (p, q, v, y = '') => {
                 const IM = IL;
-                let A = document[IM(2784)](y ? IM(5291) : IM(991));
-                A[IM(2084)] = (IM(4836) + y)[IM(2762)](), A instanceof HTMLButtonElement && (A[IM(2882)] = IM(5291));
-                let C = document[IM(2784)](IM(4768));
-                C[IM(2084)] = IM(3024);
+                let A = document.createElement(y ? "button" : "div");
+                A.className = ("hud-kit " + y).trim(), A instanceof HTMLButtonElement && (A.type = "button");
+                let C = document.createElement("span");
+                C.className = "hud-kit-icon";
                 let E = $f(p ?? '');
-                E && C[IM(2592)](eT(E, 1)), A[IM(2592)](C);
-                let F = document[IM(2784)](IM(4768));
-                F[IM(2084)] = IM(3159);
-                let H = document[IM(2784)]('b');
-                H[IM(2084)] = IM(2671), H[IM(4920)] = q, F[IM(2592)](H);
-                let I = document[IM(2784)](IM(4768));
-                return I[IM(2084)] = IM(982), I[IM(4920)] = v, A[IM(1643)](F, I), A;
+                E && C.appendChild(eT(E, 1)), A.appendChild(C);
+                let F = document.createElement("span");
+                F.className = "hud-kit-text";
+                let H = document.createElement('b');
+                H.className = "hud-kit-label", H.textContent = q, F.appendChild(H);
+                let I = document.createElement("span");
+                return I.className = "hud-kit-value", I.textContent = v, A.append(F, I), A;
             };
             if (De(this.loadout, j(c.squadWeapon, ci[c.squadWeapon] ?? c.squadWeapon, ''), j(d === "flash" ? "flashbang" : d, S6[d] ?? d, 'x' + c.grenadesHeld)), c.squadCallIn !== "none") {
                 let l = c.callInsLeft <= 0,
@@ -21245,8 +21245,8 @@ function P6(q) {
     aq.forEach((aR, aS) => {
         const Jw = Jq;
         let aU = [];
-        for (let aV of aR) aU[Jw(3087)](0, aV[Jw(4487)](0));
-        aw[Jw(5894)](3), aw[Jw(5894)](1), aw[Jw(5894)](1033), aw[Jw(5894)](aS + 1), aw[Jw(5894)](aU[Jw(488)]), aw[Jw(5894)](ax), az[Jw(3087)](...aU), ax += aU[Jw(488)];
+        for (let aV of aR) aU.push(0, aV.charCodeAt(0));
+        aw.u16(3), aw.u16(1), aw.u16(1033), aw.u16(aS + 1), aw.u16(aU.length), aw.u16(ax), az.push(...aU), ax += aU.length;
     });
     for (let aR of az) aw.u8(aR);
     aw.pad4();
@@ -21314,11 +21314,11 @@ function B3() {
     const JA = cX;
     F3 || (F3 = true, document.addEventListener("pointerdown", c => {
         const JB = JA;
-        if (c[JB(5291)] !== 0) return;
-        let d = c[JB(5099)];
+        if (c.button !== 0) return;
+        let d = c.target;
         if (!(d instanceof Element)) return;
-        let g = d[JB(2325)](L6);
-        g && (g[JB(2325)](JB(4448)) || g[JB(4362)](JB(921)) || ls());
+        let g = d.closest(L6);
+        g && (g.closest("#controls") || g.matches(":disabled, [disabled], [aria-disabled=\"true\"]") || ls());
     }, {
         capture: true,
         passive: true
@@ -21346,21 +21346,21 @@ function V3() {
     if (c) {
         new MutationObserver(d => {
             const JE = JD;
-            let g = performance[JE(2864)]();
+            let g = performance.now();
             for (let i of d)
-                for (let j of i[JE(4686)]) O6(j, g);
+                for (let j of i.addedNodes) O6(j, g);
         }).observe(c, {
             childList: true,
             subtree: true
         });
         for (let d of ["pointerdown", "click"]) document.addEventListener(d, g => {
             const JF = JD;
-            let i = g[JF(5099)];
+            let i = g.target;
             if (!(i instanceof Element)) return;
-            let j = i[JF(2325)](R2);
-            if (!j || j[JF(2325)](JF(4448)) || !N6(j)) return;
-            let l = j2[JF(778)](j);
-            l === void 0 || performance[JF(2864)]() - l >= 250 || (g[JF(5788)](), g[JF(2670)]());
+            let j = i.closest(R2);
+            if (!j || j.closest("#controls") || !N6(j)) return;
+            let l = j2.get(j);
+            l === void 0 || performance.now() - l >= 250 || (g.stopPropagation(), g.preventDefault());
         }, {
             capture: true
         });
@@ -21382,16 +21382,16 @@ async function q3() {
         q = new sr(m, l);
     return m.onFirstPress(() => Zr()), l.onChange(u => {
         const JH = JG;
-        g[JH(1930)] = u[JH(5912)], g[JH(5712)](c[JH(3904)], c[JH(2900)]);
+        g.zoom = u.deviceZoom, g.resize(c.width, c.height);
     }), l.apply(), window.addEventListener("resize", () => l.apply()), window.addEventListener("orientationchange", () => l.apply()), window.addEventListener("orientationchange", () => {
         const JI = JG;
-        window[JI(2948)](() => l[JI(1533)](), 250);
+        window.setTimeout(() => l.apply(), 250);
     }), m.onZoom = u => {
         const JJ = JG;
-        let v = Math[JJ(3002)](-1, Math[JJ(544)](1, G()[JJ(3216)] + u));
-        v !== G()[JJ(3216)] && (mW({
+        let v = Math.max(-1, Math.min(1, G().zoomBias + u));
+        v !== G().zoomBias && (mW({
             zoomBias: v
-        }), l[JJ(1533)]());
+        }), l.apply());
     }, {
         canvas: c,
         ctx: d,
@@ -21686,7 +21686,7 @@ var F6 = 34,
                 const Kv = Kq;
                 let {
                     paceRange: q
-                } = f[Kv(4012)], r = this[Kv(2255)][Kv(2575)](p);
+                } = f.arena, r = this.influence.fractionHeld(p);
                 return q[0] + (q[1] - q[0]) * r;
             };
         } ["influence"];
@@ -21746,13 +21746,13 @@ function $3(c, d) {
     let i = c.soldiers.filter(j => j.alive && j.faction === D.Player);
     g.forEach((j, l) => {
         const KD = KC;
-        let m = c[KD(787)][l];
-        if (m[KD(1393)] > 0 && (m[KD(1393)] = Math[KD(3002)](0, m[KD(1393)] - d)), !(m[KD(3814)] >= (j[KD(4657)] ?? 1))) {
-            if (!i[KD(764)](p => B6(c, j[KD(5738)], p[KD(870)]))) {
-                m[KD(4231)] = 0, m[KD(925)] = true;
+        let m = c.triggerState[l];
+        if (m.cooldown > 0 && (m.cooldown = Math.max(0, m.cooldown - d)), !(m.fired >= (j.times ?? 1))) {
+            if (!i.some(p => B6(c, j.when, p.pos))) {
+                m.inside = 0, m.armed = true;
                 return;
             }
-            m[KD(4231)] += d, !(!m[KD(925)] || m[KD(1393)] > 0 || m[KD(4231)] < (j[KD(4185)] ?? 0.5)) && (H6(c, j[KD(3621)]), m[KD(3814)]++, m[KD(4231)] = 0, m[KD(1393)] = j[KD(1393)] ?? 0, (j[KD(1717)] ?? KD(3433)) === KD(3433) && (m[KD(925)] = false));
+            m.inside += d, !(!m.armed || m.cooldown > 0 || m.inside < (j.dwell ?? 0.5)) && (H6(c, j.action), m.fired++, m.inside = 0, m.cooldown = j.cooldown ?? 0, (j.rearm ?? "exit") === "exit" && (m.armed = false));
         }
     });
 }
@@ -22164,32 +22164,32 @@ function Y3(c) {
             const Lq = Lk;
             if (!A()) return;
             try {
-                if (q) g[Lq(4932)](u, q[Lq(3300)]);
+                if (q) g.prepare(u, q.world);
                 else {
-                    u = Te(aT[z3], z3), g[Lq(4932)](u, BW(u, Lq(2173)));
-                    let F = Math[Lq(1959)](Math[Lq(3821)]() * 2147483647);
-                    q = new St(u, d, j, () => g[Lq(3597)](), true, F);
+                    u = Te(aT[z3], z3), g.prepare(u, BW(u, "veteran"));
+                    let F = Math.floor(Math.random() * 2147483647);
+                    q = new St(u, d, j, () => g.clearDecals(), true, F);
                 }
             } catch {
                 return;
             }
-            j[Lq(5805)] = Lq(519), document[Lq(1463)][Lq(4592)][Lq(5805)] = Lq(1570), p[Lq(1533)](), v = true;
+            j.mode = "sealed", document.body.dataset.mode = "backdrop", p.apply(), v = true;
             let C = q;
-            c[Lq(5635)]({
-                name: Lq(1570),
-                world: C[Lq(3300)],
+            c.set({
+                name: "backdrop",
+                world: C.world,
                 step: H => {
                     const Lv = Lq;
-                    document[Lv(1709)] || (C[Lv(5610)](H), m[Lv(3939)](C[Lv(4006)]()));
+                    document.hidden || (C.step(H), m.showScore(C.readout()));
                 },
-                draw: (H, I) => g[Lq(2527)](C[Lq(3300)], d, H, I)
+                draw: (H, I) => g.draw(C.world, d, H, I)
             });
-            let E = () => Xn(sn() ? Lq(1144) : Lq(5919));
+            let E = () => Xn(sn() ? "ducked" : "silent");
             E(), y = tt(E);
         },
         stop: () => {
             const Lw = Lk;
-            v && (v = false, c[Lw(5635)](null), m[Lw(1745)](), y?.(), y = null, Xn(Lw(4027)), j[Lw(5805)] = Lw(1567), delete document[Lw(1463)][Lw(4592)][Lw(5805)], p[Lw(1533)]());
+            v && (v = false, c.set(null), m.hideArena(), y?.(), y = null, Xn("full"), j.mode = "play", delete document.body.dataset.mode, p.apply());
         }
     };
 }
@@ -22403,20 +22403,20 @@ function T_(g, j) {
             oscillators: s,
             bed: () => {
                 const LI = LH;
-                let N = g[LI(4325)]();
-                return N[LI(3295)] = A, N[LI(4127)] = true, N[LI(5406)](g[LI(5636)], Math[LI(3821)]() * 4), q[LI(3087)](N), N;
+                let N = g.createBufferSource();
+                return N.buffer = A, N.loop = true, N.start(g.currentTime, Math.random() * 4), q.push(N), N;
             },
             lfo: (N, P, Q) => {
                 const LJ = LH;
-                let R = g[LJ(1912)]();
-                R[LJ(4403)][LJ(862)] = N;
-                let S = g[LJ(4828)]();
-                S[LJ(2515)][LJ(862)] = P, R[LJ(1334)](S)[LJ(1334)](Q), R[LJ(5406)](), s[LJ(3087)](R);
+                let R = g.createOscillator();
+                R.frequency.value = N;
+                let S = g.createGain();
+                S.gain.value = P, R.connect(S).connect(Q), R.start(), s.push(R);
             },
             layer: () => {
                 const LK = LH;
-                let N = g[LK(4828)]();
-                return N[LK(2515)][LK(862)] = 0, N[LK(1334)](l), N;
+                let N = g.createGain();
+                return N.gain.value = 0, N.connect(l), N;
             }
         },
         F = X3(E),
@@ -22445,10 +22445,10 @@ function W_(d) {
     m.pan.value = Math.random() * 1.6 - 0.8, m.connect(d.birds);
     let p = (A, C, E, F, H, I = "triangle") => {
         const LM = LL;
-        let K = g[LM(1912)]();
-        K[LM(2882)] = I, K[LM(4403)][LM(1958)](C, A), K[LM(4403)][LM(5124)](E, A + F);
-        let L = g[LM(4828)]();
-        L[LM(2515)][LM(1958)](0, A), L[LM(2515)][LM(4605)](H, A + 0.005), L[LM(2515)][LM(5124)](0.0005, A + F), K[LM(1334)](L)[LM(1334)](m), K[LM(5406)](A), K[LM(5799)](A + F + 0.02);
+        let K = g.createOscillator();
+        K.type = I, K.frequency.setValueAtTime(C, A), K.frequency.exponentialRampToValueAtTime(E, A + F);
+        let L = g.createGain();
+        L.gain.setValueAtTime(0, A), L.gain.linearRampToValueAtTime(H, A + 0.005), L.gain.exponentialRampToValueAtTime(0.0005, A + F), K.connect(L).connect(m), K.start(A), K.stop(A + F + 0.02);
     };
     if (we.birds === "arctic") {
         p(j, 1200, 650, 0.5, 0.05, "sawtooth");
@@ -22625,29 +22625,29 @@ async function u5(d) {
         world: y.world,
         step: F => {
             const M1 = LZ;
-            y[M1(5610)](F), G()[M1(5417)] && p[M1(3230)](y[M1(4006)](), G()[M1(2096)]);
+            y.step(F), G().arenaShowScore && p.showArena(y.readout(), G().arenaLockCamera);
         },
         draw: (F, H) => {
             const M5 = LZ;
-            j[M5(2527)](y[M5(3300)], g, F, H), Qe(g, j[M5(1261)], H, true);
+            j.draw(y.world, g, F, H), Qe(g, j.windTime, H, true);
         }
     }), Je(v);
     let A = () => {
             const M6 = LZ;
-            u && (G()[M6(5417)] ? p[M6(3230)](u[M6(4006)](), G()[M6(2096)]) : p[M6(1745)]());
+            u && (G().arenaShowScore ? p.showArena(u.readout(), G().arenaLockCamera) : p.hideArena());
         },
         C = F => {
             const M7 = LZ;
-            F[M7(2547)] === 'c' || F[M7(2547)] === 'C' ? (mW({
-                arenaLockCamera: !G()[M7(2096)]
-            }), G()[M7(2096)] || g[M7(5414)](), A()) : (F[M7(2547)] === 'h' || F[M7(2547)] === 'H') && (mW({
-                arenaShowScore: !G()[M7(5417)]
+            F.key === 'c' || F.key === 'C' ? (mW({
+                arenaLockCamera: !G().arenaLockCamera
+            }), G().arenaLockCamera || g.release(), A()) : (F.key === 'h' || F.key === 'H') && (mW({
+                arenaShowScore: !G().arenaShowScore
             }), A());
         };
     window.addEventListener("keydown", C), A();
     let E = () => {
         const M8 = LZ;
-        u && (u[M8(3886)] = true);
+        u && (u.exitRequested = true);
     };
     m.onPause = E, MW(1), He(f.banner.fade), await T1(() => u?.exitRequested ? (u = null, d.set(null), m.mode = "play", delete document.body.dataset.mode, q.apply(), m.onPause = null, window.removeEventListener("keydown", C), Ze(), p.hideArena(), true) : null);
 }
@@ -22974,25 +22974,25 @@ async function g5(g, j) {
         world: E.world,
         step: I => {
             const MO = MN;
-            v[MO(1349)](E[MO(3300)]);
+            v.update(E.world);
             let K = JT();
-            K ? B1() : H1(), !K && (E[MO(5610)](I), u[MO(1349)](E[MO(3300)]));
+            K ? B1() : H1(), !K && (E.step(I), u.update(E.world));
         },
         draw: (I, K) => {
             const MP = MN;
-            p[MP(2527)](E[MP(3300)], m, I, K, q[MP(5824)]), Qe(m, p[MP(1261)], K, !st() && !E[MP(3300)][MP(3913)]?.[MP(5381)]);
+            p.draw(E.world, m, I, K, q.aim), Qe(m, p.windTime, K, !st() && !E.world.skirmish?.over);
         }
     }), Je(C), He(f.banner.fade), q.mode = "play", je(EW.trumper, "The other lot want the glade. They have been told it is spoken for; persuade them.", {
         seconds: 9
     });
     let F = () => {
             const MQ = MN;
-            y && (y[MQ(3886)] = true);
+            y && (y.exitRequested = true);
         },
         H = () => {
             const MR = MN;
-            JT() || Mt(MR(1559), MR(1458), {
-                label: MR(3884),
+            JT() || Mt("The Glade", "Resume", {
+                label: "Leave the match",
                 onPick: F
             });
         };
@@ -23003,42 +23003,42 @@ async function g5(g, j) {
     }), u.onRestart = null, u.onPause = H, u.onExit = () => {
         const MU = MN;
         JT() || ST({
-            title: MU(2709),
-            body: MU(4141),
+            title: "Leave the match?",
+            body: "Your squad walks off. The glade goes to the machine.",
             buttons: [{
-                label: MU(771),
-                value: MU(1147),
-                variant: MU(681)
+                label: "LEAVE",
+                value: "leave",
+                variant: "primary"
             }, {
-                label: MU(2023),
-                value: MU(975)
+                label: "STAY",
+                value: "stay"
             }],
-            dismiss: MU(975)
-        })[MU(4353)](I => {
+            dismiss: "stay"
+        }).then(I => {
             const MV = MU;
-            I === MV(1147) && F();
+            I === "leave" && F();
         });
     }, y.onOver = I => {
         const MX = MN;
-        let K = I[MX(3913)],
-            L = y[MX(4675)](),
-            M = K[MX(708)] === I[MX(5588)] ? MX(659) : K[MX(708)] === null ? MX(4721) : MX(2123),
-            N = document[MX(2784)]('p');
-        N[MX(4920)] = K[MX(3895)] === MX(5464) ? MX(605) + L.a + MX(2455) + L.b + MX(1972) : K[MX(708)] === I[MX(5588)] ? MX(4469) + L.a + MX(4199) : MX(2419), ST({
+        let K = I.skirmish,
+            L = y.standing(),
+            M = K.winner === I.viewSide ? "VICTORY" : K.winner === null ? "A DRAW" : "DEFEAT",
+            N = document.createElement('p');
+        N.textContent = K.reason === "time" ? "The clock decided it: " + L.a + " of yours standing to " + L.b + " of theirs." : K.winner === I.viewSide ? "Their squad is gone. " + L.a + " of yours are still standing." : "Your squad is gone. The glade is theirs.", ST({
             title: M,
             body: N,
             buttons: [{
-                label: MX(543),
-                value: MX(3552),
-                variant: MX(681)
+                label: "AGAIN",
+                value: "again",
+                variant: "primary"
             }, {
-                label: MX(771),
-                value: MX(1147)
+                label: "LEAVE",
+                value: "leave"
             }],
-            dismiss: MX(1147)
-        })[MX(4353)](P => {
+            dismiss: "leave"
+        }).then(P => {
             const MY = MX;
-            y && (P === MY(3552) ? y[MY(4428)]() : y[MY(3886)] = true);
+            y && (P === "again" ? y.restart() : y.exitRequested = true);
         });
     }, await T1(() => y?.exitRequested ? (y = null, g.set(null), Ze(), zW(), G1(), q.onPause = null, u.onExit = u.onPause = null, u.setTools({
         restart: true,
@@ -23363,32 +23363,32 @@ async function m_(j, q, y) {
         world: Q.world,
         step: X => {
             const Nz = Nx;
-            H[Nz(1349)](Q[Nz(3300)]), JT() ? B1() : H1(), Q[Nz(5610)](X), F[Nz(1349)](Q[Nz(3300)]), F[Nz(4649)](Q[Nz(951)] ? {
-                kind: Nz(1949),
-                who: Q[Nz(951)]
-            } : !$[Nz(2661)] || Q[Nz(4439)] > u_ ? {
-                kind: Nz(1476)
+            H.update(Q.world), JT() ? B1() : H1(), Q.step(X), F.update(Q.world), F.setLink(Q.pausedBy ? {
+                kind: "away",
+                who: Q.pausedBy
+            } : !$.connected || Q.sinceSnap > u_ ? {
+                kind: "down"
             } : {
                 kind: 'ok'
             });
         },
         draw: (X, Y) => {
             const NA = Nx;
-            C[NA(2527)](Q[NA(3300)], A, X, Y, E[NA(5824)]), Qe(A, C[NA(1261)], Y, !st() && !Q[NA(5381)]);
+            C.draw(Q.world, A, X, Y, E.aim), Qe(A, C.windTime, Y, !st() && !Q.over);
         }
     }), Je(P), He(f.banner.fade), E.mode = "play";
     let R = () => {
             const NB = Nx;
-            I && (I[NB(3886)] = true);
+            I && (I.exitRequested = true);
         },
         S = () => {
             const NC = Nx;
-            $[NC(1147)](), R();
+            $.leave(), R();
         },
         U = () => {
             const ND = Nx;
-            JT() || Mt(ND(1559), ND(4159), {
-                label: ND(3884),
+            JT() || Mt("The Glade", "Back to it", {
+                label: "Leave the match",
                 onPick: S
             });
         };
@@ -23399,68 +23399,68 @@ async function m_(j, q, y) {
     }), F.onRestart = null, F.onPause = null, F.onExit = () => {
         const NE = Nx;
         JT() || ST({
-            title: NE(2709),
-            body: NE(5225),
+            title: "Leave the match?",
+            body: "Your squad walks off. The other player keeps the glade.",
             buttons: [{
-                label: NE(771),
-                value: NE(1147),
-                variant: NE(681)
+                label: "LEAVE",
+                value: "leave",
+                variant: "primary"
             }, {
-                label: NE(2023),
-                value: NE(975)
+                label: "STAY",
+                value: "stay"
             }],
-            dismiss: NE(975)
-        })[NE(4353)](X => {
+            dismiss: "stay"
+        }).then(X => {
             const NF = NE;
-            X === NF(1147) && S();
+            X === "leave" && S();
         });
     }, I.onPauseChange = () => {
         const NG = Nx;
-        !I || I[NG(5381)] || (I[NG(951)] ? (zW(), Go(NG(5568), I[NG(951)] + NG(4423), [{
-            label: NG(3884),
+        !I || I.over || (I.pausedBy ? (zW(), Go("HOLD POSITION", I.pausedBy + "'s wire is down", [{
+            label: "Leave the match",
             onPick: S
         }], true)) : zW());
     }, I.onOver = () => {
         const NH = Nx;
-        if (!I?.[NH(5381)] || M > 0) return;
-        let X = I[NH(5381)];
-        M = performance[NH(2864)](), zW(), $[NH(3606)](X[NH(2328)], X[NH(3895)], X[NH(4674)] === null || X[NH(4674)] ? X.a : X.b, X[NH(4674)] === null || X[NH(4674)] ? X.b : X.a, X[NH(4674)]);
-        let Y = document[NH(2784)](NH(991)),
-            a7 = document[NH(2784)]('p');
-        a7[NH(4920)] = X[NH(3895)] === NH(5231) ? X[NH(4674)] ? NH(1515) : NH(3023) : X[NH(3895)] === NH(5464) ? NH(605) + X.a + NH(2455) + X.b + NH(1972) : X[NH(4674)] ? NH(4469) + X.a + NH(4199) : NH(2419), Y[NH(2592)](a7);
-        let a8 = document[NH(2784)]('p');
-        a8[NH(2084)] = NH(5666);
-        let a9 = Math[NH(1959)](X[NH(4290)] / 60),
-            aj = String(X[NH(4290)] % 60)[NH(5898)](2, '0');
-        a8[NH(4920)] = NH(3407) + X[NH(3101)] + NH(3416) + X[NH(5421)] + NH(1026) + a9 + ':' + aj, Y[NH(2592)](a8);
-        let ak = X[NH(1469)] > 1;
+        if (!I?.over || M > 0) return;
+        let X = I.over;
+        M = performance.now(), zW(), $.reportResult(X.winnerName, X.reason, X.won === null || X.won ? X.a : X.b, X.won === null || X.won ? X.b : X.a, X.won);
+        let Y = document.createElement("div"),
+            a7 = document.createElement('p');
+        a7.textContent = X.reason === "forfeit" ? X.won ? "Their wire went dead and stayed dead. A walkover." : "Your wire was down too long. The glade goes to them." : X.reason === "time" ? "The clock decided it: " + X.a + " of yours standing to " + X.b + " of theirs." : X.won ? "Their squad is gone. " + X.a + " of yours are still standing." : "Your squad is gone. The glade is theirs.", Y.appendChild(a7);
+        let a8 = document.createElement('p');
+        a8.className = "mp-stats";
+        let a9 = Math.floor(X.seconds / 60),
+            aj = String(X.seconds % 60).padStart(2, '0');
+        a8.textContent = "KILLS " + X.kills + "  ·  LOST " + X.lost + "  ·  " + a9 + ':' + aj, Y.appendChild(a8);
+        let ak = X.rounds > 1;
         if (ak) {
-            let aw = document[NH(2784)]('p');
-            aw[NH(2084)] = NH(5666), aw[NH(4920)] = NH(483) + X[NH(1207)] + NH(2550) + X[NH(1469)], Y[NH(3091)](aw, Y[NH(803)]);
+            let aw = document.createElement('p');
+            aw.className = "mp-stats", aw.textContent = "ROUND " + X.round + " OF " + X.rounds, Y.insertBefore(aw, Y.firstChild);
         }
-        let aq = ak && !X[NH(5349)];
+        let aq = ak && !X.last;
         ST({
-            title: X[NH(4674)] === true ? NH(659) : X[NH(4674)] === null ? NH(4721) : NH(2123),
+            title: X.won === true ? "VICTORY" : X.won === null ? "A DRAW" : "DEFEAT",
             body: Y,
             buttons: aq ? [] : [{
-                label: NH(4136),
-                value: NH(866),
-                variant: NH(681)
+                label: "BACK TO THE LOBBY",
+                value: "room",
+                variant: "primary"
             }],
             autoClose: {
-                value: NH(866),
+                value: "room",
                 seconds: aq ? Fa : 10,
-                label: aq ? NH(5115) : void 0
+                label: aq ? "NEXT ROUND IN" : void 0
             }
-        })[NH(4353)](() => {
+        }).then(() => {
             L = true, aq || R();
         });
     }, $.onStart = X => {
         const NI = Nx;
-        X[NI(5649)] !== q[NI(5649)] && (K = X);
+        X.roundId !== q.roundId && (K = X);
     }, $.bindRound(q.roundId, X => {
         const NJ = Nx;
-        X.t === NJ(4880) ? R() : I?.[NJ(3504)](X);
+        X.t === "gone" ? R() : I?.handleMsg(X);
     });
     let V = await T1(() => I?.exitRequested || L && I?.over?.last ? "left" : L && K || K && !I?.over ? K : L && performance.now() - M > (Fa + d_) * 1000 ? "left" : null);
     return I = null, j.set(null), E.edgeScrollBlocked = false, $.onGameMsg = null, $.onStart = null, Ze(), F.setLink(null), F.hideClock(), zW(), G1(), E.onPause = null, F.onExit = null, F.setTools({
@@ -23627,7 +23627,7 @@ async function _5(K) {
         az = async () => {
             const NY = NX;
             try {
-                ax = await navigator[NY(1813)]?.[NY(2936)](NY(695)) ?? null;
+                ax = await navigator.wakeLock?.request("screen") ?? null;
             } catch {}
         };
     nt();
@@ -23639,29 +23639,29 @@ async function _5(K) {
         aE = !aC && _n(a8) === "reinforcements",
         aF = () => {
             const NZ = NX;
-            if (aC) return aD = [], A3(aA[NZ(2770)]);
-            let b4 = Hu(a8, aA[NZ(2770)] + (aE ? f[NZ(2624)][NZ(5068)] : 0));
-            return aD = b4[NZ(4157)](aA[NZ(2770)]), b4[NZ(4157)](0, aA[NZ(2770)]);
+            if (aC) return aD = [], A3(aA.squadSize);
+            let b4 = Hu(a8, aA.squadSize + (aE ? f.callin.reserves : 0));
+            return aD = b4.slice(aA.squadSize), b4.slice(0, aA.squadSize);
         },
         aG = () => {
             const O5 = NX;
             if (aC) return {
-                weapon: O5(777),
+                weapon: "basicRifle",
                 grenades: 0,
-                throwable: O5(5292),
+                throwable: "frag",
                 reserves: [],
                 packagesTaken: []
             };
-            let b4 = a8[O5(2396)][O5(2785)],
-                b7 = b4 !== O5(5591) && Ya(a8, b4),
+            let b4 = a8.loadout.throwable,
+                b7 = b4 !== "none" && Ya(a8, b4),
                 b8 = b7 ? gW(a8, ge[b4]) : 0;
             return {
                 weapon: li(a8),
-                grenades: Math[O5(3002)](0, Math[O5(544)](a8[O5(2396)][O5(3144)], b8)),
-                throwable: b7 ? b4 : O5(5292),
+                grenades: Math.max(0, Math.min(a8.loadout.take, b8)),
+                throwable: b7 ? b4 : "frag",
                 callIn: _n(a8),
                 reserves: aD,
-                packagesTaken: a8[O5(3184)][a7.id]?.[O5(884)]?.[ak] ?? []
+                packagesTaken: a8.records[a7.id]?.taken?.[ak] ?? []
             };
         },
         aH = false,
@@ -23669,9 +23669,9 @@ async function _5(K) {
             const O7 = NX;
             if (aH || aC) return;
             aH = true;
-            let b4 = a8[O7(2396)][O7(2785)];
-            if (b4 === O7(5591) || !Ya(a8, b4)) return;
-            let b7 = Math[O7(3002)](0, Math[O7(544)](a8[O7(2396)][O7(3144)], gW(a8, ge[b4])));
+            let b4 = a8.loadout.throwable;
+            if (b4 === "none" || !Ya(a8, b4)) return;
+            let b7 = Math.max(0, Math.min(a8.loadout.take, gW(a8, ge[b4])));
             b7 > 0 && Ka(a8, ge[b4], b7);
         };
     aq = new Or(aA, L, P, Q, ak, aF, aG);
@@ -23681,17 +23681,17 @@ async function _5(K) {
         name: "mission",
         get world() {
             const O8 = NX;
-            return aJ[O8(3300)];
+            return aJ.world;
         },
         step: b4 => {
             const O9 = NX;
-            Y[O9(1349)](aJ[O9(3300)]), aJ[O9(3300)][O9(5798)] === 0 && !JT() && vm(b4), U[O9(1309)](Q[O9(4392)]);
+            Y.update(aJ.world), aJ.world.phase === 0 && !JT() && vm(b4), U.setCallInArmed(Q.callInArmed);
             let b7 = JT();
-            b7 ? B1() : H1(), !(b7 || U[O9(4039)]) && (aJ[O9(5610)](b4), aK[O9(5610)](aJ[O9(3300)]), U[O9(1349)](aJ[O9(3300)]));
+            b7 ? B1() : H1(), !(b7 || U.briefingUp) && (aJ.step(b4), aK.step(aJ.world), U.update(aJ.world));
         },
         draw: (b4, b7) => {
             const Oj = NX;
-            P[Oj(2527)](aJ[Oj(3300)], L, b4, b7, Q[Oj(5824)]), Qe(L, P[Oj(1261)], b7, !st() && aJ[Oj(3300)][Oj(5798)] === 0);
+            P.draw(aJ.world, L, b4, b7, Q.aim), Qe(L, P.windTime, b7, !st() && aJ.world.phase === 0);
         }
     }), Je(aA), um(a7.id, ak, aB);
     let aL = a9.findIndex(b4 => b4.id === a7.id),
@@ -23699,12 +23699,12 @@ async function _5(K) {
         aN = () => {
             const Ok = NX;
             if (!aq) return;
-            let b4 = aq[Ok(3300)][Ok(5798)] === 1 ? Uu(ak, aj) : null;
-            b4 ? (ak = b4, zt(U1, b4), aq[Ok(3402)](b4)) : aq[Ok(4428)](), U[Ok(3902)](), aX();
+            let b4 = aq.world.phase === 1 ? Uu(ak, aj) : null;
+            b4 ? (ak = b4, zt(U1, b4), aq.setDifficulty(b4)) : aq.restart(), U.hideOverlay(), aX();
         },
         aO = b4 => {
             const Oq = NX;
-            (!aq || aq[Oq(3300)][Oq(5798)] !== 0) && !aq || aj[Oq(5073)](b4) && (ak = b4, zt(U1, b4), aq[Oq(3402)](b4), U[Oq(2978)](aq[Oq(3300)]));
+            (!aq || aq.world.phase !== 0) && !aq || aj.includes(b4) && (ak = b4, zt(U1, b4), aq.setDifficulty(b4), U.showBriefing(aq.world));
         },
         aP = aM ? aM.levels.findIndex(b4 => b4.id === a7.id) + 1 : 0;
     U.open({
@@ -23714,7 +23714,7 @@ async function _5(K) {
         record: aC ? null : a8.records[a7.id] ?? null,
         onNext: () => {
             const Ov = NX;
-            aq && (aq[Ov(1461)] = true);
+            aq && (aq.nextRequested = true);
         },
         onRetry: aN,
         onDifficulty: aO,
@@ -23722,11 +23722,11 @@ async function _5(K) {
         campaign: aC ? null : a8,
         onLoadout: aC ? null : () => {
             const Ow = NX;
-            aq && (aq[Ow(4428)](), U[Ow(2978)](aq[Ow(3300)]));
+            aq && (aq.restart(), U.showBriefing(aq.world));
         },
         onMissions: () => {
             const Ox = NX;
-            aq && (aq[Ox(3886)] = true);
+            aq && (aq.exitRequested = true);
         }
     }), U.setTools({
         restart: true,
@@ -23735,47 +23735,47 @@ async function _5(K) {
     }), U.onExit = () => {
         const Oz = NX;
         ST({
-            title: Oz(4084),
-            body: Oz(2512),
+            title: "Leave the mission?",
+            body: "The squad walks away. Progress on this attempt is lost.",
             buttons: [{
-                label: Oz(771),
-                value: Oz(1147),
-                variant: Oz(681)
+                label: "LEAVE",
+                value: "leave",
+                variant: "primary"
             }, {
-                label: Oz(2023),
-                value: Oz(975)
+                label: "STAY",
+                value: "stay"
             }],
-            dismiss: Oz(975)
-        })[Oz(4353)](b4 => {
+            dismiss: "stay"
+        }).then(b4 => {
             const OA = Oz;
-            b4 === OA(1147) && aq && (aq[OA(3886)] = true);
+            b4 === "leave" && aq && (aq.exitRequested = true);
         });
     };
     let aQ = async () => {
         const OB = NX;
-        mm(a7.id, ak, aB), await Om(f[OB(4315)][OB(3209)]), aq && ai(a8, aq[OB(3300)]), aq?.[OB(4428)](), U[OB(3902)](), zW(), aX();
+        mm(a7.id, ak, aB), await Om(f.banner.fade), aq && ai(a8, aq.world), aq?.restart(), U.hideOverlay(), zW(), aX();
     };
     U.onRestart = () => {
         const OC = NX;
         ST({
-            title: OC(5559),
-            body: OC(2228),
+            title: "Restart the mission?",
+            body: "Back to the drop, everyone on their feet. This attempt is lost.",
             buttons: [{
-                label: OC(745),
-                value: OC(4428),
-                variant: OC(681)
+                label: "RESTART",
+                value: "restart",
+                variant: "primary"
             }],
-            dismiss: OC(5233)
-        })[OC(4353)](b4 => {
+            dismiss: "cancel"
+        }).then(b4 => {
             const OD = OC;
-            b4 === OD(4428) && aQ();
+            b4 === "restart" && aQ();
         });
     };
     let aR = () => {
         const OE = NX;
-        !aq || JT() || U[OE(4039)] || aq[OE(3300)][OE(5798)] !== 0 || Mt(!aC && aP ? aP + '. ' + aA[OE(3918)] : aA[OE(3918)], OE(1458), {
-            label: OE(2365),
-            tone: OE(5135),
+        !aq || JT() || U.briefingUp || aq.world.phase !== 0 || Mt(!aC && aP ? aP + '. ' + aA.name : aA.name, "Resume", {
+            label: "Restart",
+            tone: "warn",
             key: 'R',
             onPick: () => {
                 aQ();
@@ -23785,26 +23785,26 @@ async function _5(K) {
     Q.onPause = aR, Q.modalOpen = JT, U.onPause = aR;
     let aS = () => {
         const OF = NX;
-        document[OF(1709)] && aR();
+        document.hidden && aR();
     };
     document.addEventListener("visibilitychange", aS), aw = () => document.removeEventListener("visibilitychange", aS), az(), aq.onCallIn = () => {
         const OG = NX;
-        let b4 = EW[OG(1541)];
-        b4 && aq && je(b4, Rm(aq[OG(3300)][OG(4350)]()), {
+        let b4 = EW.trumper;
+        b4 && aq && je(b4, Rm(aq.world.jitter()), {
             seconds: 3
         });
     }, U.onCallInPress = b4 => {
         const OH = NX;
         if (aq) {
-            if (aq[OH(3300)][OH(3479)] <= 0) {
-                CW(b4, OH(3746));
+            if (aq.world.callInsLeft <= 0) {
+                CW(b4, "no call-ins left");
                 return;
             }
-            Q[OH(4392)] ? Q[OH(1224)]() : Q[OH(1706)](), U[OH(1309)](Q[OH(4392)]);
+            Q.callInArmed ? Q.disarmCallIn() : Q.armCallIn(), U.setCallInArmed(Q.callInArmed);
         }
     }, aq.onArmCallIn = () => {
         const OI = NX;
-        let b4 = EW[OI(1541)];
+        let b4 = EW.trumper;
         b4 && je(b4, Am(), {
             sticky: true
         });
@@ -23823,47 +23823,47 @@ async function _5(K) {
     aq.onResolved = b4 => {
         const OJ = NX;
         if (aC) {
-            U[OJ(5317)](null, null, aA[OJ(4658)] ? C3(a7.id, b4, aA[OJ(4658)][OJ(856)]) : null), aa(a7.id, ak, aB, b4[OJ(5798)] === 1, aU(b4)), ua(b4[OJ(5798)] === 1);
+            U.close(null, null, aA.challenge ? C3(a7.id, b4, aA.challenge.score) : null), aa(a7.id, ak, aB, b4.phase === 1, aU(b4)), ua(b4.phase === 1);
             return;
         }
         ai(a8, b4);
-        let b7 = a8[OJ(3184)][a7.id]?.[OJ(884)]?.[ak] ?? [],
+        let b7 = a8.records[a7.id]?.taken?.[ak] ?? [],
             b8 = Gu(a8, {
-                won: b4[OJ(5798)] === 1,
+                won: b4.phase === 1,
                 missionId: a7.id,
-                missionName: aA[OJ(3918)],
+                missionName: aA.name,
                 difficulty: ak,
-                time: b4[OJ(5464)],
-                kills: b4[OJ(3101)],
-                crates: b4[OJ(2611)],
-                packagesFound: b4[OJ(5267)][OJ(588)]((b9, bj) => b9[OJ(884)] && !b7[OJ(5073)](bj) ? bj : -1)[OJ(3639)](b9 => b9 >= 0),
-                survived: b4[OJ(4874)][OJ(3639)](b9 => b9[OJ(1101)])[OJ(588)](b9 => b9[OJ(3918)]),
-                died: b4[OJ(4874)][OJ(3639)](b9 => !b9[OJ(1101)])[OJ(588)](b9 => b9[OJ(3918)])
+                time: b4.time,
+                kills: b4.kills,
+                crates: b4.cratesTaken,
+                packagesFound: b4.packages.map((b9, bj) => b9.taken && !b7.includes(bj) ? bj : -1).filter(b9 => b9 >= 0),
+                survived: b4.soldiers.filter(b9 => b9.alive).map(b9 => b9.name),
+                died: b4.soldiers.filter(b9 => !b9.alive).map(b9 => b9.name)
             });
-        U[OJ(5317)](a8[OJ(3184)][a7.id] ?? null, b8), aa(a7.id, ak, aB, b4[OJ(5798)] === 1, {
+        U.close(a8.records[a7.id] ?? null, b8), aa(a7.id, ak, aB, b4.phase === 1, {
             ...aU(b4),
-            bonds: b8[OJ(4422)][OJ(1199)],
-            balance: a8[OJ(4422)]
-        }), ua(b4[OJ(5798)] === 1);
+            bonds: b8.bonds.total,
+            balance: a8.bonds
+        }), ua(b4.phase === 1);
     }, o5, WW, ve, IW, nW;
     let aV = hT(aq.world);
     aV && L.centreOn(aV, aA);
     let aX = () => {
             const OK = NX;
-            MW(1), U[OK(2978)](aq[OK(3300)]), window[OK(1661)](OK(2082), aY, true), window[OK(1661)](OK(1777), aY, true);
+            MW(1), U.showBriefing(aq.world), window.addEventListener("pointerdown", aY, true), window.addEventListener("keydown", aY, true);
         },
         aY = b4 => {
             const OL = NX;
-            if (!aq || aq[OL(3300)][OL(5798)] !== 0 || JT()) return;
-            let b7 = b4[OL(5099)];
-            if (b7 instanceof Element && b7[OL(2325)](OL(3270))) return;
-            b4[OL(2670)](), b4[OL(5788)](), aI(), U[OL(3902)](), He(f[OL(4315)][OL(3209)]), aZ();
+            if (!aq || aq.world.phase !== 0 || JT()) return;
+            let b7 = b4.target;
+            if (b7 instanceof Element && b7.closest(".briefing-diff, .briefing-kit, .briefing-shop")) return;
+            b4.preventDefault(), b4.stopPropagation(), aI(), U.hideOverlay(), He(f.banner.fade), aZ();
             let b8 = Kl(aA);
-            b8 && je(b8[OL(4706)], b8[OL(5412)], b8[OL(2454)]);
+            b8 && je(b8.speaker, b8.text, b8.opts);
         },
         aZ = () => {
             const OM = NX;
-            window[OM(4704)](OM(2082), aY, true), window[OM(4704)](OM(1777), aY, true);
+            window.removeEventListener("pointerdown", aY, true), window.removeEventListener("keydown", aY, true);
         };
     aX();
     try {
@@ -23871,8 +23871,8 @@ async function _5(K) {
     } catch {}
     return T1(() => {
         const ON = NX;
-        let b4 = aq?.[ON(3886)] ? ON(4294) : aq?.[ON(1461)] ? ON(5856) : null;
-        return b4 ? (aq && ai(a8, aq[ON(3300)]), aq = null, K[ON(5635)](null), Ze(), U[ON(3902)](), U[ON(1136)](), zW(), aZ(), G1(), aw?.(), aw = null, Q[ON(2599)] = null, U[ON(4554)] = U[ON(3347)] = U[ON(2599)] = null, ax?.[ON(5414)]()[ON(2008)](() => {}), ax = null, b4) : null;
+        let b4 = aq?.exitRequested ? "menu" : aq?.nextRequested ? "next" : null;
+        return b4 ? (aq && ai(a8, aq.world), aq = null, K.set(null), Ze(), U.hideOverlay(), U.hideClock(), zW(), aZ(), G1(), aw?.(), aw = null, Q.onPause = null, U.onExit = U.onRestart = U.onPause = null, ax?.release().catch(() => {}), ax = null, b4) : null;
     });
 }
 async function f_() {
@@ -23888,9 +23888,9 @@ async function f_() {
         F = performance.now();
     ic(R => (C ?? E)?.step(R), R => {
         const OP = OO;
-        let S = performance[OP(2864)](),
-            U = Math[OP(544)](0.1, (S - F) / 1000);
-        F = S, (C ?? E)?.[OP(2527)](R, U);
+        let S = performance.now(),
+            U = Math.min(0.1, (S - F) / 1000);
+        F = S, (C ?? E)?.draw(R, U);
     });
     let H = Y3({
             shell: j,

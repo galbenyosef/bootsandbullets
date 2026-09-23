@@ -90,18 +90,18 @@ function Fh(c) {
     }
     return d.map(q => {
         const AJ = AI;
-        if (q[AJ(488)] < 2) return q;
-        let u = q[AJ(1799)]((E, F) => E + F.x, 0) / q[AJ(488)],
-            v = q[AJ(1799)]((E, F) => E + F.y, 0) / q[AJ(488)],
+        if (q.length < 2) return q;
+        let u = q.reduce((E, F) => E + F.x, 0) / q.length,
+            v = q.reduce((E, F) => E + F.y, 0) / q.length,
             y = q[0];
-        for (let E of q) Math[AJ(4786)](E.x - u, E.y - v) > Math[AJ(4786)](y.x - u, y.y - v) && (y = E);
+        for (let E of q) Math.hypot(E.x - u, E.y - v) > Math.hypot(y.x - u, y.y - v) && (y = E);
         let A = [y],
-            C = new Set(q[AJ(3639)](F => F !== y));
-        for (; C[AJ(4996)] > 0;) {
-            let F = A[A[AJ(488)] - 1],
+            C = new Set(q.filter(F => F !== y));
+        for (; C.size > 0;) {
+            let F = A[A.length - 1],
                 H = null;
-            for (let I of C)(!H || Math[AJ(4786)](I.x - F.x, I.y - F.y) < Math[AJ(4786)](H.x - F.x, H.y - F.y)) && (H = I);
-            A[AJ(3087)](H), C[AJ(3073)](H);
+            for (let I of C)(!H || Math.hypot(I.x - F.x, I.y - F.y) < Math.hypot(H.x - F.x, H.y - F.y)) && (H = I);
+            A.push(H), C.delete(H);
         }
         return A;
     });
@@ -163,18 +163,18 @@ function Hh(c, d, g) {
     const AM = cX;
     return c.buildings.map((j, l) => {
         const AN = AM;
-        let m = j[AN(2372)] === AN(3301) ? f[AN(3517)][AN(5596)] : f[AN(3517)][AN(564)];
+        let m = j.kind === "hut" ? f.building.hutHp : f.building.factoryHp;
         return {
-            indestructible: c[AN(4012)] || c[AN(1616)] || c[AN(4052)][AN(5073)](AN(1873)) && j[AN(2372)] === AN(1873) || c[AN(4052)][AN(5073)](AN(3328)) && c[AN(5155)] !== null && j[AN(2411)] === AN(3154),
+            indestructible: c.arena || c.unlevellable || c.indestructible.includes("bunker") && j.kind === "bunker" || c.indestructible.includes("wave-spawners") && c.waves !== null && j.role === "spawner",
             damageStage: 0,
             ruinAge: 0,
             id: l,
-            kind: j[AN(2372)],
-            role: j[AN(2411)],
-            owner: j[AN(4829)],
-            tiles: j[AN(1688)],
+            kind: j.kind,
+            role: j.role,
+            owner: j.owner,
+            tiles: j.tiles,
             centre: {
-                ...j[AN(5673)]
+                ...j.centre
             },
             x0: j.x0,
             y0: j.y0,
@@ -183,7 +183,7 @@ function Hh(c, d, g) {
             hp: m,
             maxHp: m,
             standing: true,
-            spawnTimer: f[AN(3517)][AN(4968)] * d[AN(4968)] * (0.4 + g() * 0.8),
+            spawnTimer: f.building.spawnInterval * d.spawnInterval * (0.4 + g() * 0.8),
             spawned: 0,
             flash: 0
         };
@@ -249,7 +249,7 @@ function BW(j, q, A, C, F = 0) {
         R = A && A.length > 0 ? Math.min(j.squadSize, A.length) : j.squadSize,
         S = j.playerSpawns.slice(0, R).map((aj, ak) => {
             const AR = AQ;
-            let aq = N[ak % N[AR(488)]];
+            let aq = N[ak % N.length];
             return _1(M, aj, Q(ak), aq);
         }),
         U = Bh(j, H, M, L),
@@ -1631,10 +1631,10 @@ function u3(g, j, m = "#12180c") {
     let A = [];
     u.forEach((C, E) => {
         const CY = CX;
-        let F = (d3[C] ?? d3[' '])[CY(3916)]('/'),
+        let F = (d3[C] ?? d3[' ']).split('/'),
             H = 1 + E * 4;
         for (let I = 0; I < 5; I++)
-            for (let K = 0; K < 3; K++) F[I][K] === '#' && A[CY(3087)]([H + K, 1 + I]);
+            for (let K = 0; K < 3; K++) F[I][K] === '#' && A.push([H + K, 1 + I]);
     }), y.fillStyle = m;
     for (let [C, E] of A)
         for (let F = -1; F <= 1; F++)
@@ -1898,14 +1898,14 @@ var Qi = class {
                 S = (E + H) / 2,
                 U = (X, Y) => {
                     const DJ = DI;
-                    let a7 = Math[DJ(3002)](M, Math[DJ(544)](P, X.x)),
-                        a8 = Math[DJ(3002)](N, Math[DJ(544)](Q, X.y)),
-                        a9 = Math[DJ(4953)](X.y - S, X.x - R),
-                        aj = (Math[DJ(1207)](a9 * 16 / (Math.PI * 2)) % 16 + 16) % 16,
-                        ak = this[DJ(704)](Y, aj),
+                    let a7 = Math.max(M, Math.min(P, X.x)),
+                        a8 = Math.max(N, Math.min(Q, X.y)),
+                        a9 = Math.atan2(X.y - S, X.x - R),
+                        aj = (Math.round(a9 * 16 / (Math.PI * 2)) % 16 + 16) % 16,
+                        ak = this.guideArrow(Y, aj),
                         aq = aj * Math.PI * 2 / 16,
-                        aw = [0, 2, 4, 2][(this[DJ(5464)] * 5 | 0) % 4];
-                    I[DJ(5206)](ak, Math[DJ(1207)](a7 + Math[DJ(4513)](aq) * aw - ak[DJ(3904)] / 2), Math[DJ(1207)](a8 + Math[DJ(527)](aq) * aw - ak[DJ(2900)] / 2));
+                        aw = [0, 2, 4, 2][(this.time * 5 | 0) % 4];
+                    I.drawImage(ak, Math.round(a7 + Math.cos(aq) * aw - ak.width / 2), Math.round(a8 + Math.sin(aq) * aw - ak.height / 2));
                 },
                 V = X => X.x < M || X.x > P || X.y < N || X.y > Q;
             if (!j.map.arena) {
@@ -2113,13 +2113,13 @@ var tr = class {
                 K = mf(j.theme),
                 L = (Q, R, S, U) => {
                     const Ez = Ex;
-                    A[Ez(2754)] = K;
-                    for (let V = Math[Ez(1207)](R - U); V <= R + U; V++) {
+                    A.fillStyle = K;
+                    for (let V = Math.round(R - U); V <= R + U; V++) {
                         let X = (V - R) / U,
-                            Y = Math[Ez(1730)](Math[Ez(3002)](0, 1 - X * X)) * S;
-                        for (let a7 = Math[Ez(1207)](Q - Y); a7 <= Q + Y; a7++) {
-                            let a8 = 1 - Math[Ez(4786)]((a7 - Q) / S, X);
-                            qW(a7, V) > a8 * 1.15 || A[Ez(3797)](a7, V, 1, 1);
+                            Y = Math.sqrt(Math.max(0, 1 - X * X)) * S;
+                        for (let a7 = Math.round(Q - Y); a7 <= Q + Y; a7++) {
+                            let a8 = 1 - Math.hypot((a7 - Q) / S, X);
+                            qW(a7, V) > a8 * 1.15 || A.fillRect(a7, V, 1, 1);
                         }
                     }
                 },
@@ -2509,7 +2509,7 @@ var nr = class {
             let g = c;
             this.on(document, "contextmenu", i => {
                 const F9 = F8;
-                i[F9(5099)]?.[F9(2325)]?.(F9(1275)) || i[F9(2670)]();
+                i.target?.closest?.("input, textarea, a[href], [contenteditable=\"\"], [contenteditable=\"true\"]") || i.preventDefault();
             }), this.on(g, "pointerdown", i => this.onDown(i)), this.on(window, "pointermove", i => this.onMove(i)), this.on(window, "pointerup", i => this.onUp(i, false)), this.on(window, "pointercancel", i => this.onUp(i, true)), this.on(g, "pointerenter", () => this.emit({
                 k: "enter"
             })), this.on(g, "pointerleave", () => this.emit({
@@ -2593,13 +2593,13 @@ var nr = class {
             };
             j !== "mouse" && (l.longPressTimer = window.setTimeout(() => {
                 const Fx = Fw;
-                let p = this[Fx(894)][Fx(778)](yt(c[Fx(4984)], c[Fx(5291)]));
-                !p || p[Fx(2035)] || !p[Fx(2179)] || (p[Fx(2179)] = false, this[Fx(1596)]({
-                    k: Fx(1529),
+                let p = this.active.get(yt(c.pointerId, c.button));
+                !p || p.dragging || !p.tappable || (p.tappable = false, this.emit({
+                    k: "longpress",
                     at: {
                         ...p.at
                     },
-                    kind: p[Fx(2372)]
+                    kind: p.kind
                 }));
             }, 420)), this.active.set(yt(c.pointerId, c.button), l), this.emit({
                 k: "down",
@@ -3432,23 +3432,23 @@ function x3(c, d) {
         m = '',
         p = () => {
             const H5 = H2;
-            cancelAnimationFrame(l), g[H5(549)]();
+            cancelAnimationFrame(l), g.remove();
         },
         q = () => {
             const H7 = H2;
-            if (!c[H7(3400)]) {
+            if (!c.isConnected) {
                 p();
                 return;
             }
-            let v = c[H7(1752)] !== null,
-                y = c[H7(2491)](),
-                A = g[H7(2491)](),
-                C = y[H7(2706)] - A[H7(2900)] - cr,
-                E = Math[H7(1207)](C >= 0 ? C : y[H7(4229)] + cr),
-                F = Math[H7(1207)](Math[H7(544)](Math[H7(3002)](cr, y[H7(1551)] + y[H7(3904)] / 2 - A[H7(3904)] / 2), window[H7(2901)] - A[H7(3904)] - cr)),
-                H = Math[H7(1207)](y[H7(1551)] + y[H7(3904)] / 2 - F),
+            let v = c.offsetParent !== null,
+                y = c.getBoundingClientRect(),
+                A = g.getBoundingClientRect(),
+                C = y.top - A.height - cr,
+                E = Math.round(C >= 0 ? C : y.bottom + cr),
+                F = Math.round(Math.min(Math.max(cr, y.left + y.width / 2 - A.width / 2), window.innerWidth - A.width - cr)),
+                H = Math.round(y.left + y.width / 2 - F),
                 I = v + '|' + F + '|' + E + '|' + H + '|' + (C < 0);
-            I !== m && (m = I, g[H7(1709)] = !v, g[H7(935)][H7(1551)] = F + 'px', g[H7(935)][H7(2706)] = E + 'px', g[H7(5057)][H7(827)](H7(5028), C < 0), j[H7(935)][H7(4584)](H7(1603), H + 'px')), l = requestAnimationFrame(q);
+            I !== m && (m = I, g.hidden = !v, g.style.left = F + 'px', g.style.top = E + 'px', g.classList.toggle("below", C < 0), j.style.setProperty("--tail-x", H + 'px')), l = requestAnimationFrame(q);
         };
     return q(), p;
 }
@@ -3474,7 +3474,7 @@ async function k3(d) {
     let y = null,
         A = () => {
             const H9 = H8;
-            y && (y[H9(1894)] = !j[H9(862)]() && !m[H9(862)]() && !u[H9(862)][H9(2762)]());
+            y && (y.disabled = !j.value() && !m.value() && !u.value.trim());
         };
     for (u.addEventListener("input", A);;) {
         let C = ST({
@@ -3523,11 +3523,11 @@ function w3(c, d, g = {}) {
     let p = Math.max(1, Math.round(dr / 40));
     for (let q = 1; q <= p; q++) j.push(window.setTimeout(() => {
         const Hn = Hk;
-        l || (c[Hn(4920)] = String(Math[Hn(1207)](d * q / p)));
+        l || (c.textContent = String(Math.round(d * q / p)));
     }, E2 + dr * q / p));
     return j.push(window.setTimeout(() => {
         const Hq = Hk;
-        l || g[Hq(4169)]?.();
+        l || g.onTick?.();
     }, E2 + dr)), j.push(window.setTimeout(m, E2 + dr + 120)), m;
 }
 var WG = f.fx.popupLife;
@@ -3572,14 +3572,14 @@ var ur = class {
             I.className = "result-stats";
             let K = (U, V) => {
                 const HA = Hx;
-                let X = document[HA(2784)](HA(991));
-                X[HA(2084)] = HA(3156), X[HA(2592)](Object[HA(4640)](document[HA(2784)](HA(4768)), {
-                    className: HA(530),
+                let X = document.createElement("div");
+                X.className = "result-stat", X.appendChild(Object.assign(document.createElement("span"), {
+                    className: "result-stat-k",
                     textContent: U
-                })), X[HA(2592)](Object[HA(4640)](document[HA(2784)](HA(4768)), {
-                    className: HA(5554),
+                })), X.appendChild(Object.assign(document.createElement("span"), {
+                    className: "result-stat-v",
                     textContent: V
-                })), I[HA(2592)](X);
+                })), I.appendChild(X);
             };
             if (A) {
                 j.map.objective !== "covert" && !j.map.nokill && K("kills", j.kills + " / " + j.enemyTotal), j.packages.length > 0 && K("packages", j.packages.filter(V => V.taken).length + " / " + j.packages.length);
@@ -3618,7 +3618,7 @@ var ur = class {
                     }),
                     aj = () => {
                         const HB = Hx;
-                        a9(), window[HB(4704)](HB(2082), aj, true), window[HB(4704)](HB(1777), aj, true);
+                        a9(), window.removeEventListener("pointerdown", aj, true), window.removeEventListener("keydown", aj, true);
                     };
                 window.addEventListener("pointerdown", aj, true), window.addEventListener("keydown", aj, true), this.stopTally = aj;
             }
@@ -3641,15 +3641,15 @@ var ur = class {
                 })), P.appendChild(Q), F.append(H, P), jo()) {
                 let ak = IT("Feedback", "result-rate dark", () => {
                     const HC = Hx;
-                    this[HC(3671)]?.(), this[HC(3671)] = null, k3({
-                        mission: j[HC(588)].id,
-                        difficulty: j[HC(4418)],
-                        outcome: A ? HC(4674) : HC(5421),
+                    this.stopCallout?.(), this.stopCallout = null, k3({
+                        mission: j.map.id,
+                        difficulty: j.difficulty,
+                        outcome: A ? "won" : "lost",
                         seconds: L,
-                        lost: j[HC(4874)][HC(488)] - C[HC(488)]
-                    })[HC(4353)](aq => {
+                        lost: j.soldiers.length - C.length
+                    }).then(aq => {
                         const HD = HC;
-                        aq && (ak[HD(1894)] = true, ak[HD(546)](HD(2725))[HD(4920)] = HD(5475));
+                        aq && (ak.disabled = true, ak.querySelector(".fx-btn-label").textContent = "Thanks");
                     });
                 });
                 F.appendChild(ak);
@@ -3828,15 +3828,15 @@ function hr(d) {
         p = d.options.length < 2,
         q = A => {
             const HJ = HI;
-            let C = w(HJ(5291), HJ(5162) + (A < 0 ? HJ(4748) : HJ(5856)));
-            return C[HJ(2882)] = HJ(5291), C[HJ(4920)] = A < 0 ? '‹' : '›', C[HJ(4492)](HJ(5246), A < 0 ? HJ(1146) + d[HJ(1693)] : HJ(1809) + d[HJ(1693)]), p && C[HJ(4492)](HJ(4413), HJ(2588)), C[HJ(1661)](HJ(5016), () => {
+            let C = w("button", "bl-arrow " + (A < 0 ? "prev" : "next"));
+            return C.type = "button", C.textContent = A < 0 ? '‹' : '›', C.setAttribute("aria-label", A < 0 ? "Previous " + d.label : "Next " + d.label), p && C.setAttribute("aria-disabled", "true"), C.addEventListener("click", () => {
                 const HK = HJ;
                 if (p) {
-                    CW(C, d[HK(612)]);
+                    CW(C, d.emptyHint);
                     return;
                 }
-                let E = d[HK(625)][HK(488)];
-                d[HK(3899)]((d.at + A + E) % E);
+                let E = d.options.length;
+                d.onPick((d.at + A + E) % E);
             }), C;
         };
     j.appendChild(q(-1));
@@ -3854,16 +3854,16 @@ function hr(d) {
             F = w("div", "bl-rock"),
             H = I => {
                 const HL = HI;
-                let K = w(HL(5291), HL(4018));
-                K[HL(2882)] = HL(5291), K[HL(4920)] = I < 0 ? '−' : '+', K[HL(4492)](HL(5246), I < 0 ? HL(3095) : HL(3336));
-                let L = I < 0 ? E[HL(862)] <= 0 : E[HL(862)] >= E[HL(3002)];
-                return L && K[HL(4492)](HL(4413), HL(2588)), K[HL(1661)](HL(5016), () => {
+                let K = w("button", "bl-step");
+                K.type = "button", K.textContent = I < 0 ? '−' : '+', K.setAttribute("aria-label", I < 0 ? "One fewer" : "One more");
+                let L = I < 0 ? E.value <= 0 : E.value >= E.max;
+                return L && K.setAttribute("aria-disabled", "true"), K.addEventListener("click", () => {
                     const HM = HL;
                     if (L) {
-                        CW(K, I < 0 ? E[HM(2443)][HM(5591)] : E[HM(2443)][HM(4160)]);
+                        CW(K, I < 0 ? E.hint.none : E.hint.all);
                         return;
                     }
-                    E[HM(1129)](E[HM(862)] + I);
+                    E.onSet(E.value + I);
                 }), K;
             };
         F.appendChild(H(-1)), F.appendChild(w("span", "bl-count", String(E.value))), F.appendChild(H(1)), y.appendChild(F);
@@ -3918,8 +3918,8 @@ function k6(j, q, A) {
         X = (a7, a8, a9) => a8[a9]?.locked ? (A2.set(a7, a9), q(), true) : (A2.delete(a7), false),
         Y = (a7, a8, a9) => {
             const HO = HN;
-            let aj = A2[HO(778)](a7);
-            return aj !== void 0 && aj < a9[HO(488)] && a9[aj]?.[HO(924)] ? aj : a8;
+            let aj = A2.get(a7);
+            return aj !== void 0 && aj < a9.length && a9[aj]?.locked ? aj : a8;
         };
     return [...A ? [] : [hr({
         label: "WEAPON",
@@ -3928,7 +3928,7 @@ function k6(j, q, A) {
         emptyHint: V,
         onPick: a7 => {
             const HP = HN;
-            X(HP(3036), E, a7) || (Wt(j, HP(2903), C[a7]), q());
+            X("WEAPON", E, a7) || (Wt(j, "weapon", C[a7]), q());
         }
     })], hr({
         icon: 1,
@@ -3938,10 +3938,10 @@ function k6(j, q, A) {
         emptyHint: V,
         onPick: a7 => {
             const HQ = HN;
-            if (X(HQ(1204), K, a7)) return;
-            Wt(j, HQ(2785), a7 === 0 ? HQ(5591) : H[a7 - 1]);
+            if (X("THROWABLE", K, a7)) return;
+            Wt(j, "throwable", a7 === 0 ? "none" : H[a7 - 1]);
             let a8 = a7 === 0 ? 0 : gW(j, ge[H[a7 - 1]]);
-            Wt(j, HQ(3144), a8), q();
+            Wt(j, "take", a8), q();
         },
         rocker: R ? {
             value: U,
@@ -3952,7 +3952,7 @@ function k6(j, q, A) {
             },
             onSet: a7 => {
                 const HR = HN;
-                Wt(j, HR(3144), a7), q();
+                Wt(j, "take", a7), q();
             }
         } : void 0
     }), hr({
@@ -3963,7 +3963,7 @@ function k6(j, q, A) {
         emptyHint: V,
         onPick: a7 => {
             const HS = HN;
-            X(HS(2017), N, a7) || (Wt(j, HS(2624), a7 === 0 ? HS(5591) : M[a7 - 1]), q());
+            X("CALL-IN", N, a7) || (Wt(j, "callin", a7 === 0 ? "none" : M[a7 - 1]), q());
         }
     })];
 }
@@ -3992,7 +3992,7 @@ var gr = class {
                     for (let P = 0; P <= qT.indexOf(L); P++) N.appendChild(w('i', "fx-star on"));
                     M.appendChild(N), M.appendChild(w("span", "briefing-diff-name", QW[L].name.toUpperCase())), M.title = QW[L].blurb, K || M.addEventListener("click", () => {
                         const HU = HT;
-                        L !== g[HU(4418)] && j[HU(5189)]?.(L);
+                        L !== g.difficulty && j.onDifficulty?.(L);
                     }), I.appendChild(M);
                 }
                 q.appendChild(I), j.campaign && Vu(j.campaign, g.difficulty, j.difficulties) && (q.appendChild(w('p', "briefing-rung-note", jm())), $u(j.campaign));
@@ -4004,7 +4004,7 @@ var gr = class {
                 let R = w("button", "briefing-shop");
                 R.type = "button", R.appendChild(w("span", "briefing-shop-label", "THE ARMOURY")), R.addEventListener("click", () => {
                     const HV = HT;
-                    zf(j[HV(4662)], j[HV(2164)]);
+                    zf(j.campaign, j.onLoadout);
                 }), q.appendChild(R);
             }
             let H = w("button", "briefing-go");
@@ -4025,7 +4025,7 @@ var gr = class {
                 i = [];
             c.forEach((j, l) => {
                 const HY = HX;
-                l > 0 && i[HY(3087)](w(HY(4768), HY(1138), c[HY(488)] === 2 ? 'vs' : '·')), i[HY(3087)](g(j));
+                l > 0 && i.push(w("span", "ab-vs", c.length === 2 ? 'vs' : '·')), i.push(g(j));
             }), i.push(w("span", "ab-keys", 'C ' + (d ? "free" : "lock") + " · H hide")), this.paint("viewport", c.map(j => j.up + '/' + j.lost).join(' ') + ' ' + d, i);
         } showScore(c) {
             const I5 = cX;
@@ -4176,8 +4176,8 @@ var gr = class {
             this.mission.className = "hud-mission", this.roster.className = "hud-roster", this.objective.className = "hud-objective", this.loadout.className = "hud-loadout-row";
             let c = (p, ...q) => {
                 const ID = IC;
-                let u = document[ID(2784)](ID(991));
-                return u[ID(2084)] = p, u[ID(1643)](...q), u;
+                let u = document.createElement("div");
+                return u.className = p, u.append(...q), u;
             };
             this.goal.className = "hud-goal";
             let d = document.createElement("div");
@@ -4190,8 +4190,8 @@ var gr = class {
             l.className = "hud-tools";
             let m = (p, q, u) => {
                 const IE = IC;
-                let v = document[IE(2784)](IE(5291));
-                return v[IE(2882)] = IE(5291), v[IE(2084)] = IE(1612) + p, v[IE(3984)] = q, v[IE(4492)](IE(5246), q), v[IE(1661)](IE(5016), u), v;
+                let v = document.createElement("button");
+                return v.type = "button", v.className = "hud-tool " + p, v.title = q, v.setAttribute("aria-label", q), v.addEventListener("click", u), v;
             };
             this.toolButtons = {
                 exit: m("t-exit", "Leave the mission", () => this.onExit?.()),
@@ -4218,11 +4218,11 @@ var gr = class {
             let d = this.mine(c);
             this.plates.length === d.length && this.plates.every((g, i) => g.name === d[i].name) || (this.roster.textContent = '', this.plates = d.map(g => {
                 const IJ = II;
-                let i = tn(g[IJ(3918)], Du(g[IJ(793)]));
-                return ne(g[IJ(793)]) >= 3 && i[IJ(5057)][IJ(2129)](IJ(2257)), g[IJ(2138)] && i[IJ(5057)][IJ(2129)](IJ(2138)), i[IJ(3984)] = Nu(g[IJ(793)]) + IJ(1720) + g[IJ(793)] + IJ(2520) + (g[IJ(793)] === 1 ? '' : 's') + IJ(3453), this[IJ(3564)][IJ(2592)](i), {
+                let i = tn(g.name, Du(g.rank));
+                return ne(g.rank) >= 3 && i.classList.add("vet"), g.own && i.classList.add("own"), i.title = Nu(g.rank) + " — " + g.rank + " mission" + (g.rank === 1 ? '' : 's') + " survived", this.roster.appendChild(i), {
                     root: i,
                     alive: true,
-                    name: g[IJ(3918)]
+                    name: g.name
                 };
             }));
         } flashLoadout() {

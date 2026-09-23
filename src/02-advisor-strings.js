@@ -550,7 +550,7 @@ function ml(g, j) {
             if (K < 0 || L < 0 || K >= p || L >= q) return true;
             if (y[L * p + K]) return false;
             let M = TT[z(g, K, L)];
-            return M[dG(550)] && !M[dG(2958)];
+            return M.solid && !M.swim;
         },
         C = {
             x: Math.floor(j.x / g.tile),
@@ -697,28 +697,28 @@ function hl(c, d) {
     let g = c.buildings.filter(i => i.kind === "bunker");
     return g.length === 0 ? d : d.map(j => {
         const dL = dK;
-        if (j[dL(3554)] !== 0) return j;
-        let p = Math[dL(1959)](j.x / c[dL(5519)]),
-            q = Math[dL(1959)](j.y / c[dL(5519)]),
+        if (j.pad !== 0) return j;
+        let p = Math.floor(j.x / c.tile),
+            q = Math.floor(j.y / c.tile),
             v = null;
         for (let y of g) {
-            let A = y[dL(1688)][dL(588)](([L]) => L),
-                C = y[dL(1688)][dL(588)](([, L]) => L),
-                E = Math[dL(544)](...A),
-                F = Math[dL(3002)](...A),
-                H = Math[dL(544)](...C),
-                I = Math[dL(3002)](...C),
-                K = Math[dL(3002)](Math[dL(3002)](E - p, 0, p - F), Math[dL(3002)](H - q, 0, q - I));
+            let A = y.tiles.map(([L]) => L),
+                C = y.tiles.map(([, L]) => L),
+                E = Math.min(...A),
+                F = Math.max(...A),
+                H = Math.min(...C),
+                I = Math.max(...C),
+                K = Math.max(Math.max(E - p, 0, p - F), Math.max(H - q, 0, q - I));
             K > Y5 || v && v.d <= K || (v = {
                 d: K,
                 zone: {
-                    x: ((E + F) / 2 + 0.5) * c[dL(5519)],
-                    y: ((H + I) / 2 + 0.5) * c[dL(5519)],
-                    pad: (Math[dL(3002)](F - E, I - H) + 1) * c[dL(5519)] / 2
+                    x: ((E + F) / 2 + 0.5) * c.tile,
+                    y: ((H + I) / 2 + 0.5) * c.tile,
+                    pad: (Math.max(F - E, I - H) + 1) * c.tile / 2
                 }
             });
         }
-        return v ? v[dL(5069)] : j;
+        return v ? v.zone : j;
     });
 }
 var Yr = {
@@ -1151,8 +1151,8 @@ function Te(j, q = "level") {
                 verb: j.challenge.verb ?? "OVERRUN",
                 score: ((() => {
                     const dW = dV;
-                    if (j[dW(4658)][dW(856)][dW(488)] === 0) throw new Error(dW(660));
-                    return j[dW(4658)][dW(856)];
+                    if (j.challenge.score.length === 0) throw new Error("challenge: score must name at least one stat");
+                    return j.challenge.score;
                 })())
             } : null,
             sidePersonas: j.sidePersonas ? {
