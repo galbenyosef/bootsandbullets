@@ -853,7 +853,7 @@ function gi(g, j = {}) {
     for (let [S, U] of I) H.fillRect(S, U, 1, 1);
     return i0.set(A, F), F;
 }
-var Qa = 6;
+var canopyScatterRadius = 6;
 
 function $y(j, q, y, A) {
     const vB = cX;
@@ -876,7 +876,7 @@ function $y(j, q, y, A) {
     let L = Math.sqrt(F);
     A.dist = L, A.nx = L > 0.001 ? H / L : 0, A.ny = L > 0.001 ? I / L : 0, A.tint = K;
 }
-var r0 = 5,
+var blitOffsetX = 5,
     s0 = 6;
 
 function a0(K, L) {
@@ -943,21 +943,21 @@ function a0(K, L) {
         for (let b4 = 0; b4 < ax; b4++) {
             let b7 = aV(b4, aZ);
             if (b7 > 0.34) continue;
-            aU(b4, aZ, Qa);
+            aU(b4, aZ, canopyScatterRadius);
             let b8 = -b7,
-                b9 = 1 - aR.dist / (Qa * 0.85);
+                b9 = 1 - aR.dist / (canopyScatterRadius * 0.85);
             if (b8 < 0.5 && b9 < 0.3 - b8 * 0.7) continue;
             let bj = aZ * ax + b4,
                 bk = -(aR.nx * 0.62 + aR.ny * 0.78),
                 bq = aS * (0.3 + (aN.at(b4, aZ) - 0.5) * 0.72) + bk * 2.6 + b9 * 2.4 + aR.tint * 0.5;
-            b9 > 0.72 && bk > 0.35 && (bq += 1.4), b8 < 1 && (bq -= (1 - b8) * 1.35), aE[bj] = iW(aA.canopy, bq, b4, aZ), aR.dist > Qa * 0.8 && (aE[bj] = Bt(aE[bj], aA.canopy[1], 0.7));
+            b9 > 0.72 && bk > 0.35 && (bq += 1.4), b8 < 1 && (bq -= (1 - b8) * 1.35), aE[bj] = iW(aA.canopy, bq, b4, aZ), aR.dist > canopyScatterRadius * 0.8 && (aE[bj] = Bt(aE[bj], aA.canopy[1], 0.7));
         }
     fillTerrainPixels(aE, ax, az, aw, L, Y, GRASS_PARAMS, aA, aU, aR, aK, aL, aM, aN);
     let aX = renderTerrainCanvas(ax, az, aw, L, aA, aU, aR, aK, aL, aM, aN);
     fillStonePixels(aE, aI, ax, az, aw, L, Fl(K.theme), aU, aR, aK, aL, aM, aN);
     for (let bw = 0; bw < az; bw++)
         for (let bx = 0; bx < ax; bx++) {
-            let bz = bx - r0,
+            let bz = bx - blitOffsetX,
                 bA = bw - s0;
             bz < 0 || bA < 0 || aV(bz, bA) > -0.12 || (aI[bw * ax + bx] = aJ);
         }
@@ -1082,13 +1082,13 @@ function fillStonePixels(q, H, K, L, P, Q, U, V, Y, a7, a8, a9, aj) {
                 aL = aK > 0.42 ? 1.9 : aK > -0.1 ? 0.5 : -1.4,
                 aM = az * (0.42 + (aj.at(aF, aE) - 0.5) * 0.5) + aL + aI * 1.1 + Y.tint * 0.7;
             aH < 0.9 && (aM -= (0.9 - aH) * 1.6), q[aJ] = iW(U.face, aM, aF, aE), Y.ny > 0.72 && Y.dist > aA * 0.5 ? q[aJ] = U.shadow : Y.ny < -0.5 && Y.nx < 0.3 && aI > 0.35 && (aF + aE & 1) === 0 && (q[aJ] = U.cap);
-            let aN = aF + r0,
+            let aN = aF + blitOffsetX,
                 aO = aE + s0;
             aH > 0.1 && aN < K && aO < L && (H[aO * K + aN] = aB);
         }
 }
 
-function c0(c, d, g, j, l) {
+function drawMudClod(c, d, g, j, l) {
     const vG = cX;
     let m = xT(d, g);
     if (m % 7 > 1) return;
@@ -1098,7 +1098,7 @@ function c0(c, d, g, j, l) {
         v = g + 5 + m % 4;
     c.fillStyle = SW(p[1]), c.fillRect(u, v, q, 2), c.fillRect(u + 2, v + 3, Math.max(2, q - 2), 1), c.fillStyle = SW(zT(l, 3).ramp[2]), c.fillRect(u + 1, v, Math.min(3, q - 1), 1), c.fillStyle = SW(p[3]), c.fillRect(u, v + 2, q - 1, 1);
 }
-var ie = 11,
+var terrainJitterAmplitude = 11,
     d0 = 5,
     u0 = new Set([4]),
     bi = class {
@@ -1168,8 +1168,8 @@ function m0(K, L, U) {
                 aS = aI(aR, aP),
                 aU = aS;
             if (!u0.has(aS)) {
-                let b8 = aQ + (az.at(aQ, aO) - 0.5) * 2 * ie + (aC.at(aQ, aO) - 0.5) * 2 * d0,
-                    b9 = aO + (aA.at(aQ, aO) - 0.5) * 2 * ie + (aC.at(aQ + 71, aO + 37) - 0.5) * 2 * d0,
+                let b8 = aQ + (az.at(aQ, aO) - 0.5) * 2 * terrainJitterAmplitude + (aC.at(aQ, aO) - 0.5) * 2 * d0,
+                    b9 = aO + (aA.at(aQ, aO) - 0.5) * 2 * terrainJitterAmplitude + (aC.at(aQ + 71, aO + 37) - 0.5) * 2 * d0,
                     bj = aI(b8 / Y | 0, b9 / Y | 0);
                 u0.has(bj) || (aU = bj);
             }
@@ -1186,8 +1186,8 @@ function m0(K, L, U) {
         wetSdf: aJ
     } = U, aK = (bk, bq) => {
         const vM = vK;
-        let bw = bk + (az.at(bk, bq) - 0.5) * 2 * ie + (aC.at(bk, bq) - 0.5) * 7,
-            bx = bq + (aA.at(bk, bq) - 0.5) * 2 * ie + (aC.at(bk + 43, bq + 91) - 0.5) * 7;
+        let bw = bk + (az.at(bk, bq) - 0.5) * 2 * terrainJitterAmplitude + (aC.at(bk, bq) - 0.5) * 7,
+            bx = bq + (aA.at(bk, bq) - 0.5) * 2 * terrainJitterAmplitude + (aC.at(bk + 43, bq + 91) - 0.5) * 7;
         return wW(aJ, U.width, U.height, Y, bw, bx) < -0.02;
     };
     for (let bk = 0; bk < L.height; bk++)
@@ -1198,10 +1198,10 @@ function m0(K, L, U) {
                 bz = bk * Y;
             !aK(bx + 3, bz + 4) || !aK(bx + 13, bz + 4) || !aK(bx + 8, bz + 11) || !aK(bx + 13, bz + 11) || aF.push([bq, bk]);
         }
-    scatterSnowDetail(aq, a7, a8, Y, U, a9), Zy(aq, a7, a8, Y, U, a9, ax(zT(a9, 1).scale), aB);
+    scatterSnowDetail(aq, a7, a8, Y, U, a9), scatterGroundRipples(aq, a7, a8, Y, U, a9, ax(zT(a9, 1).scale), aB);
     let aL = new bi(),
         aM = new bi();
-    return Tv(aq, a7, a8, Y, U, az, aA, aC, aD, L, aL, aM), fillFoliagePixels(aq, a7, a8, Y, U, az, aA, aB, aC, aE), scatterFoliage(aq, a7, a8, Y, U, az, aA, aC, aE), aL.prune(aq, a7), aM.prune(aq, a7), K.putImageData(ak, 0, 0), nv(K, L, U, aB), {
+    return Tv(aq, a7, a8, Y, U, az, aA, aC, aD, L, aL, aM), fillFoliagePixels(aq, a7, a8, Y, U, az, aA, aB, aC, aE), scatterFoliage(aq, a7, a8, Y, U, az, aA, aC, aE), aL.prune(aq, a7), aM.prune(aq, a7), K.putImageData(ak, 0, 0), drawRoadSurface(K, L, U, aB), {
         waterTiles: aF,
         shore: {
             wet: aL.freeze(),
@@ -1251,7 +1251,7 @@ function scatterSnowDetail(q, A, E, F, H, K) {
         }
 }
 
-function Zy(j, q, A, F, H, K, L, N) {
+function scatterGroundRipples(j, q, A, F, H, K, L, N) {
     const vO = cX;
     let P = zT(K, 1),
         Q = false;
@@ -1313,8 +1313,8 @@ function scatterFoliage(q, A, F, H, K, L, N, P, Q) {
             let az = aw / H | 0,
                 aA = ax / H | 0;
             if (az >= V || aA >= X || K.material[aA * V + az] !== 0) continue;
-            let aB = aw + (L.at(aw, ax) - 0.5) * 2 * ie + (P.at(aw, ax) - 0.5) * 8,
-                aC = ax + (N.at(aw, ax) - 0.5) * 2 * ie,
+            let aB = aw + (L.at(aw, ax) - 0.5) * 2 * terrainJitterAmplitude + (P.at(aw, ax) - 0.5) * 8,
+                aC = ax + (N.at(aw, ax) - 0.5) * 2 * terrainJitterAmplitude,
                 aD = wW(U, V, X, H, aB, aC),
                 aE = wW(U, V, X, H, aB, aC - H * 0.9) < aD - 0.15,
                 aF;
@@ -1348,8 +1348,8 @@ function Tv(q, F, H, K, L, N, P, Q, U, V, X, Y) {
         };
     for (let az = 0; az < H; az++)
         for (let aA = 0; aA < F; aA++) {
-            let aB = aA + (N.at(aA, az) - 0.5) * 2 * ie + (Q.at(aA, az) - 0.5) * 7,
-                aC = az + (P.at(aA, az) - 0.5) * 2 * ie + (Q.at(aA + 43, az + 91) - 0.5) * 7,
+            let aB = aA + (N.at(aA, az) - 0.5) * 2 * terrainJitterAmplitude + (Q.at(aA, az) - 0.5) * 7,
+                aC = az + (P.at(aA, az) - 0.5) * 2 * terrainJitterAmplitude + (Q.at(aA + 43, az + 91) - 0.5) * 7,
                 aD = wW(a7, a8, a9, K, aB, aC);
             if (aD > 0.3 || aD < -0.5) continue;
             let aE = az * F + aA,
@@ -1383,8 +1383,8 @@ function fillFoliagePixels(j, q, A, C, E, F, H, I, K, L) {
         } if (R) {
         for (let U = 0; U < A; U++)
             for (let V = 0; V < q; V++) {
-                let X = V + (F.at(V, U) - 0.5) * 2 * ie + (K.at(V, U) - 0.5) * 9,
-                    Y = U + (H.at(V, U) - 0.5) * 2 * ie + (K.at(V + 61, U + 29) - 0.5) * 9,
+                let X = V + (F.at(V, U) - 0.5) * 2 * terrainJitterAmplitude + (K.at(V, U) - 0.5) * 9,
+                    Y = U + (H.at(V, U) - 0.5) * 2 * terrainJitterAmplitude + (K.at(V + 61, U + 29) - 0.5) * 9,
                     a7 = wW(N, P, Q, C, X, Y);
                 if (a7 > 1.6) continue;
                 let a8 = V / C | 0,
@@ -1398,7 +1398,7 @@ function fillFoliagePixels(j, q, A, C, E, F, H, I, K, L) {
 var DIRT_COLOR = "#5c4f28",
     tv = "#a08a4e";
 
-function nv(K, L, Q, U) {
+function drawRoadSurface(K, L, Q, U) {
     const vU = cX;
     let Y = L.tile,
         a7 = (a8, a9) => {
@@ -1574,7 +1574,7 @@ function nv(K, L, Q, U) {
                         };
                     c7(bX, bY, bV), c7(0, 0, null);
                 } else {
-                    if (aj === 19) c0(K, ak, aq, Y, L.theme);
+                    if (aj === 19) drawMudClod(K, ak, aq, Y, L.theme);
                     else {
                         if (aj === 9) {
                             let c8 = U.at(ak + 3, aq + 7);

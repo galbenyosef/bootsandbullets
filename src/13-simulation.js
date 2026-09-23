@@ -526,7 +526,7 @@ function xe(c, d) {
     for (let j of c.sounds) soundForEvent(j, d, c.viewSide);
     c.screams.length = 0, c.deaths.length = 0, c.sounds.length = 0;
 }
-var F6 = 34,
+var musterRadius = 34,
     I2 = class {
         constructor(c) {
             const JN = cX;
@@ -648,7 +648,7 @@ var F6 = 34,
             }
             for (let i of this.squads) {
                 if (i.members = i.members.filter(j => j.alive), i.age += c, i.goal === null) {
-                    this.world.squadFields[i.id] || (this.world.squadFields[i.id] = yW(this.world.map, i.rally, true)), (i.members.filter(j => Math.hypot(j.pos.x - i.rally.x, j.pos.y - i.rally.y) < F6).length >= f.arena.squadSize || i.age > f.arena.musterTimeout && i.members.length > 0) && this.commit(i);
+                    this.world.squadFields[i.id] || (this.world.squadFields[i.id] = yW(this.world.map, i.rally, true)), (i.members.filter(j => Math.hypot(j.pos.x - i.rally.x, j.pos.y - i.rally.y) < musterRadius).length >= f.arena.squadSize || i.age > f.arena.musterTimeout && i.members.length > 0) && this.commit(i);
                     continue;
                 }
                 i.retarget -= c, i.retarget <= 0 && (i.retarget = f.arena.retargetInterval, this.aim(i));
@@ -847,7 +847,7 @@ function spawnReinforcements(g, j) {
         re(g, K), K.state = 0, ve(g, K), g.enemyTotal++, C++;
     }
 }
-var G6 = 40,
+var pathFollowDistance = 40,
     V6 = 20;
 
 function Er(c, d, g = 9, j) {
@@ -1007,7 +1007,7 @@ function moveTargetFor(c, d, g) {
     }
     if (g.state === 0 || !g.slot) return null;
     let l = Math.hypot(g.slot.x - g.pos.x, g.slot.y - g.pos.y);
-    return l <= f.movement.slotArrived ? (j || (g.state = 0), null) : l < G6 || !d.field ? g.slot : f1(d.field, c.map, g.pos, g.radius) ?? g.slot;
+    return l <= f.movement.slotArrived ? (j || (g.state = 0), null) : l < pathFollowDistance || !d.field ? g.slot : f1(d.field, c.map, g.pos, g.radius) ?? g.slot;
 }
 
 function $6(c, d, g) {
@@ -1138,10 +1138,10 @@ function wt(c, d, g, i = null) {
     }
     c.grenadeCooldown = Math.max(0, c.grenadeCooldown - d), c.herdField && (c.herdField.age += d), c.hostageField && (c.hostageField.age += d), c.sideB && (c.sideB.grenadeCooldown = Math.max(0, c.sideB.grenadeCooldown - d), c.sideB.orderMarker = Math.max(0, c.sideB.orderMarker - d)), c.screams.length = 0, c.deaths.length = 0, c.sounds.length = 0, E0(c, d), S0(c);
     let j = collectWorldActors(c);
-    c.hash.rebuild(j), g && thinkSoldier(c, d, g.manualAim, g.cursor, c, D.Player, g.targeted), c.sideB && thinkSoldier(c, d, i?.manualAim ?? null, null, c.sideB, D.Enemy), th(c, d), $h(c, d), mh(c, d), $3(c, d), x0(j, c.hash, c.map, 2), c.lastKnownAge += d, c.fog.step(c.map, c.soldiers, d, c.viewSide ?? D.Player), Vh(c, d), qh(c, d), Ui(c, d), $i(c, d), gt(c, d), c3(c, d), Ii(c, d), Yh(c, d), zh(c), c.fx.step(d), Sn(c) && Z6(c, d);
+    c.hash.rebuild(j), g && thinkSoldier(c, d, g.manualAim, g.cursor, c, D.Player, g.targeted), c.sideB && thinkSoldier(c, d, i?.manualAim ?? null, null, c.sideB, D.Enemy), th(c, d), $h(c, d), mh(c, d), $3(c, d), x0(j, c.hash, c.map, 2), c.lastKnownAge += d, c.fog.step(c.map, c.soldiers, d, c.viewSide ?? D.Player), Vh(c, d), qh(c, d), Ui(c, d), $i(c, d), gt(c, d), c3(c, d), Ii(c, d), Yh(c, d), zh(c), c.fx.step(d), Sn(c) && reapDeadActors(c, d);
 }
 
-function Z6(c, d) {
+function reapDeadActors(c, d) {
     const KY = cX;
     if (c.reapTimer -= d, c.reapTimer > 0) return;
     c.reapTimer = 2;

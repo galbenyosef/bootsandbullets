@@ -3,7 +3,7 @@
     return A;
 }
 
-function T5(c) {
+function createBirdLayer(c) {
     let {
         layer: d
     } = c;
@@ -148,7 +148,7 @@ function createAmbienceGraph(g, j) {
         H = J3(E),
         I = Z3(E),
         K = Q3(E),
-        L = T5(E);
+        L = createBirdLayer(E);
     return {
         ctx: g,
         bus: l,
@@ -776,7 +776,7 @@ function stepWorld(c, d) {
     const MZ = cX;
     c.fx.step(d), c.fog.step(c.map, c.soldiers, d, c.viewSide ?? D.Player), Zh(c, d), T3(c, d), gt(c, d), oh(c, d), uh(c, d);
 }
-var b5 = 14,
+var syncLerpRate = 14,
     c_ = 100,
     Lr = class {
         constructor(c, d, g, j, l) {
@@ -954,7 +954,7 @@ var b5 = 14,
                 if (m.prev.x = m.pos.x, m.prev.y = m.pos.y, !m.alive) continue;
                 let p = this.targets.get(m.id);
                 if (!p) continue;
-                let q = Math.min(1, c * b5),
+                let q = Math.min(1, c * syncLerpRate),
                     u = (p.x - m.pos.x) * q,
                     v = (p.y - m.pos.y) * q;
                 m.pos.x += u, m.pos.y += v, m.vel.x = c > 0 ? u / c : 0, m.vel.y = c > 0 ? v / c : 0, m.walkPhase += Math.hypot(u, v);
@@ -967,7 +967,7 @@ var b5 = 14,
                 if (A.prev.x = A.pos.x, A.prev.y = A.pos.y, !A.alive) continue;
                 let C = this.henTargets.get(A.id);
                 if (!C) continue;
-                let E = Math.min(1, c * b5),
+                let E = Math.min(1, c * syncLerpRate),
                     F = (C.x - A.pos.x) * E,
                     H = (C.y - A.pos.y) * E;
                 A.pos.x += F, A.pos.y += H, A.vel.x = c > 0 ? F / c : 0, A.vel.y = c > 0 ? H / c : 0, A.walkPhase += Math.hypot(F, H);

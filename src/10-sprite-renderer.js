@@ -329,7 +329,7 @@ function findPath(q, F, H, K = 3000, L = false, N = 1) {
     }
     return aw.reverse();
 }
-var g0 = 0.08,
+var fogRecomputeInterval = 0.08,
     ze = class {
         ["visible"];
         ["explored"];
@@ -354,10 +354,10 @@ var g0 = 0.08,
             return g < 0 || i < 0 || g >= this.width || i >= this.height ? false : this.visible[i * this.width + g] === 1;
         } step(c, d, g, i) {
             const wQ = cX;
-            this.enabled && (this.timer -= g, !(this.timer > 0) && (this.timer = g0, this.recompute(c, d, i)));
+            this.enabled && (this.timer -= g, !(this.timer > 0) && (this.timer = fogRecomputeInterval, this.recompute(c, d, i)));
         } refresh(c, d, g) {
             const wR = cX;
-            this.enabled && (this.timer = g0, this.recompute(c, d, g));
+            this.enabled && (this.timer = fogRecomputeInterval, this.recompute(c, d, g));
         } recompute(g, j, q) {
             const wS = cX;
             this.version++, this.visible.fill(0);
@@ -1041,7 +1041,7 @@ function checkCorpseSighting(c, d) {
             }
         }
 }
-var mt = 2,
+var searchSpreadScale = 2,
     V0 = c => ({
         speed: c.stats.speed,
         accel: f.enemy.accel,
@@ -1076,7 +1076,7 @@ function senseStep(c, d, g) {
         return;
     }
     if (d.memory -= g, !(d.memory > 0)) {
-        if (d.target = null, d.lastSeen = null, d.path.length = 0, shouldPursue(c, d) && c.lastKnown) d.state = 4, d.investigate = FW(c, c.lastKnown, d.id, f.enemy.searchSpread * mt), d.searchTime = 0;
+        if (d.target = null, d.lastSeen = null, d.path.length = 0, shouldPursue(c, d) && c.lastKnown) d.state = 4, d.investigate = FW(c, c.lastKnown, d.id, f.enemy.searchSpread * searchSpreadScale), d.searchTime = 0;
         else {
             let j = d.state;
             d.state = d.patrols ? 1 : 0, j !== 0 && j !== 1 && (d.goal = null);
@@ -1132,7 +1132,7 @@ function searchHerdField(c, d, g) {
     if (!Sn(c)) return null;
     let j = c.lastKnown;
     if (!j) return null;
-    let l = f.enemy.searchSpread * mt * 1.5;
+    let l = f.enemy.searchSpread * searchSpreadScale * 1.5;
     if (Math.hypot(g.x - j.x, g.y - j.y) > l) return null;
     let m = c.map,
         p = Math.floor(j.x / m.tile) + ',' + Math.floor(j.y / m.tile),
@@ -1352,7 +1352,7 @@ function vv(c, d) {
 
 function refreshTrailSearch(c, d, g) {
     const yK = cX;
-    return shouldPursue(c, d) && c.lastKnown && c.lastKnownAge < f.enemy.trailMemory && (d.investigate = FW(c, c.lastKnown, d.id, f.enemy.searchSpread * mt)), d.investigate ? Math.hypot(d.investigate.x - d.pos.x, d.investigate.y - d.pos.y) > f.movement.enemyArrived ? d.investigate : (d.searchTime += g, d.angle += g * 2.2, d.searchTime > f.enemy.searchTime && (d.investigate = null, d.searchTime = 0, d.state = d.patrols ? 1 : 0, d.goal = null), null) : (d.state = d.patrols ? 1 : 0, null);
+    return shouldPursue(c, d) && c.lastKnown && c.lastKnownAge < f.enemy.trailMemory && (d.investigate = FW(c, c.lastKnown, d.id, f.enemy.searchSpread * searchSpreadScale)), d.investigate ? Math.hypot(d.investigate.x - d.pos.x, d.investigate.y - d.pos.y) > f.movement.enemyArrived ? d.investigate : (d.searchTime += g, d.angle += g * 2.2, d.searchTime > f.enemy.searchTime && (d.investigate = null, d.searchTime = 0, d.state = d.patrols ? 1 : 0, d.goal = null), null) : (d.state = d.patrols ? 1 : 0, null);
 }
 
 function protectBuilding(c, d) {
@@ -1579,7 +1579,7 @@ function sh(c, d) {
     }
     d.clock = critterDashDelay(c);
 }
-var ah = 0.25;
+var headingLerpFactor = 0.25;
 
 function scanBirdsInRadius(j, m, q) {
     const z2 = cX;
@@ -1636,8 +1636,8 @@ function v1(g, j, p) {
             H = E > 0 ? y / F : v.heading.x,
             I = E > 0 ? A / F : v.heading.y;
         if (v.state === 3) {
-            let K = v.heading.x + (H - v.heading.x) * ah,
-                L = v.heading.y + (I - v.heading.y) * ah,
+            let K = v.heading.x + (H - v.heading.x) * headingLerpFactor,
+                L = v.heading.y + (I - v.heading.y) * headingLerpFactor,
                 M = Math.hypot(K, L) || 1;
             v.heading.x = K / M, v.heading.y = L / M;
         } else v.heading.x = H, v.heading.y = I, v.state = 3, v.goal = null, q || (g.sounds.push({

@@ -653,7 +653,7 @@ function $f(c) {
     let d = Uf.get(c);
     return d || (d = zp(c), Uf.set(c, d)), d;
 }
-var Ay = null,
+var noteSoundChannel = null,
     Ry = null;
 
 function Ke(c, d = false) {
@@ -663,13 +663,13 @@ function Ke(c, d = false) {
     let i = qf.get(c);
     return i || (i = xd(g), qf.set(c, i)), i;
 }
-var ui = () => Ay ??= m1("note"),
+var ui = () => noteSoundChannel ??= m1("note"),
     xn = () => Ry ??= m1("icon"),
     Ja = (c, d, g) => IT(c, d, g),
     jy = 2;
 
 function zf(c, d) {
-    let g = Kf;
+    let g = armoryTab;
     Ho(i => {
         const sT = b;
         let j = w("div", "ar-head"),
@@ -680,14 +680,14 @@ function zf(c, d) {
             campaign: c,
             tab: () => g,
             onTab: m => {
-                g = m, Kf = m;
+                g = m, armoryTab = m;
             }
         }), [j, l];
     }, d, {
         wide: true
     });
 }
-var Kf = "weapon";
+var armoryTab = "weapon";
 
 function renderArmouryCard(c, d, g) {
     const sU = cX;

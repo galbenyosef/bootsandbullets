@@ -690,7 +690,7 @@ function floodFillWater(g) {
         }
     return q;
 }
-var Y5 = 4;
+var bunkerRepositionRange = 4;
 
 function repositionBunkers(c, d) {
     const dK = cX;
@@ -709,7 +709,7 @@ function repositionBunkers(c, d) {
                 H = Math.min(...C),
                 I = Math.max(...C),
                 K = Math.max(Math.max(E - p, 0, p - F), Math.max(H - q, 0, q - I));
-            K > Y5 || v && v.d <= K || (v = {
+            K > bunkerRepositionRange || v && v.d <= K || (v = {
                 d: K,
                 zone: {
                     x: ((E + F) / 2 + 0.5) * c.tile,

@@ -1270,7 +1270,7 @@ function drawSkull(c, d, g, j) {
         for (let u = 0; u < SKULL_PIXELS[s].length; u++) SKULL_PIXELS[s][u] === '#' && c.fillRect(l + u, m + s, 1, 1);
 }
 
-function x2(c, d, g, j, l) {
+function drawEmberCross(c, d, g, j, l) {
     const Cq = cX;
     let m = Math.max(1, j),
         p = g * 0.4;
@@ -1313,7 +1313,7 @@ function tintedCanvas(c, d, g) {
     let l = j.getContext('2d');
     return l.drawImage(c, 0, 0), l.globalCompositeOperation = "source-in", l.fillStyle = g, l.fillRect(0, 0, j.width, j.height), d.set(c, j), j;
 }
-var Yi = {
+var silhouetteShadowOffset = {
         x: 2,
         y: 3
     },
@@ -1393,7 +1393,7 @@ var Yi = {
                 let F = v < r3 / 2 ? 1 : 2,
                     H = Math.round(m - d1.x),
                     I = Math.round(p - d1.y) + F;
-                q.drawImage(this.silhouette(j), H + Yi.x, I + Yi.y), q.drawImage(j, H, I);
+                q.drawImage(this.silhouette(j), H + silhouetteShadowOffset.x, I + silhouetteShadowOffset.y), q.drawImage(j, H, I);
                 return;
             }
             let y = Wi(this.atlas, ct(g, this.lastWorld)),
@@ -1454,7 +1454,7 @@ var Yi = {
                 I = Math.round(A - F.y),
                 K = Math.round(q - F.x);
             if (C === "none") {
-                H.drawImage(this.silhouette(j), K + Yi.x, I + Yi.y), H.drawImage(j, K, I);
+                H.drawImage(this.silhouette(j), K + silhouetteShadowOffset.x, I + silhouetteShadowOffset.y), H.drawImage(j, K, I);
                 return;
             }
             if (C === "grass") {
@@ -1509,10 +1509,10 @@ function callinPlanePos(c) {
         g = (c.t - d.dropAt) * d.planeSpeed;
     return {
         x: c.at.x + g,
-        y: c.at.y - d.altitude - g * l6
+        y: c.at.y - d.altitude - g * planeDescentSlope
     };
 }
-var l6 = 0.51;
+var planeDescentSlope = 0.51;
 
 function chuteAltitude(c) {
     const CR = cX;
@@ -1804,13 +1804,13 @@ var AimRenderer = class {
             }
             if (d.mode === "callin") {
                 let q = f.callin.bombRadius;
-                In(j, d.point, q, l, XW.ember, true), In(j, d.point, q - 1, l, XW.ember, true), x2(j, d.point, 9 * l, l, XW.ember);
+                In(j, d.point, q, l, XW.ember, true), In(j, d.point, q - 1, l, XW.ember, true), drawEmberCross(j, d.point, 9 * l, l, XW.ember);
                 return;
             }
             if (!d.placed) return;
             let m = d.friendly || d.blocked,
                 p = m ? XW.ember : d.clamped ? Qo.clamped : Qo.ready;
-            In(this.ctx, d.point, f.grenade.blastRadius, l, p, m), d.thrower && (drawArcDashes(this.ctx, d.thrower.pos, d.point, l, p), In(j, d.thrower.pos, 7, l, p, false)), x2(this.ctx, d.point, 9 * l, l, p);
+            In(this.ctx, d.point, f.grenade.blastRadius, l, p, m), d.thrower && (drawArcDashes(this.ctx, d.thrower.pos, d.point, l, p), In(j, d.thrower.pos, 7, l, p, false)), drawEmberCross(this.ctx, d.point, 9 * l, l, p);
         } drawExtractionZones(c) {
             const DB = cX;
             if (c.extraction.length !== 0)
@@ -3504,7 +3504,7 @@ async function openMapFeedback(d) {
         v.textContent = "That did not get through. Your words are still here if you want to try again.";
     }
 }
-var E2 = 600,
+var countUpStartDelay = 600,
     dr = 1400;
 
 function countUpTo(c, d, g = {}) {
@@ -3524,11 +3524,11 @@ function countUpTo(c, d, g = {}) {
     for (let q = 1; q <= p; q++) j.push(window.setTimeout(() => {
         const Hn = Hk;
         l || (c.textContent = String(Math.round(d * q / p)));
-    }, E2 + dr * q / p));
+    }, countUpStartDelay + dr * q / p));
     return j.push(window.setTimeout(() => {
         const Hq = Hk;
         l || g.onTick?.();
-    }, E2 + dr)), j.push(window.setTimeout(m, E2 + dr + 120)), m;
+    }, countUpStartDelay + dr)), j.push(window.setTimeout(m, countUpStartDelay + dr + 120)), m;
 }
 var POPUP_LIFE = f.fx.popupLife;
 
