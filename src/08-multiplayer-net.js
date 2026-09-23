@@ -136,7 +136,7 @@ var Df = c => ni(Va, Da(c)),
         setVisibility: "This game is {value} from here on."
     };
 
-function FT(c, d = {}) {
+function formatTemplate(c, d = {}) {
     const rF = cX;
     return Ey[c].replace(/\{(\w+)\}/g, (g, i) => i in d ? String(d[i]) : g);
 }
@@ -209,7 +209,7 @@ var ri = c => location.origin + "/join/" + c,
                 });
             }, this.conn.onDrop = () => {
                 const rP = rN;
-                this.room && this.tell(FT("ownDrop")), this.changed();
+                this.room && this.tell(formatTemplate("ownDrop")), this.changed();
             }, this.conn.open();
         }
         getconnected() {
@@ -332,12 +332,12 @@ var ri = c => location.origin + "/join/" + c,
                     });
                     return;
                 case "countdown":
-                    c.seconds > 0 && this.tell(FT("starting", {
+                    c.seconds > 0 && this.tell(formatTemplate("starting", {
                         n: c.seconds
                     }));
                     return;
                 case "start":
-                    this.hushUnready = true, this.tell(FT("movingOut")), hm(c.mapId, c.round);
+                    this.hushUnready = true, this.tell(formatTemplate("movingOut")), hm(c.mapId, c.round);
                     {
                         let d = {
                             roundId: c.roundId,
@@ -361,7 +361,7 @@ var ri = c => location.origin + "/join/" + c,
                     }
                     return;
                 case "gone":
-                    this.tell(FT("gone")), this.room = null, this.setWanted(null), this.pendingStart = null, this.currentStart = null, this.latestSnapshot = null, this.latestPause = null, this.latestResult = null, this.gameListener?.(c), this.changed();
+                    this.tell(formatTemplate("gone")), this.room = null, this.setWanted(null), this.pendingStart = null, this.currentStart = null, this.latestSnapshot = null, this.latestPause = null, this.latestResult = null, this.gameListener?.(c), this.changed();
                     return;
                 case "snap":
                 case "over":
@@ -382,45 +382,45 @@ var ri = c => location.origin + "/join/" + c,
                     let i = c.seats[g],
                         j = d.seats.find(l => l.id === i.id);
                     if (!j) {
-                        this.tell(FT("joined", {
+                        this.tell(formatTemplate("joined", {
                             name: i.name
                         })), this.onJoin?.(i.name);
                         continue;
                     }
-                    i.ready && !j.ready ? (this.tell(FT(this.seenReady.has(i.id) ? "readyAgain" : "ready", {
+                    i.ready && !j.ready ? (this.tell(formatTemplate(this.seenReady.has(i.id) ? "readyAgain" : "ready", {
                         name: i.name
-                    })), this.seenReady.add(i.id)) : !i.ready && j.ready && !this.hushUnready && this.tell(FT("unready", {
+                    })), this.seenReady.add(i.id)) : !i.ready && j.ready && !this.hushUnready && this.tell(formatTemplate("unready", {
                         name: i.name
-                    })), !i.connected && j.connected && this.tell(FT("paused", {
+                    })), !i.connected && j.connected && this.tell(formatTemplate("paused", {
                         name: i.name
-                    })), i.connected && !j.connected && this.tell(FT("resumed"));
+                    })), i.connected && !j.connected && this.tell(formatTemplate("resumed"));
                 }
-                for (let l of d.seats) c.seats.some(m => m.id === l.id) || this.tell(FT("left", {
+                for (let l of d.seats) c.seats.some(m => m.id === l.id) || this.tell(formatTemplate("left", {
                     name: l.name
                 }));
-                c.mapId !== d.mapId && this.tell(FT("setMap", {
+                c.mapId !== d.mapId && this.tell(formatTemplate("setMap", {
                     value: c.mapId
-                })), c.seconds !== d.seconds && this.tell(FT("setDuration", {
+                })), c.seconds !== d.seconds && this.tell(formatTemplate("setDuration", {
                     value: Math.round(c.seconds / 60) + " MINUTE" + (c.seconds === 60 ? '' : 'S')
-                })), c.visibility !== d.visibility && this.tell(FT("setVisibility", {
+                })), c.visibility !== d.visibility && this.tell(formatTemplate("setVisibility", {
                     value: c.visibility.toUpperCase()
                 }));
             } else {
-                this.setWanted(c.code), this.tell(FT("opened"));
-                for (let m of c.seats) this.tell(FT("joined", {
+                this.setWanted(c.code), this.tell(formatTemplate("opened"));
+                for (let m of c.seats) this.tell(formatTemplate("joined", {
                     name: m.name
                 }));
             }
             this.room = c, this.hushUnready = false, this.changed();
         } reportResult(c, d, g, i, j = null) {
             const sx = cX;
-            gm(j, d), d === "forfeit" && c ? this.tell(FT("walkover", {
+            gm(j, d), d === "forfeit" && c ? this.tell(formatTemplate("walkover", {
                 name: c
-            })) : c ? this.tell(FT("wonBy", {
+            })) : c ? this.tell(formatTemplate("wonBy", {
                 name: c,
                 a: g,
                 b: i
-            })) : this.tell(FT("draw", {
+            })) : this.tell(formatTemplate("draw", {
                 a: g
             }));
         } say(c) {
@@ -560,7 +560,7 @@ var bW = [{
     },
     gW = (c, d) => Math.max(0, Math.floor(c.stock[d] ?? 0));
 
-function Hf(c, d) {
+function buyStockItem(c, d) {
     const sG = cX;
     let g = $a.get(d);
     if (!g || !g.ready || !si(d)) return false;
@@ -580,7 +580,7 @@ function ai(c, d) {
     return d.callInsUsed = 0, g === 0 || d.squadCallIn === "none" ? 0 : Ka(c, d.squadCallIn, g);
 }
 
-function Gf(c, d) {
+function unlockItem(c, d) {
     const sJ = cX;
     let g = $a.get(d);
     if (!g || !g.ready || si(d) || $e(c, d) || g.requires && !c.unlocked.includes(g.requires)) return false;
@@ -689,7 +689,7 @@ function zf(c, d) {
 }
 var Kf = "weapon";
 
-function Iy(c, d, g) {
+function renderArmouryCard(c, d, g) {
     const sU = cX;
     let j = w("div", "ar-card" + (c.ready ? '' : " pending")),
         l = w("div", "ar-art"),
@@ -708,7 +708,7 @@ function Iy(c, d, g) {
                     CW(v, "not enough war bonds");
                     return;
                 }
-                Hf(d, c.id) && (la(c.id, q, d.bonds), g());
+                buyStockItem(d, c.id) && (la(c.id, q, d.bonds), g());
             }
         });
         return (!c.ready || d.bonds < q) && (v.setAttribute("aria-disabled", "true"), v.classList.add("off")), p.appendChild(v), j.appendChild(p), j;
@@ -728,7 +728,7 @@ function Iy(c, d, g) {
                     CW(E, "not enough war bonds");
                     return;
                 }
-                Gf(d, c.id) && (la(c.id, A, d.bonds), g());
+                unlockItem(d, c.id) && (la(c.id, A, d.bonds), g());
             });
             d.bonds < A && (E.setAttribute("aria-disabled", "true"), E.classList.add("off")), p.appendChild(E);
         }
@@ -762,7 +762,7 @@ function mi(c) {
             const sZ = sY;
             let C = w("div", "ar-panel"),
                 E = w("div", "ar-grid");
-            for (let F of bW.filter(H => H.category === v)) E.appendChild(Iy(F, j, () => {
+            for (let F of bW.filter(H => H.category === v)) E.appendChild(renderArmouryCard(F, j, () => {
                 const t7 = sZ;
                 m(), c.onBought?.();
             }));
@@ -776,11 +776,11 @@ function mi(c) {
     });
     g.append(u.root, u.body);
 }
-var Xf = "cf.lastGroup",
+var LAST_GROUP_KEY = "cf.lastGroup",
     Py = () => {
         const t9 = cX;
         try {
-            return localStorage.getItem(Xf);
+            return localStorage.getItem(LAST_GROUP_KEY);
         } catch {
             return null;
         }
@@ -788,7 +788,7 @@ var Xf = "cf.lastGroup",
     Ly = c => {
         const tg = cX;
         try {
-            localStorage.setItem(Xf, c);
+            localStorage.setItem(LAST_GROUP_KEY, c);
         } catch {}
     },
     pi = c => aT[c]?.name?.toUpperCase() ?? c.toUpperCase(),

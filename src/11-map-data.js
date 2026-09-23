@@ -15,43 +15,43 @@ function mh(c, d) {
         if (!i.alive) continue;
         switch (i.prev.x = i.pos.x, i.prev.y = i.pos.y, i.stateTime -= d, rh(c, i) && (i.clock -= d, i.clock <= 0 && sh(c, i)), Cv(c, i, d), i.state) {
             case 1:
-                i.stateTime <= 0 && Rv(c, i, g.get(i.flock) ?? i.pos), Li(i, d);
+                i.stateTime <= 0 && pickWanderGoal(c, i, g.get(i.flock) ?? i.pos), dampVelocity(i, d);
                 break;
             case 0:
-                if (!i.goal || i.stateTime <= 0 || Av(i.pos, i.goal, 2)) {
-                    Oi(c, i), Li(i, d);
+                if (!i.goal || i.stateTime <= 0 || withinRadius(i.pos, i.goal, 2)) {
+                    startPeckPause(c, i), dampVelocity(i, d);
                     break;
                 }
-                ph(c, i, i.goal, f.critter.speed * i.traits.pace, d);
+                moveToward(c, i, i.goal, f.critter.speed * i.traits.pace, d);
                 break;
             case 2:
                 if (i.stateTime <= 0) {
-                    Oi(c, i), Li(i, d);
+                    startPeckPause(c, i), dampVelocity(i, d);
                     break;
                 }
-                lh(c, i, f.critter.dashSpeed * i.traits.pace, d);
+                steerCritter(c, i, f.critter.dashSpeed * i.traits.pace, d);
                 break;
             case 3:
                 if (i.stateTime <= 0) {
-                    Oi(c, i), Li(i, d);
+                    startPeckPause(c, i), dampVelocity(i, d);
                     break;
                 }
-                lh(c, i, f.critter.dashSpeed * i.traits.pace, d);
+                steerCritter(c, i, f.critter.dashSpeed * i.traits.pace, d);
                 break;
         }
         let j = Math.hypot(i.pos.x - i.prev.x, i.pos.y - i.prev.y);
         i.walkPhase += j, j > 0.05 && (i.angle = Math.atan2(i.vel.y, i.vel.x));
     }
 }
-var Av = (c, d, g) => Math.hypot(c.x - d.x, c.y - d.y) <= g;
+var withinRadius = (c, d, g) => Math.hypot(c.x - d.x, c.y - d.y) <= g;
 
-function Oi(c, d) {
+function startPeckPause(c, d) {
     const zA = cX;
     let [g, i] = f.critter.peckPause;
     d.state = 1, d.stateTime = (g + c.jitter() * (i - g)) / d.traits.restless, d.goal = null;
 }
 
-function Rv(c, d, g) {
+function pickWanderGoal(c, d, g) {
     const zB = cX;
     let j = Math.hypot(g.x - d.pos.x, g.y - d.pos.y) > f.critter.strayRadius;
     for (let m = 0; m < 6; m++) {
@@ -69,29 +69,29 @@ function Rv(c, d, g) {
             return;
         }
     }
-    Oi(c, d);
+    startPeckPause(c, d);
 }
 
-function lh(c, d, g, j) {
+function steerCritter(c, d, g, j) {
     const zC = cX;
     let l = {
         x: d.pos.x + d.heading.x * 24,
         y: d.pos.y + d.heading.y * 24
     };
-    if (ph(c, d, l, g, j), d.vel.x === 0 && d.vel.y === 0) {
+    if (moveToward(c, d, l, g, j), d.vel.x === 0 && d.vel.y === 0) {
         let m = (c.jitter() < 0.5 ? 1 : -1) * Math.PI / 2,
             p = Math.atan2(d.heading.y, d.heading.x) + m;
         d.heading.x = Math.cos(p), d.heading.y = Math.sin(p);
     }
 }
 
-function Li(c, d) {
+function dampVelocity(c, d) {
     const zD = cX;
     let g = Math.min(1, 12 * d);
     c.vel.x -= c.vel.x * g, c.vel.y -= c.vel.y * g;
 }
 
-function ph(g, j, m, p, q) {
+function moveToward(g, j, m, p, q) {
     const zE = cX;
     let u = m.x - j.pos.x,
         v = m.y - j.pos.y,
@@ -112,7 +112,7 @@ function ph(g, j, m, p, q) {
     }) ? j.pos.y = H : j.vel.y = 0;
 }
 
-function fh(c, d) {
+function spawnBirds(c, d) {
     const zF = cX;
     let g = f.birds,
         j = GT(xT(Math.round(c.x), Math.round(c.y))),
@@ -208,7 +208,7 @@ function vh(c, d, g) {
     };
 }
 
-function Pv(c) {
+function pickTier(c) {
     const zI = cX;
     let d = c();
     for (let g = 0; g < yh.length; g++)
@@ -350,7 +350,7 @@ var Ni = class W {
                     ...d
                 }
             });
-            for (let g of fh(c, d)) this.birds.push(g);
+            for (let g of spawnBirds(c, d)) this.birds.push(g);
         } bang(c, d) {
             const zX = cX;
             this.journal({
@@ -567,7 +567,7 @@ var Ni = class W {
                     },
                     life: 0.3 + this.rnd() * 0.55,
                     maxLife: 0.85,
-                    color: Pv(this.rnd),
+                    color: pickTier(this.rnd),
                     size: this.rnd() < 0.62 ? 2 : 1
                 });
             }
@@ -986,7 +986,7 @@ var Di = {
     zv = new Map(Object.entries(Di).map(([c, d]) => [d, Number(c)])),
     Dh = c => zv.get(c) ?? 0;
 
-function Oh(c, d) {
+function pickWeighted(c, d) {
     const AD = cX;
     let g = 0;
     for (let j of c) g += Math.max(0, j.weight);
@@ -998,14 +998,14 @@ function Oh(c, d) {
 
 function f2(c) {
     const AE = cX;
-    let d = Oh(f.arena.kit.guns, mT(c, 19271)).id;
+    let d = pickWeighted(f.arena.kit.guns, mT(c, 19271)).id;
     return {
         kind: Dh(d),
         gun: d,
-        throwable: Oh(f.arena.kit.throwables, mT(c, 19284)).id
+        throwable: pickWeighted(f.arena.kit.throwables, mT(c, 19284)).id
     };
 }
-var Cn = (c, d) => ({
+var resolveCombatStats = (c, d) => ({
         speed: d.speed,
         fireRange: _T[c].fireRange,
         fireInterval: _T[c].fireInterval,
@@ -1015,10 +1015,10 @@ var Cn = (c, d) => ({
         preferredRange: uW(c).melee ? _T[c].fireRange * 0.5 : d.preferredRange
     }),
     Nh = {
-        0x0: Cn("enemyRifle", f.enemy),
-        0x1: Cn("sniperRifle", f.sniper),
-        0x3: Cn("pistol", f.officer),
-        0x2: Cn("bazooka", f.bazooka)
+        0x0: resolveCombatStats("enemyRifle", f.enemy),
+        0x1: resolveCombatStats("sniperRifle", f.sniper),
+        0x3: resolveCombatStats("pistol", f.officer),
+        0x2: resolveCombatStats("bazooka", f.bazooka)
     },
     Yv = (c, d) => d === 1 ? c : {
         ...c,
@@ -1027,7 +1027,7 @@ var Cn = (c, d) => ({
 
 function Xv(c, d, g) {
     const AF = cX;
-    let i = g && g !== Di[c] ? Cn(g, Nh[c]) : Nh[c];
+    let i = g && g !== Di[c] ? resolveCombatStats(g, Nh[c]) : Nh[c];
     return {
         speed: i.speed * d.speed,
         fireRange: i.fireRange * d.fireRange,

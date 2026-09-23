@@ -2,7 +2,7 @@
         Y = j[S * q + R];
     return U + (V - U) * M + (X + (Y - X) * M - (U + (V - U) * M)) * N;
 }
-var Rl = [
+var NEIGHBOR_OFFSETS = [
     [0, -1],
     [1, -1],
     [1, 0],
@@ -76,8 +76,8 @@ function no(q) {
                 b9 = 0,
                 bj = 0;
             for (let bk = 0; bk < 8; bk++) {
-                let bq = b7 + Rl[bk][0],
-                    bw = b4 + Rl[bk][1],
+                let bq = b7 + NEIGHBOR_OFFSETS[bk][0],
+                    bw = b4 + NEIGHBOR_OFFSETS[bk][1],
                     bx = bq < 0 || bw < 0 || bq >= H || bw >= K,
                     bz = bx ? -1 : bw * H + bq;
                 (bx || P[bz] === P[b8]) && (b9 |= 1 << bk), !bx && Q[bz] && (bj |= 1 << bk);
@@ -610,7 +610,7 @@ function xs(c) {
     } = O(m - g + 1, p - j + 1);
     return u.drawImage(c, -g, -j), q;
 }
-var Vt = {
+var SPRITE_DEFS = {
         trumper: {
             cell: 64,
             frames: 6,
@@ -628,11 +628,11 @@ var Vt = {
             }
         }
     },
-    F1 = Object.keys(Vt);
+    F1 = Object.keys(SPRITE_DEFS);
 
 function ue(c) {
     const fM = cX;
-    let d = Vt[c] ?? Vt[F1[0]];
+    let d = SPRITE_DEFS[c] ?? SPRITE_DEFS[F1[0]];
     return {
         count: d.frames,
         cell: d.cell,
@@ -640,7 +640,7 @@ function ue(c) {
     };
 }
 
-function y4(g) {
+function decodeRleFrame(g) {
     const fN = cX;
     let j = g.cell * g.frames,
         {
@@ -665,19 +665,19 @@ function y4(g) {
     }
     return m;
 }
-var Hl = new Map(),
+var spriteFrameCache = new Map(),
     v4 = (c, d) => {
         const fO = cX;
-        let g = Hl.get(c);
+        let g = spriteFrameCache.get(c);
         if (g) return g;
-        let i = y4(d);
-        return Hl.set(c, i), i;
+        let i = decodeRleFrame(d);
+        return spriteFrameCache.set(c, i), i;
     };
 
-function _4(g, j = 0) {
+function drawSpriteFrame(g, j = 0) {
     const fP = cX;
-    let q = Vt[g] ? g : F1[0],
-        v = Vt[q],
+    let q = SPRITE_DEFS[g] ? g : F1[0],
+        v = SPRITE_DEFS[q],
         y = Math.max(0, Math.min(v.frames - 1, j)),
         A = v.cell,
         C = v4(q, v),
@@ -708,10 +708,10 @@ function Gl(c) {
         c: i,
         g: j
     } = O(g * d, g);
-    for (let l = 0; l < d; l++) j.drawImage(_4(c, l), g * l, 0);
+    for (let l = 0; l < d; l++) j.drawImage(drawSpriteFrame(c, l), g * l, 0);
     return i;
 }
-var x4 = {
+var narratorDef = {
         id: "narrator",
         name: ''
     },
@@ -737,7 +737,7 @@ var x4 = {
     so = false,
     ks = 0;
 
-function o1(c, d, g = null) {
+function addTimer(c, d, g = null) {
     const fR = cX;
     let i = {
         left: c,
@@ -751,7 +751,7 @@ function o1(c, d, g = null) {
         }
     }, qt)), i;
 }
-var S4 = c => {
+var removeTimer = c => {
     const fU = cX;
     c && (We = We.filter(d => d !== c));
 };
@@ -763,7 +763,7 @@ function B1() {
 function H1() {
     so = false;
 }
-var Vl = 0.035,
+var commsCharDelay = 0.035,
     E4 = /[\s.,;:!?'"()\-·]/;
 
 function M4() {
@@ -777,7 +777,7 @@ var ws = () => {
     We = [], window.clearInterval(ro), ro = 0, window.clearTimeout(ks), ks = 0, so = false;
 };
 
-function C4(c, d, g, j) {
+function typeCommsLine(c, d, g, j) {
     const fY = cX;
     if (e1() || !g) {
         c.textContent = d;
@@ -787,18 +787,18 @@ function C4(c, d, g, j) {
     let l = 0,
         m = 0;
     j.talk();
-    let p = o1(Vl, () => {
+    let p = addTimer(commsCharDelay, () => {
         const fZ = fY;
         if (l >= d.length) {
-            S4(p), j.rest();
+            removeTimer(p), j.rest();
             return;
         }
         let q = d[l++];
         c.textContent += q, !E4.test(q) && m++ % g.everyNth === 0 && G().sound && O1(g);
-    }, Vl);
+    }, commsCharDelay);
 }
 
-function A4(c, d) {
+function setupCommsFace(c, d) {
     const g7 = cX;
     let g = v => {
             const g4 = b;
@@ -816,7 +816,7 @@ function A4(c, d) {
         p = false,
         q = 0,
         u = 0;
-    return o1(qt / 1000, () => {
+    return addTimer(qt / 1000, () => {
         const g8 = g7;
         u += qt / 1000, !(u < m.hold) && (u = 0, q++, q >= m.frames.length && (q = 0, p && (p = false, m = j)), g(m.frames[q]));
     }, qt / 1000), {
@@ -850,7 +850,7 @@ function je(c, d, g = {}) {
             v = Object.assign(document.createElement('i'), {
                 className: "comms-portrait"
             });
-        v.style.backgroundImage = "var(--sk-face-" + c.portrait + ')', u.style.setProperty("--comms-face-n", "var(--sk-face-" + c.portrait + "-n)"), u.appendChild(v), j.appendChild(u), l = A4(u, c.portrait);
+        v.style.backgroundImage = "var(--sk-face-" + c.portrait + ')', u.style.setProperty("--comms-face-n", "var(--sk-face-" + c.portrait + "-n)"), u.appendChild(v), j.appendChild(u), l = setupCommsFace(u, c.portrait);
     }
     let m = document.createElement("div");
     m.className = "comms-said", c.name && m.appendChild(Object.assign(document.createElement("span"), {
@@ -862,22 +862,22 @@ function je(c, d, g = {}) {
     });
     m.appendChild(p), j.appendChild(m);
     let q = g.delay ?? k4;
-    o1(q, () => {
+    addTimer(q, () => {
         const gk = gj;
         j.hidden = false, requestAnimationFrame(() => {
             const gq = gk;
-            j.classList.add('in'), e1() && j.classList.add("still"), o1(e1() ? 0 : 0.26, () => C4(p, d, c.voice, l));
-        }), g.sticky || (o1(g.seconds ?? w4, $l), R4());
+            j.classList.add('in'), e1() && j.classList.add("still"), addTimer(e1() ? 0 : 0.26, () => typeCommsLine(p, d, c.voice, l));
+        }), g.sticky || (addTimer(g.seconds ?? w4, $l), startIdleWatch());
     });
 }
-var ql = 1;
+var IDLE_THRESHOLD = 1;
 
-function R4() {
+function startIdleWatch() {
     const gw = cX;
     let c = performance.now() / 1000;
-    o1(ql, () => {
-        o1(0.1, () => {
-            Qr() < c + ql || $l();
+    addTimer(IDLE_THRESHOLD, () => {
+        addTimer(0.1, () => {
+            Qr() < c + IDLE_THRESHOLD || $l();
         }, 0.1);
     });
 }
@@ -902,7 +902,7 @@ function Kl(c) {
     if (!d || !d.text.trim()) return null;
     let g = new Map(R1().map(m => [m.action, m.keys])),
         i = d.text.replace(/\{FIRE\}/g, g.get("fire") ?? '').replace(/\{GRENADE\}/g, g.get("grenade") ?? '').replace(/\{MOVE\}/g, g.get("move") ?? '').replace(/\s+/g, ' ').trim(),
-        j = EW[d.speaker] ?? EW[Xr] ?? x4,
+        j = EW[d.speaker] ?? EW[Xr] ?? narratorDef,
         l = d.seconds < 0 ? {
             sticky: true
         } : {

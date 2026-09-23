@@ -1,7 +1,7 @@
 }(a, 672707));
-var B5 = Object.defineProperty,
+var defineProperty = Object.defineProperty,
     J2 = (c, d) => {
-        for (var g in d) B5(c, g, {
+        for (var g in d) defineProperty(c, g, {
             get: d[g],
             enumerable: true
         });

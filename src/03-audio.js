@@ -1,4 +1,4 @@
-function Yn() {
+function initAudioContext() {
     const dY = cX;
     if (!f.audio.enabled) return false;
     if (PT) return PT.state === "suspended" && PT.resume(), true;
@@ -16,11 +16,11 @@ A1(c => {
     !PT || !Me || Me.gain.setTargetAtTime(c.sound ? c.volume : 0, PT.currentTime, 0.03);
 });
 var Zr = () => {
-    Yn();
+    initAudioContext();
 };
 
 function Ot() {
-    return Yn() ? PT : null;
+    return initAudioContext() ? PT : null;
 }
 var wl = () => Kn;
 
@@ -31,24 +31,24 @@ function Xn(c) {
 }
 
 function Nt() {
-    return Yn() ? de : null;
+    return initAudioContext() ? de : null;
 }
-var ce = [];
+var activeVoices = [];
 
-function t1(c, d, g = false) {
+function registerVoice(c, d, g = false) {
     const e8 = cX;
     let i = PT.currentTime;
-    for (let j = ce.length - 1; j >= 0; j--) ce[j].until <= i && ce.splice(j, 1);
-    if (ce.length >= f.audio.maxVoices) {
-        let l = ce.findIndex(m => !m.keep);
+    for (let j = activeVoices.length - 1; j >= 0; j--) activeVoices[j].until <= i && activeVoices.splice(j, 1);
+    if (activeVoices.length >= f.audio.maxVoices) {
+        let l = activeVoices.findIndex(m => !m.keep);
         if (l >= 0) {
             try {
-                ce[l].node.disconnect();
+                activeVoices[l].node.disconnect();
             } catch {}
-            ce.splice(l, 1);
+            activeVoices.splice(l, 1);
         }
     }
-    return ce.push({
+    return activeVoices.push({
         node: c,
         until: d,
         keep: g
@@ -59,23 +59,23 @@ function Sl() {
     const e9 = cX;
     if (!PT) return 0;
     let c = PT.currentTime;
-    return ce.filter(d => d.until > c).length;
+    return activeVoices.filter(d => d.until > c).length;
 }
 
 function pW() {
-    return !Yn() || !PT || !Me || !de || !$n ? null : {
+    return !initAudioContext() || !PT || !Me || !de || !$n ? null : {
         ctx: PT,
         master: Me,
         world: de,
         noise: $n
     };
 }
-var El = -1000000000,
-    Qr = () => El;
+var lastAudioGestureAt = -1000000000,
+    Qr = () => lastAudioGestureAt;
 
-function Dt(c) {
+function updateAudioActivity(c) {
     const eg = cX;
-    Jr = performance.now() / 1000, c && (El = Jr);
+    Jr = performance.now() / 1000, c && (lastAudioGestureAt = Jr);
 }
 var ps = {};
 J2(ps, {
@@ -113,10 +113,10 @@ function fW(c) {
     let q = g.createBiquadFilter();
     q.type = c.type ?? "bandpass", q.frequency.setValueAtTime(c.freq, m), c.sweepTo && q.frequency.exponentialRampToValueAtTime(c.sweepTo, m + c.duration), q.Q.value = c.q;
     let u = g.createGain();
-    u.gain.setValueAtTime(0, m), u.gain.linearRampToValueAtTime(c.gain, m + 0.004), u.gain.exponentialRampToValueAtTime(0.0005, m + c.duration), p.connect(q).connect(u).connect(c.chrome ? j : t1(u, m + c.duration + 0.02, c.keep === true)), p.start(m), p.stop(m + c.duration + 0.02);
+    u.gain.setValueAtTime(0, m), u.gain.linearRampToValueAtTime(c.gain, m + 0.004), u.gain.exponentialRampToValueAtTime(0.0005, m + c.duration), p.connect(q).connect(u).connect(c.chrome ? j : registerVoice(u, m + c.duration + 0.02, c.keep === true)), p.start(m), p.stop(m + c.duration + 0.02);
 }
 
-function L1(c, d, g) {
+function playSineTone(c, d, g) {
     const ek = cX;
     if (!G().sound) return;
     let j = pW();
@@ -126,18 +126,18 @@ function L1(c, d, g) {
     } = j, m = l.currentTime, p = l.createOscillator();
     p.type = "sine", p.frequency.setValueAtTime(c, m), p.frequency.exponentialRampToValueAtTime(c * 0.35, m + d);
     let q = l.createGain();
-    q.gain.setValueAtTime(g, m), q.gain.exponentialRampToValueAtTime(0.0005, m + d), p.connect(q).connect(t1(q, m + d + 0.02)), p.start(m), p.stop(m + d + 0.02);
+    q.gain.setValueAtTime(g, m), q.gain.exponentialRampToValueAtTime(0.0005, m + d), p.connect(q).connect(registerVoice(q, m + d + 0.02)), p.start(m), p.stop(m + d + 0.02);
 }
-var Ml = new Map();
+var lastPlayedAt = new Map();
 
 function Ce(c, d) {
     const eq = cX;
     let g = performance.now() / 1000;
-    return g - (Ml.get(c) ?? -1000000000) < d ? false : (Ml.set(c, g), true);
+    return g - (lastPlayedAt.get(c) ?? -1000000000) < d ? false : (lastPlayedAt.set(c, g), true);
 }
 var $T = (c, d = 0.18) => c * (1 + (Math.random() * 2 - 1) * d),
     Ts = () => {
-        Dt(true), fW({
+        updateAudioActivity(true), fW({
             duration: 0.09,
             gain: 0.55,
             freq: $T(1500),
@@ -147,7 +147,7 @@ var $T = (c, d = 0.18) => c * (1 + (Math.random() * 2 - 1) * d),
         });
     },
     Jn = () => {
-        Dt(false), fW({
+        updateAudioActivity(false), fW({
             duration: 0.1,
             gain: 0.4,
             freq: $T(950),
@@ -157,14 +157,14 @@ var $T = (c, d = 0.18) => c * (1 + (Math.random() * 2 - 1) * d),
     },
     Zn = () => {
         const ew = cX;
-        Dt(false), fW({
+        updateAudioActivity(false), fW({
             duration: 0.55,
             gain: 0.9,
             freq: 800,
             q: 0.5,
             sweepTo: 90,
             type: "lowpass"
-        }), L1(110, 0.45, 0.8);
+        }), playSineTone(110, 0.45, 0.8);
     },
     Ws = () => {
         const ex = cX;
@@ -177,7 +177,7 @@ var $T = (c, d = 0.18) => c * (1 + (Math.random() * 2 - 1) * d),
                 q: 0.4,
                 sweepTo: 55,
                 type: "lowpass"
-            }), L1(64, 0.8, 0.9);
+            }), playSineTone(64, 0.8, 0.9);
         }, 60);
     },
     es = () => {
@@ -194,7 +194,7 @@ var $T = (c, d = 0.18) => c * (1 + (Math.random() * 2 - 1) * d),
             let p = d.createBiquadFilter();
             p.type = "lowpass", p.frequency.value = 320;
             let q = d.createGain();
-            q.gain.setValueAtTime(0.0001, g), q.gain.exponentialRampToValueAtTime(0.16, g + 0.8), q.gain.setValueAtTime(0.16, g + j - 1.2), q.gain.exponentialRampToValueAtTime(0.0005, g + j), m.connect(p).connect(q).connect(t1(q, g + j + 0.05)), m.start(g), m.stop(g + j + 0.05);
+            q.gain.setValueAtTime(0.0001, g), q.gain.exponentialRampToValueAtTime(0.16, g + 0.8), q.gain.setValueAtTime(0.16, g + j - 1.2), q.gain.exponentialRampToValueAtTime(0.0005, g + j), m.connect(p).connect(q).connect(registerVoice(q, g + j + 0.05)), m.start(g), m.stop(g + j + 0.05);
         }
     },
     ts = () => {
@@ -210,14 +210,14 @@ var $T = (c, d = 0.18) => c * (1 + (Math.random() * 2 - 1) * d),
     },
     ns = () => {
         const eC = cX;
-        Dt(false), fW({
+        updateAudioActivity(false), fW({
             duration: 0.28,
             gain: 0.95,
             freq: 3400,
             q: 0.8,
             sweepTo: 700,
             type: "bandpass"
-        }), L1(240, 0.12, 0.35);
+        }), playSineTone(240, 0.12, 0.35);
     },
     os = c => {
         const eD = cX;
@@ -250,7 +250,7 @@ var $T = (c, d = 0.18) => c * (1 + (Math.random() * 2 - 1) * d),
             let I = d.createGain();
             I.gain.setValueAtTime(0.0001, l), I.gain.exponentialRampToValueAtTime(A, l + C), I.gain.exponentialRampToValueAtTime(0.0005, l + E), F.connect(H).connect(I).connect(g), F.start(l), F.stop(l + E + 0.05);
         };
-        m("lowpass", 500, 60, 0.6, 0.7, 0.02, 1.4), m("bandpass", 1400, 700, 1.4, 0.16, 0.18, 1.1), L1(60, 0.9, 0.65);
+        m("lowpass", 500, 60, 0.6, 0.7, 0.02, 1.4), m("bandpass", 1400, 700, 1.4, 0.16, 0.18, 1.1), playSineTone(60, 0.9, 0.65);
     },
     rs = () => {
         const eG = cX;
@@ -289,7 +289,7 @@ var $T = (c, d = 0.18) => c * (1 + (Math.random() * 2 - 1) * d),
                     q: 1.2,
                     sweepTo: 140,
                     type: "lowpass"
-                }), L1($T(90, 0.12), 0.2, 0.22);
+                }), playSineTone($T(90, 0.12), 0.2, 0.22);
                 return;
             }
             fW({
@@ -392,7 +392,7 @@ function Qn(j, q, A) {
     } = C, I = F.currentTime, K = F.createStereoPanner();
     K.pan.value = Math.max(-1, Math.min(1, j));
     let L = I + Math.max(A.dur, ...q.map(Q => Q.at + Q.dur)) + 0.05;
-    K.connect(t1(K, L));
+    K.connect(registerVoice(K, L));
     for (let Q of q) {
         let R = I + Q.at,
             S = F.createOscillator();

@@ -232,7 +232,7 @@ var o4 = c => c === 2 || c === 8,
         }
     };
 
-function gs(c, d, g) {
+function gridNeighbors(c, d, g) {
     const f8 = cX;
     let j = c % d,
         l = c / d | 0,
@@ -258,7 +258,7 @@ function bs(d, g, j, m) {
             if (!j[A]) continue;
             let C = y === 0 || v === 0 || y === d - 1 || v === g - 1;
             if (!C) {
-                for (let E of gs(A, d, g))
+                for (let E of gridNeighbors(A, d, g))
                     if (!j[E]) {
                         C = true;
                         break;
@@ -270,7 +270,7 @@ function bs(d, g, j, m) {
         let F = p[q++],
             H = m[F];
         if (!(H >= i4)) {
-            for (let I of gs(F, d, g)) !j[I] || m[I] !== 0 || (m[I] = H + 1, p[u++] = I);
+            for (let I of gridNeighbors(F, d, g)) !j[I] || m[I] !== 0 || (m[I] = H + 1, p[u++] = I);
         }
     }
     for (let K = 0; K < m.length; K++) m[K] > 0 && m[K]--;
@@ -287,7 +287,7 @@ function jl(c, d, g, j) {
         let y = p[q++],
             A = m[y];
         if (!(A >= j)) {
-            for (let C of gs(y, c, d)) g[C] || m[C] !== 0 || (m[C] = A + 1, p[u++] = C);
+            for (let C of gridNeighbors(y, c, d)) g[C] || m[C] !== 0 || (m[C] = A + 1, p[u++] = C);
         }
     }
     return m;

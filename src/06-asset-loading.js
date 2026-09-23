@@ -1,4 +1,4 @@
-var Ss = ["boot", "sprites", "missions", "ready"],
+var LOAD_PHASES = ["boot", "sprites", "missions", "ready"],
     j4 = 500,
     ee = c => document.getElementById(c),
     zl = 0,
@@ -21,31 +21,31 @@ function Jl() {
 
 function V1(c) {
     const gF = cX;
-    let d = Ss.indexOf(c);
+    let d = LOAD_PHASES.indexOf(c);
     if (d < 0 || d + 1 <= ao) return Promise.resolve();
     ao = d + 1;
     let g = ee("boot-bar");
     if (g) {
-        for (let j = 0; j < Ss.length; j++) g.children[j]?.classList.toggle('on', j < ao);
+        for (let j = 0; j < LOAD_PHASES.length; j++) g.children[j]?.classList.toggle('on', j < ao);
     }
     let i = ee("boot-word");
-    if (i && (i.textContent = (Ss[ao] ?? c).toUpperCase()), c === "boot") {
+    if (i && (i.textContent = (LOAD_PHASES[ao] ?? c).toUpperCase()), c === "boot") {
         let l = ee("boot-quote");
         if (l && !l.textContent) {
-            l.textContent = I4(il);
+            l.textContent = randomOf(il);
             let m = ee("boot-who");
             m && (m.textContent = "-- " + (EW.trumper?.name ?? ''));
         }
     }
     return P4();
 }
-var I4 = c => c[Math.floor(Math.random() * c.length)] ?? '',
+var randomOf = c => c[Math.floor(Math.random() * c.length)] ?? '',
     P4 = () => new Promise(c => {
         requestAnimationFrame(() => requestAnimationFrame(() => c()));
     });
 async function Es() {
     const gG = cX;
-    await L4();
+    await waitForStylesheet();
     let c = Math.max(0, j4 - (performance.now() - zl));
     return new Promise(d => {
         const gH = gG;
@@ -64,7 +64,7 @@ async function Es() {
     });
 }
 
-function L4(c = 2000) {
+function waitForStylesheet(c = 2000) {
     const gK = cX;
     let d = document.querySelector("link[href$=\"style.css\"]");
     return !d || d.media === "all" ? Promise.resolve() : new Promise(g => {
@@ -92,7 +92,7 @@ function Zl(c) {
     let i = ee("boot-hint");
     i && (i.textContent = String(c?.message ?? c).slice(0, 120));
 }
-var O4 = window,
+var globalWindow = window,
     N4 = 60000,
     D4 = 10,
     F4 = 3500,
@@ -103,7 +103,7 @@ var O4 = window,
         ec = c;
     };
 
-function nc(c) {
+function formatStack(c) {
     const gO = cX;
     if (!c) return null;
     let d = c.split('\x0a'),
@@ -117,11 +117,11 @@ function nc(c) {
     return g.join('\x0a').slice(0, F4);
 }
 
-function B4(c) {
+function serializeError(c) {
     const gP = cX;
     if (c instanceof Error) return {
         message: (c.name + ': ' + c.message).slice(0, 500),
-        stack: nc(c.stack)
+        stack: formatStack(c.stack)
     };
     let d = "unknown";
     try {
@@ -133,18 +133,18 @@ function B4(c) {
     };
 }
 
-function Wc(c, d, g) {
+function reportError(c, d, g) {
     const gQ = cX;
     try {
         let {
             message: j,
             stack: l
-        } = B4(d), m = c + ':' + j + ':' + (l?.split('\x0a')[1] ?? ''), p = Date.now(), q = Ql.get(m);
+        } = serializeError(d), m = c + ':' + j + ':' + (l?.split('\x0a')[1] ?? ''), p = Date.now(), q = Ql.get(m);
         if (q !== void 0 && p - q < N4 || q === void 0 && Tc >= D4) return;
-        q === void 0 && (Tc += 1), Ql.set(m, p), O4.cf_track?.error?.({
+        q === void 0 && (Tc += 1), Ql.set(m, p), globalWindow.cf_track?.error?.({
             kind: c,
             message: j,
-            stack: l ?? (g ? nc(g) : null),
+            stack: l ?? (g ? formatStack(g) : null),
             route: ec,
             release: "0.3.0"
         });
@@ -156,10 +156,10 @@ function oc() {
     try {
         window.addEventListener("error", c => {
             const gS = gR;
-            Wc("error", c.error ?? c.message, (c.filename ?? '') + ':' + (c.lineno ?? 0) + ':' + (c.colno ?? 0));
+            reportError("error", c.error ?? c.message, (c.filename ?? '') + ':' + (c.lineno ?? 0) + ':' + (c.colno ?? 0));
         }), window.addEventListener("unhandledrejection", c => {
             const gU = gR;
-            Wc("rejection", c.reason);
+            reportError("rejection", c.reason);
         });
     } catch {}
 }
@@ -1655,10 +1655,10 @@ function co(c) {
 }
 async function yd() {
     const hq = cX;
-    return lo.map(c => H4(c, aT[c])).filter(c => c.objective !== "skirmish").filter(c => !Kt(c.zone).dev);
+    return lo.map(c => normalizeMission(c, aT[c])).filter(c => c.objective !== "skirmish").filter(c => !Kt(c.zone).dev);
 }
 
-function H4(c, d) {
+function normalizeMission(c, d) {
     const hw = cX;
     let g = 0,
         i = 0;
@@ -1707,7 +1707,7 @@ var mo = {
         return _d(d, g, i);
     };
 
-function V4(c, d) {
+function remapImageColors(c, d) {
     const hA = cX;
     let {
         c: g,
@@ -1757,7 +1757,7 @@ function kd(c, d) {
         if (m.length !== p.length) throw new Error("ramp \"" + j + "\" (" + m.length + ") and \"" + l + "\" (" + p.length + ") differ in length");
         for (let q = 0; q < m.length; q++) g[m[q]] = p[q];
     }
-    return V4(c, g);
+    return remapImageColors(c, g);
 }
 
 function wd(d, g, j, m = 8) {

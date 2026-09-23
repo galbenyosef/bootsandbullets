@@ -32,7 +32,7 @@
     G5 = ["marchUp", "marchDown", "marchLeft", "marchRight"],
     V5 = ["panUp", "panDown", "panLeft", "panRight"];
 
-function sl(c) {
+function sanitizeControls(c) {
     const cY = cX;
     let d = {
         ...Rt
@@ -68,7 +68,7 @@ function jt(c) {
         label: i => i === "march" || i === "pan" ? W1[c[i]].label : Gr(c[i])
     };
 }
-var al = "cf.settings",
+var SETTINGS_KEY = "cf.settings",
     qr = {
         zoomBias: 0,
         edgeScroll: true,
@@ -93,21 +93,21 @@ var al = "cf.settings",
     },
     Vr = new Set();
 
-function q5(c) {
+function sanitizeSettings(c) {
     const d7 = cX;
     let d = {
         ...qr
     };
     if (typeof c != "object" || c === null) return d;
     let g = c;
-    return typeof g.zoomBias == "number" && (d.zoomBias = Math.max(-1, Math.min(1, Math.round(g.zoomBias)))), typeof g.edgeScroll == "boolean" && (d.edgeScroll = g.edgeScroll), typeof g.sound == "boolean" && (d.sound = g.sound), typeof g.music == "boolean" && (d.music = g.music), typeof g.volume == "number" && (d.volume = Math.max(0, Math.min(1, g.volume))), typeof g.musicVolume == "number" && (d.musicVolume = Math.max(0, Math.min(1, g.musicVolume))), typeof g.haptics == "boolean" && (d.haptics = g.haptics), (g.handedness === "left" || g.handedness === "right") && (d.handedness = g.handedness), (g.resolution === "half" || g.resolution === "full") && (d.resolution = g.resolution), typeof g.crisp == "boolean" && (d.crisp = g.crisp), (typeof g.reducedMotion == "boolean" || g.reducedMotion === null) && (d.reducedMotion = g.reducedMotion), (g.rules === "modern" || g.rules === "classic") && (d.rules = g.rules), typeof g.autoFire == "boolean" && (d.autoFire = g.autoFire), (g.blood === "none" || g.blood === "normal" || g.blood === "carnage") && (d.blood = g.blood), typeof g.arenaLockCamera == "boolean" && (d.arenaLockCamera = g.arenaLockCamera), typeof g.arenaShowScore == "boolean" && (d.arenaShowScore = g.arenaShowScore), d.keys = sl(g.keys), d;
+    return typeof g.zoomBias == "number" && (d.zoomBias = Math.max(-1, Math.min(1, Math.round(g.zoomBias)))), typeof g.edgeScroll == "boolean" && (d.edgeScroll = g.edgeScroll), typeof g.sound == "boolean" && (d.sound = g.sound), typeof g.music == "boolean" && (d.music = g.music), typeof g.volume == "number" && (d.volume = Math.max(0, Math.min(1, g.volume))), typeof g.musicVolume == "number" && (d.musicVolume = Math.max(0, Math.min(1, g.musicVolume))), typeof g.haptics == "boolean" && (d.haptics = g.haptics), (g.handedness === "left" || g.handedness === "right") && (d.handedness = g.handedness), (g.resolution === "half" || g.resolution === "full") && (d.resolution = g.resolution), typeof g.crisp == "boolean" && (d.crisp = g.crisp), (typeof g.reducedMotion == "boolean" || g.reducedMotion === null) && (d.reducedMotion = g.reducedMotion), (g.rules === "modern" || g.rules === "classic") && (d.rules = g.rules), typeof g.autoFire == "boolean" && (d.autoFire = g.autoFire), (g.blood === "none" || g.blood === "normal" || g.blood === "carnage") && (d.blood = g.blood), typeof g.arenaLockCamera == "boolean" && (d.arenaLockCamera = g.arenaLockCamera), typeof g.arenaShowScore == "boolean" && (d.arenaShowScore = g.arenaShowScore), d.keys = sanitizeControls(g.keys), d;
 }
 
 function ll() {
     const d8 = cX;
     try {
-        let c = localStorage.getItem(al);
-        GW = q5(c ? JSON.parse(c) : null);
+        let c = localStorage.getItem(SETTINGS_KEY);
+        GW = sanitizeSettings(c ? JSON.parse(c) : null);
     } catch {
         GW = {
             ...qr
@@ -124,7 +124,7 @@ function mW(c) {
         ...c
     };
     try {
-        localStorage.setItem(al, JSON.stringify(GW));
+        localStorage.setItem(SETTINGS_KEY, JSON.stringify(GW));
     } catch {}
     for (let d of Vr) d(GW);
     return GW;
@@ -146,7 +146,7 @@ function e1() {
 }
 var It = null;
 
-function U5() {
+function detectAppleDevice() {
     const dq = cX;
     if (It !== null) return It;
     try {
@@ -160,7 +160,7 @@ function U5() {
 
 function R1() {
     const dw = cX;
-    let c = U5(),
+    let c = detectAppleDevice(),
         d = jt(G().keys);
     return [{
         action: Se.march.toLowerCase(),
@@ -427,7 +427,7 @@ var Z = (c, d, g, i, j = {}) => ({
         }
     };
 
-function dl(c) {
+function resolveTerrainPalette(c) {
     const dx = cX;
     let d = $5[c] ?? {},
         g = {};
@@ -502,12 +502,12 @@ function ul(j, q, y, A) {
         if (A === "sight") {
             if (V.blocksSight) return false;
         } else {
-            if (V.blocksShots && !(V.lowWall && K5(q, E, F, C))) return false;
+            if (V.blocksShots && !(V.lowWall && withinOverReach(q, E, F, C))) return false;
         }
     }
     return true;
 }
-var K5 = (c, d, g, i) => Math.hypot((d + 0.5) * i - c.x, (g + 0.5) * i - c.y) <= f.cover.overReach,
+var withinOverReach = (c, d, g, i) => Math.hypot((d + 0.5) * i - c.x, (g + 0.5) * i - c.y) <= f.cover.overReach,
     kW = (c, d, g) => ul(c, d, g, "sight"),
     PW = (c, d, g) => ul(c, d, g, "shots");
 
@@ -536,7 +536,7 @@ function uT(c, d, g = 24) {
     };
 }
 
-function ml(g, j) {
+function getMainlandMask(g, j) {
     const dF = cX;
     if (g.mainland) return g.mainland;
     let {
@@ -563,7 +563,7 @@ function ml(g, j) {
             x: K,
             y: L
         } = E.pop();
-        for (let [M, N] of z5) {
+        for (let [M, N] of CARDINAL_OFFSETS) {
             let P = K + M,
                 Q = L + N;
             A(P, Q) || v[Q * p + P] || (v[Q * p + P] = 1, E.push({
@@ -574,7 +574,7 @@ function ml(g, j) {
     }
     return g.mainland = v, v;
 }
-var z5 = [
+var CARDINAL_OFFSETS = [
     [1, 0],
     [-1, 0],
     [0, 1],
@@ -583,7 +583,7 @@ var z5 = [
 
 function zr(c, d, g, j = 24) {
     const dH = cX;
-    let m = ml(c, g);
+    let m = getMainlandMask(c, g);
     if (m.length === 0 || !m.some(v => v === 1)) return uT(c, d, j);
     let p = Math.floor(d.x / c.tile),
         q = Math.floor(d.y / c.tile),
@@ -602,7 +602,7 @@ function zr(c, d, g, j = 24) {
     return uT(c, d, j);
 }
 
-function pl(j) {
+function floodFillRegions(j) {
     const dI = cX;
     let q = new Uint8Array(j.width * j.height),
         A = [];
@@ -653,7 +653,7 @@ function pl(j) {
     return A;
 }
 
-function fl(g) {
+function floodFillWater(g) {
     const dJ = cX;
     let j = new Uint8Array(g.width * g.height),
         q = [];
@@ -692,7 +692,7 @@ function fl(g) {
 }
 var Y5 = 4;
 
-function hl(c, d) {
+function repositionBunkers(c, d) {
     const dK = cX;
     let g = c.buildings.filter(i => i.kind === "bunker");
     return g.length === 0 ? d : d.map(j => {
@@ -728,7 +728,7 @@ var Yr = {
     0x20: "shell crater (q)"
 };
 
-function gl(c, d, g) {
+function validateBuildingBlocks(c, d, g) {
     const dM = cX;
     let j = new Set();
     for (let l = 0; l < g; l++)
@@ -1009,7 +1009,7 @@ var Xr = "trumper",
         why: "`cull` with no `chickens`: there is nothing to kill, and the mission would be won on the first step"
     }];
 
-function Q5(c) {
+function validateDifficulties(c) {
     const dO = cX;
     if (c === void 0) return null;
     if (c.length === 0) throw new Error("difficulties: an empty list is a mission nobody can play");
@@ -1018,7 +1018,7 @@ function Q5(c) {
     return c;
 }
 
-function T4(c) {
+function validateWeapons(c) {
     const dP = cX;
     if (c === void 0) return null;
     if (c.length === 0) throw new Error("weapons: an empty list arms nobody");
@@ -1027,14 +1027,14 @@ function T4(c) {
     return c;
 }
 
-function qn(c, d) {
+function requirePositive(c, d) {
     const dQ = cX;
     if (d === void 0) return null;
     if (!(d > 0)) throw new Error(c + ": must be a positive number, got " + String(d));
     return d;
 }
 
-function W4(c) {
+function validateCountdown(c) {
     const dR = cX;
     if (c === void 0) return null;
     if (c.steps.length === 0) throw new Error("countdown: steps must name at least one beat");
@@ -1047,13 +1047,13 @@ function W4(c) {
 }
 var yl = c => c.countdown ? c.countdown.steps.length * c.countdown.beat : 0;
 
-function e4(c, d) {
+function countdownStepAt(c, d) {
     const dS = cX;
     if (!c || d <= 0) return null;
     let g = c.steps.length - Math.ceil(d / c.beat);
     return c.steps[Math.max(0, Math.min(c.steps.length - 1, g))];
 }
-var vl = {
+var ROUND_LABELS = {
         0x1: "ROUND ONE",
         0x2: "ROUND TWO",
         0x3: "ROUND THREE",
@@ -1074,8 +1074,8 @@ function xl(c, d, g) {
     if (d <= 0) return null;
     let i = c.countdown,
         j = i ? i.steps.length * i.beat : f.countdown.match;
-    if (g > 0 && d > j) return vl[g] ?? "ROUND " + g;
-    if (i) return e4(i, Math.min(d, j));
+    if (g > 0 && d > j) return ROUND_LABELS[g] ?? "ROUND " + g;
+    if (i) return countdownStepAt(i, Math.min(d, j));
     if (d <= t4) return _l;
     let l = Un.length - Math.ceil(Math.min(d, j));
     return Un[Math.max(0, Math.min(Un.length - 1, l))];
@@ -1084,7 +1084,7 @@ function xl(c, d, g) {
 function kl(c, d) {
     const dU = cX;
     let g = c.countdown ? [...c.countdown.steps] : [...Un, _l];
-    return d > 0 ? [vl[d] ?? "ROUND " + d, ...g] : g;
+    return d > 0 ? [ROUND_LABELS[d] ?? "ROUND " + d, ...g] : g;
 }
 
 function Te(j, q = "level") {
@@ -1108,7 +1108,7 @@ function Te(j, q = "level") {
             pristine: E,
             pixelWidth: A * F,
             pixelHeight: C * F,
-            colors: dl(j.theme),
+            colors: resolveTerrainPalette(j.theme),
             objective: H === "covert" ? "reach" : H,
             nokill: H === "covert" || j.nokill === true,
             timeLimit: Math.max(0, j.timeLimit ?? 0),
@@ -1136,15 +1136,15 @@ function Te(j, q = "level") {
             enemySpeed: j.enemySpeed ?? 1,
             rungMod: j.rungMod ?? {},
             triggers: j.triggers ?? [],
-            difficulties: Q5(j.difficulties),
+            difficulties: validateDifficulties(j.difficulties),
             conceals: false,
-            weapons: T4(j.weapons),
-            countdown: W4(j.countdown),
+            weapons: validateWeapons(j.weapons),
+            countdown: validateCountdown(j.countdown),
             spawn: {
-                interval: qn("spawn.interval", j.spawn?.interval),
-                perBuilding: qn("spawn.perBuilding", j.spawn?.perBuilding),
-                maxAlive: qn("spawn.maxAlive", j.spawn?.maxAlive),
-                aggroRange: qn("spawn.aggroRange", j.spawn?.aggroRange) ?? f.building.spawnAggroRange
+                interval: requirePositive("spawn.interval", j.spawn?.interval),
+                perBuilding: requirePositive("spawn.perBuilding", j.spawn?.perBuilding),
+                maxAlive: requirePositive("spawn.maxAlive", j.spawn?.maxAlive),
+                aggroRange: requirePositive("spawn.aggroRange", j.spawn?.aggroRange) ?? f.building.spawnAggroRange
             },
             personas: j.personas ?? null,
             challenge: j.challenge ? {
@@ -1206,15 +1206,15 @@ function Te(j, q = "level") {
             E[P * A + R] = U;
         }
     }
-    gl(E, A, C), n4(I, y, L), I.pristine = E.slice(), I.conceals = E.some(Y => TT[Y].concealment < 1);
+    validateBuildingBlocks(E, A, C), scanTerrainRings(I, y, L), I.pristine = E.slice(), I.conceals = E.some(Y => TT[Y].concealment < 1);
     let M = j.squad ?? 0;
-    I.squadSize = M > 0 ? Math.min(M, I.playerSpawns.length) : I.playerSpawns.length, I.buildings = pl(I), I.extraction = hl(I, I.extraction), I.protects = I.buildings.some(Y => Y.role === "protect");
-    for (let Y of fl(I)) I.extraction.push(Y);
+    I.squadSize = M > 0 ? Math.min(M, I.playerSpawns.length) : I.playerSpawns.length, I.buildings = floodFillRegions(I), I.extraction = repositionBunkers(I, I.extraction), I.protects = I.buildings.some(Y => Y.role === "protect");
+    for (let Y of floodFillWater(I)) I.extraction.push(Y);
     return I;
 }
 var bl = [0, 1, 11, 8, 10, 13, 4, 19, 41];
 
-function n4(g, j, p) {
+function scanTerrainRings(g, j, p) {
     const dX = cX;
     let q = (v, y) => v < 0 || y < 0 || y >= j.length || v >= g.width ? null : v < j[y].length ? j[y][v] : '.';
     for (let [v, y] of p) {
