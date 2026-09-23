@@ -165,15 +165,15 @@ for (let [W, T] of Object.entries(j3)) {
     for (let e of T)
         if (e.length !== 8) throw new Error("title glyph \"" + W + "\" has a row of " + e.length + ", not 8: \"" + e + '"');
 }
-var E6 = Array.from({
+var BLANK_GLYPH = Array.from({
     length: 11
 }, () => '.' .repeat(8));
 
-function I3(c) {
+function glyphRowsFor(c) {
     const IV = cX;
-    return j3[c.toUpperCase()] ?? E6;
+    return j3[c.toUpperCase()] ?? BLANK_GLYPH;
 }
-var lW = 100,
+var GLYPH_SIZE = 100,
     R6 = 1000,
     _r = -200,
     xt = 32,
@@ -192,7 +192,7 @@ var lW = 100,
         w: 8,
         h: 11,
         advance: 9,
-        rows: I3
+        rows: glyphRowsFor
     },
     vW = class {
         ["bytes"] = [];
@@ -222,7 +222,7 @@ var lW = 100,
         }
     };
 
-function j6(c, d) {
+function glyphRects(c, d) {
     const Jj = cX;
     let g = [];
     for (let j = 0; j < d.h; j++) {
@@ -235,15 +235,15 @@ function j6(c, d) {
             }
             let p = m;
             for (; p + 1 < d.w && l[p + 1] === '#';) p++;
-            g.push([m * lW, (d.h - 1 - j) * lW, (p + 1) * lW, (d.h - j) * lW]), m = p + 1;
+            g.push([m * GLYPH_SIZE, (d.h - 1 - j) * GLYPH_SIZE, (p + 1) * GLYPH_SIZE, (d.h - j) * GLYPH_SIZE]), m = p + 1;
         }
     }
     return g;
 }
 
-function I6(c, d) {
+function glyphRectStream(c, d) {
     const Jk = cX;
-    let g = j6(c, d);
+    let g = glyphRects(c, d);
     if (g.length === 0) return [];
     let j = new vW();
     j.i16(g.length), j.i16(Math.min(...g.map(p => p[0]))), j.i16(Math.min(...g.map(p => p[1]))), j.i16(Math.max(...g.map(p => p[2]))), j.i16(Math.max(...g.map(p => p[3])));
@@ -259,17 +259,17 @@ function I6(c, d) {
     return j.pad4(), j.bytesOut();
 }
 
-function P6(q) {
+function buildFontPdf(q) {
     const Jq = cX;
     let F = xr - xt + 1 + 1,
         H = q.advance,
         K = q.w,
         L = q.h,
-        P = (L + 1) * lW,
+        P = (L + 1) * GLYPH_SIZE,
         Q = [
             []
         ];
-    for (let aH = xt; aH <= xr; aH++) Q.push(I6(q.rows(String.fromCharCode(aH)), q));
+    for (let aH = xt; aH <= xr; aH++) Q.push(glyphRectStream(q.rows(String.fromCharCode(aH)), q));
     let U = new vW(),
         V = new vW(),
         X = 0;
@@ -282,13 +282,13 @@ function P6(q) {
     let Y = new vW();
     Y.u32(65536), Y.u32(65536), Y.u32(0), Y.u32(1594834165), Y.u16(11), Y.u16(R6);
     for (let aK = 0; aK < 4; aK++) Y.u32(0);
-    Y.i16(0), Y.i16(_r), Y.i16(K * lW), Y.i16(L * lW), Y.u16(0), Y.u16(7), Y.i16(2), Y.i16(1), Y.i16(0);
+    Y.i16(0), Y.i16(_r), Y.i16(K * GLYPH_SIZE), Y.i16(L * GLYPH_SIZE), Y.u16(0), Y.u16(7), Y.i16(2), Y.i16(1), Y.i16(0);
     let a7 = new vW();
-    a7.u32(65536), a7.i16(P), a7.i16(_r), a7.i16(0), a7.u16(H * lW), a7.i16(0), a7.i16(0), a7.i16(K * lW), a7.i16(1), a7.i16(0), a7.i16(0);
+    a7.u32(65536), a7.i16(P), a7.i16(_r), a7.i16(0), a7.u16(H * GLYPH_SIZE), a7.i16(0), a7.i16(0), a7.i16(K * GLYPH_SIZE), a7.i16(1), a7.i16(0), a7.i16(0);
     for (let aL = 0; aL < 4; aL++) a7.i16(0);
     a7.i16(0), a7.u16(F);
     let a8 = new vW();
-    for (let aM = 0; aM < F; aM++) a8.u16(H * lW), a8.i16(0);
+    for (let aM = 0; aM < F; aM++) a8.u16(H * GLYPH_SIZE), a8.i16(0);
     let a9 = new vW();
     a9.u32(65536), a9.u16(F), a9.u16(K * L * 4), a9.u16(K * L);
     for (let aN = 0; aN < 11; aN++) a9.u16(0);
@@ -296,12 +296,12 @@ function P6(q) {
     let aj = new vW();
     aj.u16(0), aj.u16(1), aj.u16(3), aj.u16(1), aj.u32(12), aj.u16(4), aj.u16(32), aj.u16(0), aj.u16(4), aj.u16(4), aj.u16(1), aj.u16(0), aj.u16(xr), aj.u16(65535), aj.u16(0), aj.u16(xt), aj.u16(65535), aj.u16(1 - xt & 65535), aj.u16(1), aj.u16(0), aj.u16(0);
     let ak = new vW();
-    ak.u16(4), ak.i16(H * lW), ak.u16(400), ak.u16(5), ak.i16(0);
+    ak.u16(4), ak.i16(H * GLYPH_SIZE), ak.u16(400), ak.u16(5), ak.i16(0);
     for (let aO = 0; aO < 4; aO++) ak.i16(0);
     for (let aP = 0; aP < 4; aP++) ak.i16(0);
-    ak.i16(lW), ak.i16(4 * lW), ak.i16(0);
+    ak.i16(GLYPH_SIZE), ak.i16(4 * GLYPH_SIZE), ak.i16(0);
     for (let aQ = 0; aQ < 10; aQ++) ak.u8(0);
-    ak.u32(3), ak.u32(0), ak.u32(0), ak.u32(0), ak.tag("CFDR"), ak.u16(64), ak.u16(xt), ak.u16(xr), ak.i16(P), ak.i16(_r), ak.i16(0), ak.u16(P), ak.u16(-_r), ak.u32(0), ak.u32(0), ak.i16(L * lW), ak.i16(L * lW), ak.u16(0), ak.u16(xt), ak.u16(2);
+    ak.u32(3), ak.u32(0), ak.u32(0), ak.u32(0), ak.tag("CFDR"), ak.u16(64), ak.u16(xt), ak.u16(xr), ak.i16(P), ak.i16(_r), ak.i16(0), ak.u16(P), ak.u16(-_r), ak.u32(0), ak.u32(0), ak.i16(L * GLYPH_SIZE), ak.i16(L * GLYPH_SIZE), ak.u16(0), ak.u16(xt), ak.u16(2);
     let aq = [q.family, "Regular", q.postScript, q.family, "1.0", q.postScript],
         aw = new vW();
     aw.u16(0), aw.u16(aq.length), aw.u16(6 + aq.length * 12);
@@ -344,16 +344,16 @@ function P6(q) {
     }
     return Uint8Array.from(aE.bytesOut());
 }
-var SV = O3.family,
+var PRIMARY_FONT = O3.family,
     EV = N3.family,
     P3 = new Set();
-async function L3(c) {
+async function embedFontFace(c) {
     const Jx = cX;
     if (P3.has(c.family)) return true;
     if (typeof document > 'u') return false;
     let d;
     try {
-        let i = P6(c),
+        let i = buildFontPdf(c),
             j = '';
         for (let l = 0; l < i.length; l++) j += String.fromCharCode(i[l]);
         d = btoa(j);
@@ -367,43 +367,43 @@ async function L3(c) {
     } catch {}
     return true;
 }
-async function D3() {
+async function embedFonts() {
     const Jz = cX;
-    let [c] = await Promise.all([L3(O3), L3(N3)]);
+    let [c] = await Promise.all([embedFontFace(O3), embedFontFace(N3)]);
     return c;
 }
-var L6 = "button, [role=\"button\"], .fx-btn, .fx-card, .fx-group",
+var CLICKABLE_SELECTOR = "button, [role=\"button\"], .fx-btn, .fx-card, .fx-group",
     F3 = false;
 
-function B3() {
+function installClickRouter() {
     const JA = cX;
     F3 || (F3 = true, document.addEventListener("pointerdown", c => {
         const JB = JA;
         if (c.button !== 0) return;
         let d = c.target;
         if (!(d instanceof Element)) return;
-        let g = d.closest(L6);
+        let g = d.closest(CLICKABLE_SELECTOR);
         g && (g.closest("#controls") || g.matches(":disabled, [disabled], [aria-disabled=\"true\"]") || ls());
     }, {
         capture: true,
         passive: true
     }));
 }
-var R2 = "button, [role=\"button\"], .fx-btn, .fx-card, .fx-group",
+var OVERLAY_CONTROL_SELECTOR = "button, [role=\"button\"], .fx-btn, .fx-card, .fx-group",
     G3 = "#overlay",
     j2 = new WeakMap(),
     H3 = false;
 
-function O6(c, d) {
+function registerOverlayControls(c, d) {
     const JC = cX;
     if (c instanceof Element) {
-        c.matches(R2) && j2.set(c, d);
-        for (let g of c.querySelectorAll(R2)) j2.set(g, d);
+        c.matches(OVERLAY_CONTROL_SELECTOR) && j2.set(c, d);
+        for (let g of c.querySelectorAll(OVERLAY_CONTROL_SELECTOR)) j2.set(g, d);
     }
 }
-var N6 = c => !!c.closest(G3);
+var isInOverlay = c => !!c.closest(G3);
 
-function V3() {
+function installOverlayObserver() {
     const JD = cX;
     if (H3) return;
     H3 = true;
@@ -413,7 +413,7 @@ function V3() {
             const JE = JD;
             let g = performance.now();
             for (let i of d)
-                for (let j of i.addedNodes) O6(j, g);
+                for (let j of i.addedNodes) registerOverlayControls(j, g);
         }).observe(c, {
             childList: true,
             subtree: true
@@ -422,8 +422,8 @@ function V3() {
             const JF = JD;
             let i = g.target;
             if (!(i instanceof Element)) return;
-            let j = i.closest(R2);
-            if (!j || j.closest("#controls") || !N6(j)) return;
+            let j = i.closest(OVERLAY_CONTROL_SELECTOR);
+            if (!j || j.closest("#controls") || !isInOverlay(j)) return;
             let l = j2.get(j);
             l === void 0 || performance.now() - l >= 250 || (g.stopPropagation(), g.preventDefault());
         }, {
@@ -433,7 +433,7 @@ function V3() {
 }
 async function q3() {
     const JG = cX;
-    Yl(), await D3(), Xl(), ll(), zs(), Jl(), await V1("boot"), wo(), B3(), V3(), Zu();
+    Yl(), await embedFonts(), Xl(), ll(), zs(), Jl(), await V1("boot"), wo(), installClickRouter(), installOverlayObserver(), Zu();
     let c = document.getElementById("screen"),
         d = c.getContext('2d', {
             alpha: false
@@ -468,14 +468,14 @@ async function q3() {
         controls: q
     };
 }
-var kr = (c, d) => {
+var viewEdgeX = (c, d) => {
     const JK = cX;
     if (!d) return 0;
     let g = c.viewW / 2;
     return g <= 0 ? 0 : (d.x - (c.x + g)) / g;
 };
 
-function D6(c, d, g) {
+function soundForEvent(c, d, g) {
     const JL = cX;
     if (!(c.side !== void 0 && c.side !== g)) switch (c.kind) {
         case "shot":
@@ -507,9 +507,9 @@ function D6(c, d, g) {
         case "denied":
             return cs();
         case "grunt":
-            return eo(kr(d, c.at));
+            return eo(viewEdgeX(d, c.at));
         case "squawk":
-            return to(kr(d, c.at));
+            return to(viewEdgeX(d, c.at));
         case "win":
             return us();
         case "lose":
@@ -521,9 +521,9 @@ function D6(c, d, g) {
 
 function xe(c, d) {
     const JM = cX;
-    for (let g of c.screams) To(kr(d, g));
-    for (let i of c.deaths) Wo(kr(d, i));
-    for (let j of c.sounds) D6(j, d, c.viewSide);
+    for (let g of c.screams) To(viewEdgeX(d, g));
+    for (let i of c.deaths) Wo(viewEdgeX(d, i));
+    for (let j of c.sounds) soundForEvent(j, d, c.viewSide);
     c.screams.length = 0, c.deaths.length = 0, c.sounds.length = 0;
 }
 var F6 = 34,
@@ -773,7 +773,7 @@ var F6 = 34,
         }
     };
 
-function U3(c, d) {
+function siteCentroid(c, d) {
     const KA = cX;
     let g = c.map,
         j = d === "hostages" ? g.hostages : d === "extraction" ? g.extraction : g.playerSpawns;
@@ -787,14 +787,14 @@ function U3(c, d) {
     };
 }
 
-function B6(c, d, g) {
+function pointInZone(c, d, g) {
     const KB = cX;
     let i = c.map.tile;
     if ("rect" in d) {
         let l = d.rect;
         return g.x >= l.x * i && g.x < (l.x + l.w) * i && g.y >= l.y * i && g.y < (l.y + l.h) * i;
     }
-    let j = U3(c, d.at);
+    let j = siteCentroid(c, d.at);
     return j !== null && Math.hypot(g.x - j.x, g.y - j.y) <= d.radius * i;
 }
 
@@ -813,20 +813,20 @@ function $3(c, d) {
         const KD = KC;
         let m = c.triggerState[l];
         if (m.cooldown > 0 && (m.cooldown = Math.max(0, m.cooldown - d)), !(m.fired >= (j.times ?? 1))) {
-            if (!i.some(p => B6(c, j.when, p.pos))) {
+            if (!i.some(p => pointInZone(c, j.when, p.pos))) {
                 m.inside = 0, m.armed = true;
                 return;
             }
-            m.inside += d, !(!m.armed || m.cooldown > 0 || m.inside < (j.dwell ?? 0.5)) && (H6(c, j.action), m.fired++, m.inside = 0, m.cooldown = j.cooldown ?? 0, (j.rearm ?? "exit") === "exit" && (m.armed = false));
+            m.inside += d, !(!m.armed || m.cooldown > 0 || m.inside < (j.dwell ?? 0.5)) && (spawnReinforcements(c, j.action), m.fired++, m.inside = 0, m.cooldown = j.cooldown ?? 0, (j.rearm ?? "exit") === "exit" && (m.armed = false));
         }
     });
 }
 
-function H6(g, j) {
+function spawnReinforcements(g, j) {
     const KE = cX;
     let m = g.map.tile,
         p = j.near,
-        q = typeof p == "string" ? U3(g, p) : {
+        q = typeof p == "string" ? siteCentroid(g, p) : {
             x: (p.x + 0.5) * m,
             y: (p.y + 0.5) * m
         };
@@ -871,7 +871,7 @@ function Er(c, d, g = 9, j) {
         kind: "ground"
     };
 }
-var Mr = (c, d) => c.soldiers.filter(g => g.faction === d),
+var soldiersOfSide = (c, d) => c.soldiers.filter(g => g.faction === d),
     P2 = (c, d) => {
         const KG = cX;
         d === c.viewSide && c.sounds.push({
@@ -883,14 +883,14 @@ function ae(c, d, g = c, j, l = {}) {
     const KH = cX;
     if (c.preroll > 0) return;
     let m = uT(c.map, d);
-    g.squadTarget = null, g.targetBuilding = null, g.field = yW(c.map, m, true, l.swimCost ?? 1), g.orderGoal = m, g.orderMarker = f.soldier.orderMarkerTime, Rr(c, m, j);
-    for (let p of Mr(c, j)) p.alive && (p.state = 1);
+    g.squadTarget = null, g.targetBuilding = null, g.field = yW(c.map, m, true, l.swimCost ?? 1), g.orderGoal = m, g.orderMarker = f.soldier.orderMarkerTime, assignFormation(c, m, j);
+    for (let p of soldiersOfSide(c, j)) p.alive && (p.state = 1);
     l.quiet || P2(c, j);
 }
 
 function Cr(c, d, g) {
     const KI = cX;
-    for (let i of Mr(c, g)) i.alive && (i.fireLatch = _T[i.weapon].fireInterval, i.fireLatchAt = {
+    for (let i of soldiersOfSide(c, g)) i.alive && (i.fireLatch = _T[i.weapon].fireInterval, i.fireLatchAt = {
         x: d.x,
         y: d.y
     });
@@ -903,8 +903,8 @@ function kt(c, d, g = c, i, j = {}) {
             ...d.pos
         }, g.orderMarker = f.soldier.orderMarkerTime, g.lastTargetPos = {
             ...d.pos
-        }, g.repathTimer = 0, Rr(c, d.pos, i);
-        for (let l of Mr(c, i)) l.alive && (l.state = 2);
+        }, g.repathTimer = 0, assignFormation(c, d.pos, i);
+        for (let l of soldiersOfSide(c, i)) l.alive && (l.state = 2);
         P2(c, i);
     }
 }
@@ -916,12 +916,12 @@ function Ar(c, d, g = c, j, l = {}) {
     let m = uT(c.map, d.centre);
     g.field = yW(c.map, m, true, l.swimCost ?? 1), g.orderGoal = {
         ...d.centre
-    }, g.orderMarker = f.soldier.orderMarkerTime, Rr(c, m, j);
-    for (let p of Mr(c, j)) p.alive && (p.state = 2);
+    }, g.orderMarker = f.soldier.orderMarkerTime, assignFormation(c, m, j);
+    for (let p of soldiersOfSide(c, j)) p.alive && (p.state = 2);
     P2(c, j);
 }
 
-function Rr(c, d, g) {
+function assignFormation(c, d, g) {
     const KL = cX;
     let j = c.soldiers.filter(u => u.alive && u.faction === g),
         l = f.soldier.formationSpacing,
@@ -942,7 +942,7 @@ function Rr(c, d, g) {
     }, v.slotStuck = 0;
 }
 
-function q6(g, j, m) {
+function findFreeSlot(g, j, m) {
     const KM = cX;
     let p = f.soldier.formationSpacing,
         q = j.orderGoal ?? m.pos,
@@ -964,10 +964,10 @@ function q6(g, j, m) {
     m.slotStuck = 0, v && (m.slot = v);
 }
 
-function L2(d, g, j, l = null, m = d, p, q = false) {
+function thinkSoldier(d, g, j, l = null, m = d, p, q = false) {
     const KN = cX;
     let u = f.soldier;
-    if (p === d.viewSide && X6(d, g), m.squadTarget) {
+    if (p === d.viewSide && tickStepNoise(d, g), m.squadTarget) {
         if (!m.squadTarget.alive) m.squadTarget = null;
         else {
             m.repathTimer -= g;
@@ -976,14 +976,14 @@ function L2(d, g, j, l = null, m = d, p, q = false) {
                 ...m.squadTarget.pos
             }, m.lastTargetPos = {
                 ...m.squadTarget.pos
-            }, Rr(d, m.squadTarget.pos, p), m.repathTimer = 0.35);
+            }, assignFormation(d, m.squadTarget.pos, p), m.repathTimer = 0.35);
         }
     }
     m.targetBuilding && !m.targetBuilding.standing && (m.targetBuilding = null);
     for (let y of d.soldiers) {
         if (!y.alive || y.faction !== p || (y.prev.x = y.pos.x, y.prev.y = y.pos.y, y.fireCooldown -= g, y.fireLatch > 0 && (y.fireLatch -= g), Mi(y, d.map, g))) continue;
-        let A = U6(d, m, y) ?? ut(d.map, y);
-        if (Ei(y, A, d.hash, d.map, w0, g), h1(y, d.map, g), g1(y, d.map), A && y.slot && Math.hypot(y.vel.x, y.vel.y) < f.movement.slotStuckSpeed ? (y.slotStuck += g, y.slotStuck > f.movement.slotStuckTrigger && q6(d, m, y)) : y.slotStuck > 0 && (y.slotStuck = Math.max(0, y.slotStuck - g * 2)), ji(d, y), p === d.viewSide && y.wading && d.jitter() < 0.08 && Math.hypot(y.vel.x, y.vel.y) > 8) {
+        let A = moveTargetFor(d, m, y) ?? ut(d.map, y);
+        if (Ei(y, A, d.hash, d.map, w0, g), h1(y, d.map, g), g1(y, d.map), A && y.slot && Math.hypot(y.vel.x, y.vel.y) < f.movement.slotStuckSpeed ? (y.slotStuck += g, y.slotStuck > f.movement.slotStuckTrigger && findFreeSlot(d, m, y)) : y.slotStuck > 0 && (y.slotStuck = Math.max(0, y.slotStuck - g * 2)), ji(d, y), p === d.viewSide && y.wading && d.jitter() < 0.08 && Math.hypot(y.vel.x, y.vel.y) > 8) {
             let C = z(d.map, Math.floor(y.pos.x / d.map.tile), Math.floor(y.pos.y / d.map.tile)) === 9;
             d.fx.splash(y.pos, C), d.sounds.push({
                 kind: "wade",
@@ -991,11 +991,11 @@ function L2(d, g, j, l = null, m = d, p, q = false) {
                 value: C ? 1 : 0
             });
         }
-        K6(d, m, y, j, u, l, q);
+        tickFire(d, m, y, j, u, l, q);
     }
 }
 
-function U6(c, d, g) {
+function moveTargetFor(c, d, g) {
     const KO = cX;
     let i = f.soldier,
         j = d.squadTarget?.alive ? d.squadTarget.pos : d.targetBuilding?.standing ? d.targetBuilding.centre : null;
@@ -1027,7 +1027,7 @@ function $6(c, d, g) {
     };
 }
 
-function K6(c, d, g, j, m, p, q = false) {
+function tickFire(c, d, g, j, m, p, q = false) {
     const KQ = cX;
     let u = j ?? (g.fireLatch > 0 ? g.fireLatchAt : null);
     if (g.wading) {
@@ -1037,12 +1037,12 @@ function K6(c, d, g, j, m, p, q = false) {
     let v = null;
     if (u) v = q ? u : $6(c, g, u);
     else {
-        if (d.squadTarget?.alive && K3(c, g, d.squadTarget.pos)) v = d.squadTarget.pos;
+        if (d.squadTarget?.alive && inFireRange(c, g, d.squadTarget.pos)) v = d.squadTarget.pos;
         else {
-            if (d.targetBuilding?.standing && K3(c, g, d.targetBuilding.centre)) v = d.targetBuilding.centre;
+            if (d.targetBuilding?.standing && inFireRange(c, g, d.targetBuilding.centre)) v = d.targetBuilding.centre;
             else {
                 if (m.autoEngage && d.autoEngage) {
-                    let y = Y6(c, g);
+                    let y = findEngageTarget(c, g);
                     y && (v = y.pos);
                 }
             }
@@ -1060,14 +1060,14 @@ function K6(c, d, g, j, m, p, q = false) {
         return;
     }
     if (g.angle = Math.atan2(v.y - g.pos.y, v.x - g.pos.x), g.fireCooldown <= 0) {
-        let E = z6(g);
+        let E = rankWeaponModifiers(g);
         g.fireCooldown = E.fireInterval, g.fireLatch = 0;
         let F = _T[g.weapon];
         y1(c, g, v, E.spread, u ? F.fireRange * m.manualRange : void 0);
     }
 }
 
-function z6(c) {
+function rankWeaponModifiers(c) {
     const KR = cX;
     let d = _T[c.weapon];
     if (c.rank <= 0) return {
@@ -1080,9 +1080,9 @@ function z6(c) {
         fireInterval: d.fireInterval * (1 + (f.veteran.fireInterval - 1) * g)
     };
 }
-var K3 = (c, d, g) => Math.hypot(g.x - d.pos.x, g.y - d.pos.y) <= _T[d.weapon].fireRange && (uW(d.weapon).melee === true || PW(c.map, d.pos, g));
+var inFireRange = (c, d, g) => Math.hypot(g.x - d.pos.x, g.y - d.pos.y) <= _T[d.weapon].fireRange && (uW(d.weapon).melee === true || PW(c.map, d.pos, g));
 
-function Y6(c, d) {
+function findEngageTarget(c, d) {
     const KS = cX;
     let g = null,
         j = uW(d.weapon),
@@ -1096,7 +1096,7 @@ function Y6(c, d) {
     return g;
 }
 
-function X6(c, d) {
+function tickStepNoise(c, d) {
     const KU = cX;
     if (c.stepNoise -= d, c.stepNoise > 0) return;
     c.stepNoise = f.enemy.stepInterval;
@@ -1113,7 +1113,7 @@ function X6(c, d) {
 }
 var On = [];
 
-function J6(c) {
+function collectWorldActors(c) {
     const KV = cX;
     On.length = 0;
     for (let d of c.actors) On.push(d);
@@ -1137,8 +1137,8 @@ function wt(c, d, g, i = null) {
         c.shouts = c.shouts.filter(m => m.t > 0);
     }
     c.grenadeCooldown = Math.max(0, c.grenadeCooldown - d), c.herdField && (c.herdField.age += d), c.hostageField && (c.hostageField.age += d), c.sideB && (c.sideB.grenadeCooldown = Math.max(0, c.sideB.grenadeCooldown - d), c.sideB.orderMarker = Math.max(0, c.sideB.orderMarker - d)), c.screams.length = 0, c.deaths.length = 0, c.sounds.length = 0, E0(c, d), S0(c);
-    let j = J6(c);
-    c.hash.rebuild(j), g && L2(c, d, g.manualAim, g.cursor, c, D.Player, g.targeted), c.sideB && L2(c, d, i?.manualAim ?? null, null, c.sideB, D.Enemy), th(c, d), $h(c, d), mh(c, d), $3(c, d), x0(j, c.hash, c.map, 2), c.lastKnownAge += d, c.fog.step(c.map, c.soldiers, d, c.viewSide ?? D.Player), Vh(c, d), qh(c, d), Ui(c, d), $i(c, d), gt(c, d), c3(c, d), Ii(c, d), Yh(c, d), zh(c), c.fx.step(d), Sn(c) && Z6(c, d);
+    let j = collectWorldActors(c);
+    c.hash.rebuild(j), g && thinkSoldier(c, d, g.manualAim, g.cursor, c, D.Player, g.targeted), c.sideB && thinkSoldier(c, d, i?.manualAim ?? null, null, c.sideB, D.Enemy), th(c, d), $h(c, d), mh(c, d), $3(c, d), x0(j, c.hash, c.map, 2), c.lastKnownAge += d, c.fog.step(c.map, c.soldiers, d, c.viewSide ?? D.Player), Vh(c, d), qh(c, d), Ui(c, d), $i(c, d), gt(c, d), c3(c, d), Ii(c, d), Yh(c, d), zh(c), c.fx.step(d), Sn(c) && Z6(c, d);
 }
 
 function Z6(c, d) {

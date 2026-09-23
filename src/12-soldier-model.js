@@ -76,7 +76,7 @@ function _1(c, d, g, i, j = D.Player) {
     };
 }
 
-function Fh(c) {
+function clusterPoints(c) {
     const AI = cX;
     let d = [],
         g = new Set();
@@ -107,7 +107,7 @@ function Fh(c) {
     });
 }
 
-function Bh(j, q, y, A) {
+function buildEnemyArmy(j, q, y, A) {
     const AL = cX;
     let C = N => {
             const AK = b;
@@ -146,7 +146,7 @@ function Bh(j, q, y, A) {
         }
         F.push(WW(y, S, 0, C(S), q, -1, D.Enemy, E));
     }
-    let M = Fh(j.patrolNodes);
+    let M = clusterPoints(j.patrolNodes);
     for (let a7 of F)
         if (!(!a7.patrols || !a7.home))
             for (let a8 of M) {
@@ -159,7 +159,7 @@ function Bh(j, q, y, A) {
     return F;
 }
 
-function Hh(c, d, g) {
+function buildBuildings(c, d, g) {
     const AM = cX;
     return c.buildings.map((j, l) => {
         const AN = AM;
@@ -190,7 +190,7 @@ function Hh(c, d, g) {
     });
 }
 
-function Gh(c, d) {
+function buildHostages(c, d) {
     const AO = cX;
     return c.hostages.map(g => ({
         id: d.nextId++,
@@ -215,14 +215,14 @@ function Gh(c, d) {
         delivered: false
     }));
 }
-var Jv = Fe.slice(0, 12).map(c => ({
+var DEFAULT_SQUAD = Fe.slice(0, 12).map(c => ({
     name: c,
     missions: 0,
     own: false,
     fresh: false
 }));
 
-function Zv(c, d) {
+function hashString(c, d) {
     const AP = cX;
     let g = 2166136261 ^ d;
     for (let i = 0; i < c.length; i++) g = Math.imul(g ^ c.charCodeAt(i), 16777619) >>> 0;
@@ -238,12 +238,12 @@ function BW(j, q, A, C, F = 0) {
     if (I) {
         for (let [a8, a9] of Object.entries(I)) H[a8] *= a9;
     }
-    let K = Zv(j.id, F),
+    let K = hashString(j.id, F),
         L = GT(K),
         M = {
             nextId: 1
         },
-        N = A && A.length > 0 ? A : Jv,
+        N = A && A.length > 0 ? A : DEFAULT_SQUAD,
         P = j.weapons?.[0] ?? C?.weapon ?? "basicRifle",
         Q = aj => j.weapons ? j.weapons[aj % j.weapons.length] : P,
         R = A && A.length > 0 ? Math.min(j.squadSize, A.length) : j.squadSize,
@@ -252,9 +252,9 @@ function BW(j, q, A, C, F = 0) {
             let aq = N[ak % N.length];
             return _1(M, aj, Q(ak), aq);
         }),
-        U = Bh(j, H, M, L),
-        V = Hh(j, H, L),
-        X = Gh(j, M),
+        U = buildEnemyArmy(j, H, M, L),
+        V = buildBuildings(j, H, L),
+        X = buildHostages(j, M),
         Y = dh(j, M, L),
         a7 = {
             map: j,
@@ -433,7 +433,7 @@ function x1(c) {
     c.actors = [...c.soldiers, ...c.enemies], c.map.critterNotice !== null && c.actors.push(...c.critters);
 }
 
-function Qv(c, d) {
+function spawnIntervalFor(c, d) {
     const AY = cX;
     let g = (c.sideLevers?.[d.owner] ?? c.levers).spawnInterval;
     return c.arenaPace ? g * c.arenaPace(d.owner) : g;
@@ -462,13 +462,13 @@ function Vh(c, d) {
         let j = c.sideLevers?.[g.owner] ?? c.levers;
         if (g.spawnTimer -= d, g.spawnTimer > 0) continue;
         let m = c.map.spawn;
-        if (g.spawnTimer = m.interval ?? f.building.spawnInterval * Qv(c, g), g.spawned >= (m.perBuilding ?? j.maxSpawned)) continue;
+        if (g.spawnTimer = m.interval ?? f.building.spawnInterval * spawnIntervalFor(c, g), g.spawned >= (m.perBuilding ?? j.maxSpawned)) continue;
         if (m.maxAlive !== null) {
             let C = 0;
             for (let E of c.enemies) E.alive && C++;
             if (C >= m.maxAlive) continue;
         }
-        let p = y2(c, g, c.map.arena) ?? y2(c, g);
+        let p = spawnPointsAroundRect(c, g, c.map.arena) ?? spawnPointsAroundRect(c, g);
         if (!p) continue;
         let q = c.map.sidePersonas?.[g.owner] ?? c.map.personas,
             u = c.map.arena ? f2(c.nextId) : null,
@@ -513,7 +513,7 @@ function qh(j, q) {
         S = 0;
     for (let X = 0; X < N; X++) {
         let Y = R[X % R.length],
-            a7 = y2(j, Y, true);
+            a7 = spawnPointsAroundRect(j, Y, true);
         if (!a7) continue;
         let a8 = j.map.sidePersonas?.[Y.owner] ?? j.map.personas,
             a9 = WW(j, a7, 0, null, j.levers, Y.id, Y.owner, a8);
@@ -526,7 +526,7 @@ function qh(j, q) {
     }), Q && j.fx.popup(Q, "wave " + j.wavesSent, "#ff8a3c"));
 }
 
-function y2(g, j, m = false) {
+function spawnPointsAroundRect(g, j, m = false) {
     const B8 = cX;
     let p = g.map.tile,
         q = [],
@@ -543,27 +543,27 @@ function y2(g, j, m = false) {
                     x: (E + 0.5 + (F ? I : 0)) * p,
                     y: (C + 0.5 + (H ? I : 0)) * p
                 };
-            fT(g.map, K.x, K.y, f.enemy.radius) || m && T6(g, K, j.owner) || (F ? (C === j.y0 + j.h ? q : y).push(K) : H ? v.push(K) : A.push(K));
+            fT(g.map, K.x, K.y, f.enemy.radius) || m && pointSeenByEnemies(g, K, j.owner) || (F ? (C === j.y0 + j.h ? q : y).push(K) : H ? v.push(K) : A.push(K));
         }
     for (let L of [q, v, y, A])
         if (L.length > 0) return L[g.jitter() * L.length | 0];
     return null;
 }
 
-function T6(c, d, g) {
+function pointSeenByEnemies(c, d, g) {
     const B9 = cX;
     for (let i of c.actors)
         if (!(!i.alive || i.faction === g) && !(Math.hypot(i.pos.x - d.x, i.pos.y - d.y) > f.wave.hideRadius) && kW(c.map, i.pos, d)) return true;
     return false;
 }
 
-function Bi(c, d, g, i = null, j = null) {
+function damageBuilding(c, d, g, i = null, j = null) {
     const Bd = cX;
     if (!d.standing) return false;
     if (d.indestructible) return d.flash = Math.max(d.flash, 0.4), i && c.fx.spall(i, j ?? d.centre), false;
     d.hp -= g;
     let l = g < d.maxHp * f.building.scratchFraction;
-    return l && i && c.fx.spall(i, j ?? d.centre), d.flash = l ? 0.25 : 1, d.hp > 0 ? false : (W6(c, d), l && UT(c, d.centre, c.levers.hearing * 2, null, f.enemy.alert.blastHold), true);
+    return l && i && c.fx.spall(i, j ?? d.centre), d.flash = l ? 0.25 : 1, d.hp > 0 ? false : (collapseBuilding(c, d), l && UT(c, d.centre, c.levers.hearing * 2, null, f.enemy.alert.blastHold), true);
 }
 
 function ft(d, g, j, m = 0) {
@@ -581,7 +581,7 @@ function ft(d, g, j, m = 0) {
     return null;
 }
 
-function W6(c, d) {
+function collapseBuilding(c, d) {
     const Bk = cX;
     d.standing = false, d.hp = 0, d.damageStage = 2, d.ruinAge = 0;
     for (let [g, i] of d.tiles) $r(c.map, g, i, 13);
@@ -634,7 +634,7 @@ function $h(c, d) {
     for (let g of c.hostages)
         if (!(!g.alive || g.delivered)) {
             if (g.prev.x = g.pos.x, g.prev.y = g.pos.y, !g.freed) {
-                Kh(c, g.pos, f.hostage.freeRadius) && (g.freed = true, c.fx.sparkle(g.pos, "#8fe0ff"), c.fx.popup({
+                nearestSoldier(c, g.pos, f.hostage.freeRadius) && (g.freed = true, c.fx.sparkle(g.pos, "#8fe0ff"), c.fx.popup({
                     x: g.pos.x,
                     y: g.pos.y - 12
                 }, "RESCUED", "#8fe0ff", "hostage"), c.sounds.push({
@@ -653,11 +653,11 @@ function $h(c, d) {
                         at: g.pos
                     });
                     break;
-                } g.delivered || n6(c, g, d);
+                } g.delivered || tickHostageFollow(c, g, d);
         }
 }
 
-function Kh(c, d, g) {
+function nearestSoldier(c, d, g) {
     const Bv = cX;
     let j = null,
         l = g;
@@ -669,14 +669,14 @@ function Kh(c, d, g) {
     return j;
 }
 
-function e6(c, d, g) {
+function hostageFollowSlot(c, d, g) {
     const Bw = cX;
     let i = c.hostages.filter(l => l.alive && l.freed && !l.delivered),
         j = i.indexOf(d);
     return j <= 0 ? g.pos : Ci(g.pos, i.length, f.hostage.followDistance * 0.8)[j] ?? g.pos;
 }
 
-function t6(c, d, g) {
+function hostageRouteTo(c, d, g) {
     const Bx = cX;
     let j = c.map,
         l = c.hostageField;
@@ -690,18 +690,18 @@ function t6(c, d, g) {
     return p || (p = yW(j, g.pos, false, f.hostage.swimCost), l.fields.set(m, p)), f1(p, j, d.pos, d.radius);
 }
 
-function n6(g, j, m) {
+function tickHostageFollow(g, j, m) {
     const Bz = cX;
     let q = Ee(g.map, j.pos.x, j.pos.y);
     j.wading = q.wade, j.swimming = q.swim;
-    let y = Kh(g, j.pos, 1 / 0);
+    let y = nearestSoldier(g, j.pos, 1 / 0);
     if (!y) {
         j.vel.x *= 0.9, j.vel.y *= 0.9;
         return;
     }
-    let A = j.swimming ? null : e6(g, j, y),
+    let A = j.swimming ? null : hostageFollowSlot(g, j, y),
         C = A !== null && !DW(g.map, j.pos, y.pos, j.radius, false),
-        E = A === null ? ut(g.map, j) ?? y.pos : C ? t6(g, j, y) ?? A : A,
+        E = A === null ? ut(g.map, j) ?? y.pos : C ? hostageRouteTo(g, j, y) ?? A : A,
         F = E.x - j.pos.x,
         H = E.y - j.pos.y,
         I = Math.hypot(F, H),
@@ -717,7 +717,7 @@ function n6(g, j, m) {
     j.vel.x += (K - j.vel.x) * M, j.vel.y += (L - j.vel.y) * M, h1(j, g.map, m), g1(j, g.map), Math.hypot(j.pos.x - j.prev.x, j.pos.y - j.prev.y) > 0.05 && (j.angle = Math.atan2(j.vel.y, j.vel.x));
 }
 
-function Hi(c, d) {
+function killHostage(c, d) {
     const BA = cX;
     if (!(!d.alive || d.delivered)) {
         if (d.alive = false, TT[oW(c.map, d.pos.x, d.pos.y)].swim) {
@@ -728,7 +728,7 @@ function Hi(c, d) {
     }
 }
 
-function Gi(c, d) {
+function markHostageLost(c, d) {
     const BB = cX;
     d.taken || d.lost || (d.lost = true, c.fx.popup({
         x: d.pos.x,
@@ -801,17 +801,17 @@ function Yh(c, d) {
                 }
                 continue;
             }
-            g.fuse -= d, !(g.fuse > 0) && (g.alive = false, se(c, g.pos, f.mine.blastRadius));
+            g.fuse -= d, !(g.fuse > 0) && (g.alive = false, explodeAt(c, g.pos, f.mine.blastRadius));
         }
 }
 
-function Xh(c, d, g, i) {
+function triggerMinesNear(c, d, g, i) {
     const BE = cX;
     let j = Math.max(i, f.mine.chainRadius);
     for (let l of c.mines) !l.alive || l.fuse >= 0 || Math.hypot(l.pos.x - d, l.pos.y - g) > j || (l.triggered = true, l.fuse = 0.08 + c.jitter() * 0.12);
 }
 
-function se(d, g, j, m) {
+function explodeAt(d, g, j, m) {
     const BF = cX;
     d.fx.explosion(g, j), d.sounds.push({
         kind: "explosion",
@@ -838,22 +838,22 @@ function se(d, g, j, m) {
             };
         u.vel.x += E.x * f.blast.knockback * C, u.vel.y += E.y * f.blast.knockback * C, u.stagger = Math.max(u.stagger, f.blast.stagger * C);
     }
-    for (let F of d.hostages) !F.alive || F.delivered || Math.hypot(F.pos.x - g.x, F.pos.y - g.y) <= p && Hi(d, F);
+    for (let F of d.hostages) !F.alive || F.delivered || Math.hypot(F.pos.x - g.x, F.pos.y - g.y) <= p && killHostage(d, F);
     for (let H of d.critters) H.alive && Math.hypot(H.pos.x - g.x, H.pos.y - g.y) <= p && pt(d, H);
     let q = ft(d, g.x, g.y, j);
-    q && !v2(q, m) && Bi(d, q, f.building.blastDamage);
-    for (let I of d.crates) I.alive && Math.hypot(I.pos.x - g.x, I.pos.y - g.y) <= j && Vi(d, I);
-    Xh(d, g.x, g.y, j);
-    for (let K of d.packages) K.taken || K.lost || Math.hypot(K.pos.x - g.x, K.pos.y - g.y) <= j && Gi(d, K);
+    q && !isProtectedBy(q, m) && damageBuilding(d, q, f.building.blastDamage);
+    for (let I of d.crates) I.alive && Math.hypot(I.pos.x - g.x, I.pos.y - g.y) <= j && detonateContainer(d, I);
+    triggerMinesNear(d, g.x, g.y, j);
+    for (let K of d.packages) K.taken || K.lost || Math.hypot(K.pos.x - g.x, K.pos.y - g.y) <= j && markHostageLost(d, K);
     for (let L of d.supplies) !L.alive || L.collected || Math.hypot(L.pos.x - g.x, L.pos.y - g.y) <= j && (L.alive = false, d.fx.sparkle(L.pos, "#c86a3a"), d.fx.popup({
         x: L.pos.x,
         y: L.pos.y - 10
     }, "SUPPLIES LOST", "#ff6a48"));
 }
 
-function Vi(c, d) {
+function detonateContainer(c, d) {
     const BG = cX;
-    d.alive && (d.alive = false, se(c, d.pos, d.barrel ? f.barrel.blastRadius : f.crate.blastRadius));
+    d.alive && (d.alive = false, explodeAt(c, d.pos, d.barrel ? f.barrel.blastRadius : f.crate.blastRadius));
 }
 
 function y1(g, j, q, v, y) {
@@ -926,7 +926,7 @@ function d2(c, d, g) {
     }, d.faction));
 }
 
-function _2(d, g, j, m, p, q) {
+function pointSegmentDistSq(d, g, j, m, p, q) {
     const BJ = cX;
     let u = p - j,
         v = q - m,
@@ -938,7 +938,7 @@ function _2(d, g, j, m, p, q) {
     return (d - C) ** 2 + (g - E) ** 2;
 }
 
-function Jh(d, g, j) {
+function stepBullet(d, g, j) {
     const BK = cX;
     g.prev.x = g.pos.x, g.prev.y = g.pos.y;
     let m = g.pos.x + g.vel.x * j,
@@ -959,7 +959,7 @@ function Zh(c, d) {
     const BL = cX;
     for (let g = c.bullets.length - 1; g >= 0; g--) {
         let i = c.bullets[g];
-        i.life -= d, (i.life <= 0 || Jh(c.map, i, d)) && c.bullets.splice(g, 1);
+        i.life -= d, (i.life <= 0 || stepBullet(c.map, i, d)) && c.bullets.splice(g, 1);
     }
 }
 
@@ -974,14 +974,14 @@ function Ui(c, d) {
             l.blast > 0 ? An(c, l) : l.faction === c.viewSide && c.fx.impact(l.pos), c.bullets.splice(j, 1);
             continue;
         }
-        if (Jh(g, l, d)) {
+        if (stepBullet(g, l, d)) {
             let m = ft(c, l.pos.x, l.pos.y, 3);
-            if (m && !v2(m, l.faction)) {
+            if (m && !isProtectedBy(m, l.faction)) {
                 let o = {
                     x: l.pos.x - l.vel.x,
                     y: l.pos.y - l.vel.y
                 };
-                Bi(c, m, l.blast > 0 ? f.building.blastDamage : l.buildingDamage, {
+                damageBuilding(c, m, l.blast > 0 ? f.building.blastDamage : l.buildingDamage, {
                     x: l.pos.x,
                     y: l.pos.y
                 }, o);
@@ -989,30 +989,30 @@ function Ui(c, d) {
             l.blast > 0 ? An(c, l) : c.fx.impact(l.pos), UT(c, l.pos, Math.max(c.levers.hearing * f.enemy.impactAlarm, f.enemy.impactAlarmFloor)), c.bullets.splice(j, 1);
             continue;
         }
-        o6(c, l), i6(c, l) && c.bullets.splice(j, 1);
+        alertNearMiss(c, l), resolveBulletHit(c, l) && c.bullets.splice(j, 1);
     }
 }
 
-function o6(c, d) {
+function alertNearMiss(c, d) {
     const BN = cX;
     if (!d.from || !be(c) || !c.playerSides.includes(d.faction)) return;
     let g = f.enemy.alert,
         i = g.nearMiss * g.sensitivity;
     if (!(i <= 0)) {
-        for (let j of c.enemies) !j.alive || j.wounded || j.faction === d.faction || qi(d, j.pos, i) && H0(c, j, d.from);
+        for (let j of c.enemies) !j.alive || j.wounded || j.faction === d.faction || bodyHitTest(d, j.pos, i) && H0(c, j, d.from);
     }
 }
 var An = (c, d) => {
     const BO = cX;
-    se(c, d.pos, d.blast, d.faction);
+    explodeAt(c, d.pos, d.blast, d.faction);
 };
 
-function v2(c, d) {
+function isProtectedBy(c, d) {
     const BP = cX;
     return c.role === "protect" && d !== void 0 && c.owner === d;
 }
 
-function qi(c, d, g) {
+function bodyHitTest(c, d, g) {
     const BQ = cX;
     let j = f.body,
         l = g + f.bullet.radius,
@@ -1020,31 +1020,31 @@ function qi(c, d, g) {
         p = d.y + j.drop;
     for (let q = 0; q <= 3; q++) {
         let u = m + (p - m) * q / 3;
-        if (_2(d.x, u, c.prev.x, c.prev.y, c.pos.x, c.pos.y) <= l * l) return true;
+        if (pointSegmentDistSq(d.x, u, c.prev.x, c.prev.y, c.pos.x, c.pos.y) <= l * l) return true;
     }
     return false;
 }
 
-function i6(c, d) {
+function resolveBulletHit(c, d) {
     const BR = cX;
     for (let g of c.actors)
-        if (!(!g.alive || g.faction === d.faction) && qi(d, g.pos, f.body.radius)) return d.faction === c.viewSide ? c.shotsHit++ : c.incomingHit++, d.blast > 0 ? An(c, d) : Ye(c, g, 1, {
+        if (!(!g.alive || g.faction === d.faction) && bodyHitTest(d, g.pos, f.body.radius)) return d.faction === c.viewSide ? c.shotsHit++ : c.incomingHit++, d.blast > 0 ? An(c, d) : Ye(c, g, 1, {
             x: d.pos.x - d.vel.x,
             y: d.pos.y - d.vel.y
         }, d.faction), true;
     for (let i of c.hostages)
-        if (!(!i.alive || i.delivered) && qi(d, i.pos, f.body.radius)) return d.blast > 0 ? An(c, d) : Hi(c, i), true;
+        if (!(!i.alive || i.delivered) && bodyHitTest(d, i.pos, f.body.radius)) return d.blast > 0 ? An(c, d) : killHostage(c, i), true;
     for (let j of c.critters)
-        if (j.alive && qi(d, j.pos, f.critter.radius)) return d.blast > 0 ? An(c, d) : pt(c, j), true;
+        if (j.alive && bodyHitTest(d, j.pos, f.critter.radius)) return d.blast > 0 ? An(c, d) : pt(c, j), true;
     for (let l of c.crates) {
         if (!l.alive) continue;
         let m = (l.barrel ? f.barrel.radius : f.crate.radius) + f.bullet.radius;
-        if (_2(l.pos.x, l.pos.y, d.prev.x, d.prev.y, d.pos.x, d.pos.y) <= m * m) return Vi(c, l), true;
+        if (pointSegmentDistSq(l.pos.x, l.pos.y, d.prev.x, d.prev.y, d.pos.x, d.pos.y) <= m * m) return detonateContainer(c, l), true;
     }
     for (let n of c.packages) {
         if (n.taken || n.lost) continue;
         let o = f.crate.radius + f.bullet.radius;
-        if (_2(n.pos.x, n.pos.y, d.prev.x, d.prev.y, d.pos.x, d.pos.y) <= o * o) return Gi(c, n), true;
+        if (pointSegmentDistSq(n.pos.x, n.pos.y, d.prev.x, d.prev.y, d.pos.x, d.pos.y) <= o * o) return markHostageLost(c, n), true;
     }
     return false;
 }
@@ -1085,7 +1085,7 @@ function Rn(c) {
     return c.grenadesHeld <= 0 ? "empty" : c.grenadeCooldown > 0 ? "cooling" : 'ok';
 }
 
-function r6(c, d, g, j = null) {
+function nearestAlly(c, d, g, j = null) {
     const BU = cX;
     if (j && j.alive && !j.wading && j.faction === d) return j;
     let l = null,
@@ -1101,30 +1101,30 @@ function r6(c, d, g, j = null) {
 function ht(c, d, g = D.Player, i = c, j = null) {
     const BV = cX;
     if (Rn(i) !== 'ok') return false;
-    let l = r6(c, g, d, j);
+    let l = nearestAlly(c, g, d, j);
     return l ? (i.grenadesHeld--, i.grenadeCooldown = f.grenade.cooldown, Ri(c, l.pos, d, g, i.squadThrowable), true) : false;
 }
 
-function Qh(c, d) {
+function stepProjectile(c, d) {
     const BX = cX;
     return c.prev.x = c.pos.x, c.prev.y = c.pos.y, c.t += d / c.duration, c.t >= 1 ? true : (c.pos.x = c.from.x + (c.to.x - c.from.x) * c.t, c.pos.y = c.from.y + (c.to.y - c.from.y) * c.t, false);
 }
 
 function T3(c, d) {
     const BY = cX;
-    for (let g = c.grenades.length - 1; g >= 0; g--) Qh(c.grenades[g], d) && c.grenades.splice(g, 1);
+    for (let g = c.grenades.length - 1; g >= 0; g--) stepProjectile(c.grenades[g], d) && c.grenades.splice(g, 1);
 }
 
 function $i(c, d) {
     const BZ = cX;
     for (let g = c.grenades.length - 1; g >= 0; g--) {
         let i = c.grenades[g];
-        Qh(i, d) && (i.kind === "flash" ? e3(c, i.to) : i.kind === "smoke" ? W3(c, i.to) : se(c, i.to, f.grenade.blastRadius, i.faction), c.grenades.splice(g, 1));
+        stepProjectile(i, d) && (i.kind === "flash" ? detonateFlashbang(c, i.to) : i.kind === "smoke" ? deploySmoke(c, i.to) : explodeAt(c, i.to, f.grenade.blastRadius, i.faction), c.grenades.splice(g, 1));
     }
 }
-var jn = c => Math.sin(c * Math.PI) * 11;
+var arcLift = c => Math.sin(c * Math.PI) * 11;
 
-function W3(c, d) {
+function deploySmoke(c, d) {
     const C1 = cX;
     c.clouds.push({
         pos: {
@@ -1145,7 +1145,7 @@ function gt(c, d) {
     for (let g = c.clouds.length - 1; g >= 0; g--) c.clouds[g].life -= d, c.clouds[g].life <= 0 && c.clouds.splice(g, 1);
 }
 
-function e3(c, d) {
+function detonateFlashbang(c, d) {
     const C6 = cX;
     let g = f.flashbang;
     c.fx.bang(d, g.blastRadius), c.sounds.push({
@@ -1179,7 +1179,7 @@ function e3(c, d) {
     }
 }
 
-function zi(j, q, A, C, F) {
+function drawRadialBurst(j, q, A, C, F) {
     const C7 = cX;
     if (C < 1) return;
     let {
@@ -1224,7 +1224,7 @@ function In(c, d, g, i, j, m) {
     for (let v = 0; v < Math.PI * 2; v += p) !m && u++ % 3 === 0 || c.fillRect(Math.round(d.x + Math.cos(v) * g), Math.round(d.y + Math.sin(v) * g), q, q);
 }
 
-function n3(c, d, g, j) {
+function drawDottedRing(c, d, g, j) {
     const C9 = cX;
     if (g < 1) return;
     c.fillStyle = j;
@@ -1237,16 +1237,16 @@ function n3(c, d, g, j) {
         c.fillRect(Math.round(d.x + Math.cos(p) * v), Math.round(d.y + Math.sin(p) * v), 1, 1);
     }
 }
-var _e = ["......#......", "......#......", "....#####....", "...##.#.##...", "..##..#..##..", "..#.......#..", "#####.#.#####", "..#.......#..", "..##..#..##..", "...##.#.##...", "....#####....", "......#......", "......#......"],
-    Ki = (_e.length - 1) / 2,
+var SKULL_PIXELS = ["......#......", "......#......", "....#####....", "...##.#.##...", "..##..#..##..", "..#.......#..", "#####.#.#####", "..#.......#..", "..##..#..##..", "...##.#.##...", "....#####....", "......#......", "......#......"],
+    Ki = (SKULL_PIXELS.length - 1) / 2,
     s6 = 4,
-    t3 = (c, d) => c >= 0 && d >= 0 && d < _e.length && c < _e[d].length && _e[d][c] === '#',
+    t3 = (c, d) => c >= 0 && d >= 0 && d < SKULL_PIXELS.length && c < SKULL_PIXELS[d].length && SKULL_PIXELS[d][c] === '#',
     a6 = ((() => {
         const Cj = cX;
         let c = [],
             d = new Set();
-        for (let g = -1; g <= _e.length; g++)
-            for (let j = -1; j <= _e.length; j++) {
+        for (let g = -1; g <= SKULL_PIXELS.length; g++)
+            for (let j = -1; j <= SKULL_PIXELS.length; j++) {
                 if (t3(j, g) || d.has(j + ',' + g) || Math.hypot(j - Ki, g - Ki) < s6 - 0.5) continue;
                 let l = false;
                 for (let m = -1; m <= 1 && !l; m++)
@@ -1259,15 +1259,15 @@ var _e = ["......#......", "......#......", "....#####....", "...##.#.##...", ".
         return c;
     })());
 
-function o3(c, d, g, j) {
+function drawSkull(c, d, g, j) {
     const Ck = cX;
     let l = Math.round(d.x) - Ki,
         m = Math.round(d.y) - Ki;
     c.fillStyle = j;
     for (let [p, q] of a6) c.fillRect(l + p, m + q, 1, 1);
     c.fillStyle = g;
-    for (let s = 0; s < _e.length; s++)
-        for (let u = 0; u < _e[s].length; u++) _e[s][u] === '#' && c.fillRect(l + u, m + s, 1, 1);
+    for (let s = 0; s < SKULL_PIXELS.length; s++)
+        for (let u = 0; u < SKULL_PIXELS[s].length; u++) SKULL_PIXELS[s][u] === '#' && c.fillRect(l + u, m + s, 1, 1);
 }
 
 function x2(c, d, g, j, l) {
@@ -1277,7 +1277,7 @@ function x2(c, d, g, j, l) {
     c.fillStyle = l, c.fillRect(Math.round(d.x - g), Math.round(d.y), Math.round(g - p), m), c.fillRect(Math.round(d.x + p), Math.round(d.y), Math.round(g - p), m), c.fillRect(Math.round(d.x), Math.round(d.y - g), m, Math.round(g - p)), c.fillRect(Math.round(d.x), Math.round(d.y + p), m, Math.round(g - p));
 }
 
-function i3(c, d, g, j, m) {
+function drawArcDashes(c, d, g, j, m) {
     const Cw = cX;
     c.fillStyle = m;
     let p = 14;
@@ -1285,13 +1285,13 @@ function i3(c, d, g, j, m) {
         if (q % 3 === 0) continue;
         let u = q / p,
             v = d.x + (g.x - d.x) * u,
-            y = d.y + (g.y - d.y) * u - jn(u),
+            y = d.y + (g.y - d.y) * u - arcLift(u),
             A = Math.max(1, Math.round(1.5 * j));
         c.fillRect(Math.round(v), Math.round(y), A, A);
     }
 }
 
-function Pn(c, d, g, j, m, p) {
+function drawNoiseDisc(c, d, g, j, m, p) {
     const Cx = cX;
     c.fillStyle = p;
     for (let q = Math.round(g - m); q <= g + m; q++) {
@@ -1304,7 +1304,7 @@ function Pn(c, d, g, j, m, p) {
     }
 }
 
-function bt(c, d, g) {
+function tintedCanvas(c, d, g) {
     const Cz = cX;
     let i = d.get(c);
     if (i) return i;
@@ -1486,7 +1486,7 @@ var Yi = {
             H.fillRect(K + 3 + Q, I + L + 1, j.width - 6, 1);
         } silhouette(c) {
             const CO = cX;
-            return bt(c, this.silhouettes, gT.void);
+            return tintedCanvas(c, this.silhouettes, gT.void);
         }
     };
 
@@ -1503,7 +1503,7 @@ function k2(c, d) {
     }), true);
 }
 
-function s3(c) {
+function callinPlanePos(c) {
     const CQ = cX;
     let d = f.callin,
         g = (c.t - d.dropAt) * d.planeSpeed;
@@ -1514,7 +1514,7 @@ function s3(c) {
 }
 var l6 = 0.51;
 
-function a3(c) {
+function chuteAltitude(c) {
     const CR = cX;
     let d = f.callin;
     if (c.t < d.dropAt || c.t >= d.dropAt + d.chuteTime) return -1;
@@ -1522,7 +1522,7 @@ function a3(c) {
     return Math.round(d.altitude * (1 - g));
 }
 
-function l3(c) {
+function chuteProgress(c) {
     const CS = cX;
     let d = f.callin;
     return Math.max(0, Math.min(1, (c.t - d.dropAt) / d.chuteTime));
@@ -1536,10 +1536,10 @@ function c3(c, d) {
         j = g.t;
     g.t += d;
     let l = i.dropAt + i.chuteTime;
-    j < l && g.t >= l && c6(c, g.kind, g.at), g.t >= i.done && (c.callIn = null);
+    j < l && g.t >= l && resolveCallinDrop(c, g.kind, g.at), g.t >= i.done && (c.callIn = null);
 }
 
-function c6(c, d, g) {
+function resolveCallinDrop(c, d, g) {
     const CV = cX;
     let j = uT(c.map, g);
     if (UT(c, j, c.levers.hearing * 0.6), d === "supplyDrop") {
@@ -1553,7 +1553,7 @@ function c6(c, d, g) {
         return;
     }
     if (d === "airstrike") {
-        se(c, j, f.callin.bombRadius, D.Player), c.fx.shake(f.fx.screenShake), c.sounds.push({
+        explodeAt(c, j, f.callin.bombRadius, D.Player), c.fx.shake(f.fx.screenShake), c.sounds.push({
             kind: "airstrike",
             at: j
         });
@@ -1569,7 +1569,7 @@ function c6(c, d, g) {
     }
     c.reserves = [], x1(c);
 }
-var d3 = {
+var LETTER_PATTERNS = {
         A: ".#./#.#/###/#.#/#.#",
         B: "##./#.#/##./#.#/##.",
         C: ".##/#../#../#../.##",
@@ -1618,7 +1618,7 @@ var d3 = {
     Ji = new Map(),
     m6 = c => c.length * 4 - 1 + 2;
 
-function u3(g, j, m = "#12180c") {
+function renderPixelText(g, j, m = "#12180c") {
     const CX = cX;
     let p = g + '|' + j + '|' + m,
         q = Ji.get(p);
@@ -1631,7 +1631,7 @@ function u3(g, j, m = "#12180c") {
     let A = [];
     u.forEach((C, E) => {
         const CY = CX;
-        let F = (d3[C] ?? d3[' ']).split('/'),
+        let F = (LETTER_PATTERNS[C] ?? LETTER_PATTERNS[' ']).split('/'),
             H = 1 + E * 4;
         for (let I = 0; I < 5; I++)
             for (let K = 0; K < 3; K++) F[I][K] === '#' && A.push([H + K, 1 + I]);
@@ -1643,7 +1643,7 @@ function u3(g, j, m = "#12180c") {
     for (let [I, K] of A) y.fillRect(I, K, 1, 1);
     return Ji.size >= u6 && Ji.clear(), Ji.set(p, v), v;
 }
-var Zi = class W {
+var ShadowRenderer = class W {
     constructor(c, d) {
         const CZ = cX;
         this.ctx = c, this.atlas = d;
@@ -1726,8 +1726,8 @@ var Zi = class W {
         for (let j of c.grenades) {
             let l = YT(j.prev.x, j.pos.x, d),
                 m = YT(j.prev.y, j.pos.y, d),
-                p = jn(j.t);
-            Pn(g, l, m, 2.5, 1.4, gT.night), g.fillStyle = gT.stone, g.fillRect(Math.round(l - 1), Math.round(m - p - 2), 3, 3), g.fillStyle = TW.starDim, g.fillRect(Math.round(l), Math.round(m - p - 3), 1, 1);
+                p = arcLift(j.t);
+            drawNoiseDisc(g, l, m, 2.5, 1.4, gT.night), g.fillStyle = gT.stone, g.fillRect(Math.round(l - 1), Math.round(m - p - 2), 3, 3), g.fillStyle = TW.starDim, g.fillRect(Math.round(l), Math.round(m - p - 3), 1, 1);
         }
     } drawPopups(c) {
         const Dv = cX;
@@ -1736,7 +1736,7 @@ var Zi = class W {
             let j = 1 - g.life / g.maxLife,
                 m = f.fx.popupRise * (1 - (1 - j) * (1 - j)),
                 p = g.icon ? this.atlas.icons[g.icon] : null,
-                q = u3(g.text, g.color),
+                q = renderPixelText(g.text, g.color),
                 u = q.width + (p ? p.width + 1 : 0),
                 v = Math.round(g.pos.x - u / 2),
                 y = Math.round(g.pos.y - m);
@@ -1747,13 +1747,13 @@ var Zi = class W {
         let q = j.callIn;
         if (!q) return;
         let A = this.ctx,
-            C = s3(q),
+            C = callinPlanePos(q),
             F = Math.floor(performance.now() / 45) % un,
             H = this.atlas.plane[F],
             I = f.callin.altitude,
-            K = bt(H, this.shadows, gT.night);
+            K = tintedCanvas(H, this.shadows, gT.night);
         A.drawImage(K, Math.round(C.x - H.width / 2 + I * W.SLANT.x), Math.round(q.at.y - H.height / 2 + I * W.SLANT.y)), A.drawImage(H, Math.round(C.x - H.width / 2), Math.round(C.y - H.height / 2));
-        let L = a3(q);
+        let L = chuteAltitude(q);
         if (L < 0) return;
         if (q.kind === "airstrike") {
             let X = this.atlas.crate,
@@ -1766,12 +1766,12 @@ var Zi = class W {
             }
             return;
         }
-        let N = l3(q),
+        let N = chuteProgress(q),
             P = Math.round(Math.sin(q.t * 3.1) * 6 * (1 - N * 0.6)),
             Q = this.atlas.parachute,
             R = q.kind === "supplyDrop" ? this.atlas.crate : Q,
             S = Math.max(1, R.width / 2 * (0.35 + 0.65 * N));
-        Pn(A, Math.round(q.at.x), Math.round(q.at.y), S, Math.max(1, S * 0.4), gT.night);
+        drawNoiseDisc(A, Math.round(q.at.x), Math.round(q.at.y), S, Math.max(1, S * 0.4), gT.night);
         let U = Math.round(q.at.x + P - Q.width / 2),
             V = Math.round(q.at.y - L - Q.height);
         if (A.drawImage(Q, U, V), q.kind === "supplyDrop") {
@@ -1781,12 +1781,12 @@ var Zi = class W {
     }
 };
 
-function m3(c) {
+function showingGuideArrows(c) {
     const Dx = cX;
     let d = f.onboarding;
     return c.difficulty !== "rookie" || c.map.objective !== "eliminate" || c.time < d.arrowsAfter ? false : c.enemyTotal - c.kills <= d.arrowsBelow;
 }
-var Qi = class {
+var AimRenderer = class {
         constructor(c, d) {
             const Dz = cX;
             this.ctx = c, this.atlas = d;
@@ -1799,7 +1799,7 @@ var Qi = class {
                 l = 1 / g;
             if (d.mode === "fire") {
                 if (!hT(c)) return;
-                o3(this.ctx, d.point, Qo.crosshair, gT.night);
+                drawSkull(this.ctx, d.point, Qo.crosshair, gT.night);
                 return;
             }
             if (d.mode === "callin") {
@@ -1810,7 +1810,7 @@ var Qi = class {
             if (!d.placed) return;
             let m = d.friendly || d.blocked,
                 p = m ? XW.ember : d.clamped ? Qo.clamped : Qo.ready;
-            In(this.ctx, d.point, f.grenade.blastRadius, l, p, m), d.thrower && (i3(this.ctx, d.thrower.pos, d.point, l, p), In(j, d.thrower.pos, 7, l, p, false)), x2(this.ctx, d.point, 9 * l, l, p);
+            In(this.ctx, d.point, f.grenade.blastRadius, l, p, m), d.thrower && (drawArcDashes(this.ctx, d.thrower.pos, d.point, l, p), In(j, d.thrower.pos, 7, l, p, false)), x2(this.ctx, d.point, 9 * l, l, p);
         } drawExtractionZones(c) {
             const DB = cX;
             if (c.extraction.length !== 0)
@@ -1818,7 +1818,7 @@ var Qi = class {
                     let g = d.pad + f.extraction.radius,
                         i = Math.round(d.x),
                         j = Math.round(d.y);
-                    zi(this.ctx, i, j, g, {
+                    drawRadialBurst(this.ctx, i, j, g, {
                         tones: [gT.soil, JW.brass, JW.brassLit],
                         dash: [3, 2],
                         drift: Math.floor(this.time * 0.6 * 8),
@@ -1836,7 +1836,7 @@ var Qi = class {
                 g = c.squadTarget || c.targetBuilding ? Ca.attack : Ca.move,
                 i = d < 0.4 ? 0 : d < 0.75 ? 1 : 2,
                 j = i === 0 ? [gT.bark, g[0]] : [g[i]];
-            zi(this.ctx, c.orderGoal.x, c.orderGoal.y, Math.round(3 + d * 11), {
+            drawRadialBurst(this.ctx, c.orderGoal.x, c.orderGoal.y, Math.round(3 + d * 11), {
                 tones: j,
                 jitter: false
             });
@@ -1844,7 +1844,7 @@ var Qi = class {
             const DE = cX;
             let g = (m, p, q, u) => {
                     const DD = b;
-                    zi(this.ctx, Math.round(m), Math.round(p), q, {
+                    drawRadialBurst(this.ctx, Math.round(m), Math.round(p), q, {
                         tones: [gT.ash, u],
                         ticks: {
                             len: 3,
@@ -1866,7 +1866,7 @@ var Qi = class {
                 if (!g.alive || g.fuse < 0) continue;
                 let i = 1 - g.fuse / f.mine.fuse,
                     j = Math.floor(this.time * 18) % 2 === 0;
-                n3(this.ctx, g.pos, f.mine.blastRadius * i, j ? XW.hot : XW.cold), d.fillStyle = j ? XW.core : XW.body, d.fillRect(Math.round(g.pos.x) - 1, Math.round(g.pos.y) - 4, 2, 1);
+                drawDottedRing(this.ctx, g.pos, f.mine.blastRadius * i, j ? XW.hot : XW.cold), d.fillStyle = j ? XW.core : XW.body, d.fillRect(Math.round(g.pos.x) - 1, Math.round(g.pos.y) - 4, 2, 1);
             }
         } drawCratePulses(c) {
             const DG = cX;
@@ -1912,7 +1912,7 @@ var Qi = class {
                 if (j.map.guide === "extraction") {
                     for (let X of j.extraction) V(X) && U(X, TW.extraction);
                 }
-                if (m3(j)) {
+                if (showingGuideArrows(j)) {
                     for (let Y of j.enemies) Y.alive && V(Y.pos) && U(Y.pos, TW.hostile);
                 }
             }
@@ -1940,7 +1940,7 @@ var Qi = class {
                         v = Math.round((1 - (1 - u) * (1 - u)) * p6);
                     (u < 0.66 || Math.floor(this.time * 24) % 2 === 0) && g.drawImage(p[0], Math.round(c.x), Math.round(c.y) - v);
                 }
-                if (m.standing && m.flash > 0.7 && g.drawImage(bt(q, this.struck, TW.guide), Math.round(c.x), Math.round(c.y)), m.standing && m.hp < m.maxHp) {
+                if (m.standing && m.flash > 0.7 && g.drawImage(tintedCanvas(q, this.struck, TW.guide), Math.round(c.x), Math.round(c.y)), m.standing && m.hp < m.maxHp) {
                     let y = m.w * 16 - 4,
                         A = Math.round(m.x0 * 16 + 2),
                         C = Math.round(c.y - 4);
@@ -1962,7 +1962,7 @@ var Qi = class {
             const DN = cX;
             let d = this.ctx,
                 g = c.barrel ? this.atlas.barrel : this.atlas.crate;
-            Pn(d, c.pos.x, c.pos.y + 3, 5.5, 2.4, gT.night), d.drawImage(g, Math.round(c.pos.x - g.width / 2), Math.round(c.pos.y - g.height + 3));
+            drawNoiseDisc(d, c.pos.x, c.pos.y + 3, 5.5, 2.4, gT.night), d.drawImage(g, Math.round(c.pos.x - g.width / 2), Math.round(c.pos.y - g.height + 3));
         } drawSupply(c) {
             const DO = cX;
             let d = this.ctx,
@@ -2039,14 +2039,14 @@ var Qi = class {
         }
     };
 
-function er(c) {
+function clearCanvas(c) {
     const DY = cX;
     c && (c.width = 0, c.height = 0);
 }
 var tr = class {
         constructor(c) {
             const DZ = cX;
-            this.ctx = c, (this.figures = new Xi(c, this.atlas), this.effects = new Zi(c, this.atlas), this.markers = new Qi(c, this.atlas), this.props = new Tr(c, this.atlas), this.water = new Wr(c));
+            this.ctx = c, (this.figures = new Xi(c, this.atlas), this.effects = new ShadowRenderer(c, this.atlas), this.markers = new AimRenderer(c, this.atlas), this.props = new Tr(c, this.atlas), this.water = new Wr(c));
         } ["atlas"] = Cf();
         ["terrain"];
         ["info"];
@@ -2079,7 +2079,7 @@ var tr = class {
             let g = a0(d, this.info);
             g.shadow && c.drawImage(g.shadow, 0, 0), g.understorey && c.drawImage(g.understorey, 0, 0);
             let i = this.canopy;
-            this.canopy = g.layer, er(i), er(g.shadow), er(g.understorey);
+            this.canopy = g.layer, clearCanvas(i), clearCanvas(g.shadow), clearCanvas(g.understorey);
         } prepare(c, d) {
             const E8 = cX;
             let g = this.bakeGround(c);
@@ -2093,7 +2093,7 @@ var tr = class {
         } beginTerrain(c) {
             const Ej = cX;
             let d = this.terrain;
-            this.terrain = document.createElement("canvas"), this.terrain.width = c.pixelWidth, this.terrain.height = c.pixelHeight, this.terrain.getContext('2d').imageSmoothingEnabled = false, er(d);
+            this.terrain = document.createElement("canvas"), this.terrain.width = c.pixelWidth, this.terrain.height = c.pixelHeight, this.terrain.getContext('2d').imageSmoothingEnabled = false, clearCanvas(d);
         } clearDecals() {
             const Ek = cX;
             this.decalLayer.clear();
@@ -2341,12 +2341,12 @@ var tr = class {
     f6 = 900,
     f3 = (c, d, g) => Math.max(d, Math.min(g, c));
 
-function h6(c, d) {
+function layoutFor(c, d) {
     const EF = cX;
     return d > c ? "stacked" : c >= f6 ? "wide" : "compact";
 }
 
-function g6(c, d, g) {
+function cameraZoomFor(c, d, g) {
     const EG = cX;
     let i = f.camera.zoom,
         j = Math.min(c / i.idealWorldW, d / i.idealWorldH),
@@ -2391,13 +2391,13 @@ var nr = class {
             const EL = cX;
             let d = window.innerWidth,
                 g = window.innerHeight,
-                j = h6(d, g),
+                j = layoutFor(d, g),
                 m = this.touchOverride ?? h3(),
                 p = document.documentElement;
             p.dataset.layout = j, p.dataset.input = m ? "touch" : "pointer", p.dataset.hand = G().handedness, p.offsetWidth;
             let q = Math.max(1, this.canvas.clientWidth),
                 u = Math.max(1, this.canvas.clientHeight),
-                v = g6(q, u, G().zoomBias),
+                v = cameraZoomFor(q, u, G().zoomBias),
                 y = this.pixelRatio(),
                 A = Math.max(1, Math.round(v * y));
             this.canvas.width = Math.round(q * y), this.canvas.height = Math.round(u * y), this.ctx.imageSmoothingEnabled = false, this.state = {
@@ -3244,7 +3244,7 @@ var nr = class {
         return Math.floor(d / 60) + ':' + String(d % 60).padStart(2, '0');
     };
 
-function y6(c, d) {
+function tickHoldSurvive(c, d) {
     const GP = cX;
     if (c.map.objective === "hold") {
         let g = eW(c);
@@ -3301,7 +3301,7 @@ function w2(c) {
         }
         case "hold":
             return {
-                status: "hold " + vt(c.heldFor) + '/' + vt(c.map.duration) + (c.inZone ? '' : " · zone empty") + y3(c), done: Math.round(c.heldFor), total: Math.round(c.map.duration), won: c.heldFor >= c.map.duration
+                status: "hold " + vt(c.heldFor) + '/' + vt(c.map.duration) + (c.inZone ? '' : " · zone empty") + waveStatusText(c), done: Math.round(c.heldFor), total: Math.round(c.map.duration), won: c.heldFor >= c.map.duration
             };
         case "collect": {
             let r = c.supplies.length,
@@ -3328,7 +3328,7 @@ function w2(c) {
             let A = Math.ceil(c.timeLeft),
                 C = c.map.waves !== null && c.wavesSent >= c.map.waves.count && !c.enemies.some(E => E.alive);
             return {
-                status: C ? "the last of them" : "hold " + String(Math.floor(A / 60)).padStart(2, '0') + ':' + String(A % 60).padStart(2, '0') + y3(c),
+                status: C ? "the last of them" : "hold " + String(Math.floor(A / 60)).padStart(2, '0') + ':' + String(A % 60).padStart(2, '0') + waveStatusText(c),
                 done: Math.round(c.map.duration - c.timeLeft),
                 total: Math.round(c.map.duration),
                 won: c.timeLeft <= 0 || C
@@ -3361,28 +3361,28 @@ function w2(c) {
     }
 }
 
-function y3(c) {
+function waveStatusText(c) {
     const GR = cX;
     let d = c.map.waves;
     return d ? c.wavesSent >= d.count ? " · last wave" : " · wave " + (c.wavesSent + 1) + '/' + d.count + " in " + vt(Math.max(0, c.waveTimer)) : '';
 }
 
-function v6(c) {
+function objectiveFailed(c) {
     const GS = cX;
     if (eW(c).length === 0 || c.map.nokill && c.kills > 0 || c.map.timeLimit > 0 && c.time >= c.map.timeLimit || c.map.objective === "rescue" && c.hostages.some(g => !g.alive && !g.delivered) || c.map.objective === "collect" && c.supplies.some(g => !g.alive && !g.collected)) return true;
-    let d = S2(c);
+    let d = protectBuildingOf(c);
     return !!(d && !d.standing);
 }
-var S2 = c => c.buildings.find(d => d.role === "protect") ?? null;
+var protectBuildingOf = c => c.buildings.find(d => d.role === "protect") ?? null;
 
 function _3(c, d) {
     const GU = cX;
     if (c.phase !== 0) return;
-    y6(c, d);
+    tickHoldSurvive(c, d);
     let g = w2(c);
-    c.status = g.status, g.won ? (c.phase = 1, c.phaseTime = 0) : v6(c) && (c.phase = 2, c.phaseTime = 0);
+    c.status = g.status, g.won ? (c.phase = 1, c.phaseTime = 0) : objectiveFailed(c) && (c.phase = 2, c.phaseTime = 0);
 }
-var v3 = {
+var OBJECTIVE_TEXT = {
     eliminate: "Kill every enemy",
     demolish: "Level every enemy building",
     rescue: "Walk every hostage to a tent",
@@ -3399,9 +3399,9 @@ var v3 = {
 
 function _t(c) {
     const GV = cX;
-    let d = c.objective === "survive" && c.protects ? "Hold the outpost until the clock runs down" : v3[c.objective] ?? c.objective,
+    let d = c.objective === "survive" && c.protects ? "Hold the outpost until the clock runs down" : OBJECTIVE_TEXT[c.objective] ?? c.objective,
         g = c.objective === "reach" || c.objective === "covert",
-        i = c.nokill && g ? v3.covert : c.nokill ? d + " — without killing anybody" : d;
+        i = c.nokill && g ? OBJECTIVE_TEXT.covert : c.nokill ? d + " — without killing anybody" : d;
     return c.timeLimit ? i + ", inside " + vt(c.timeLimit) : c.objective === "hold" && c.duration ? i + " for " + vt(c.duration) : i;
 }
 var lr = class {
@@ -3422,7 +3422,7 @@ var lr = class {
     },
     cr = 12;
 
-function x3(c, d) {
+function showCallout(c, d) {
     const H2 = cX;
     let g = w("div", "callout");
     g.setAttribute("role", "status");
@@ -3452,15 +3452,15 @@ function x3(c, d) {
         };
     return q(), p;
 }
-async function k3(d) {
+async function openMapFeedback(d) {
     const H8 = cX;
     let g = w("div", "dsp-body map-feedback"),
-        j = kn({
+        j = renderStarRating({
             label: "How fun, out of five",
             prompt: "Pick a star.",
             onChange: () => A()
         }),
-        m = kn({
+        m = renderStarRating({
             label: "How hard, out of five",
             prompt: "One is easy, five is brutal.",
             onChange: () => A()
@@ -3507,7 +3507,7 @@ async function k3(d) {
 var E2 = 600,
     dr = 1400;
 
-function w3(c, d, g = {}) {
+function countUpTo(c, d, g = {}) {
     const Hk = cX;
     let j = [],
         l = false,
@@ -3530,15 +3530,15 @@ function w3(c, d, g = {}) {
         l || g.onTick?.();
     }, E2 + dr)), j.push(window.setTimeout(m, E2 + dr + 120)), m;
 }
-var WG = f.fx.popupLife;
+var POPUP_LIFE = f.fx.popupLife;
 
-function S3(c) {
+function failReasonText(c) {
     const Hv = cX;
     if (c.map.objective === "rescue" && c.hostages.some(g => !g.alive && !g.delivered)) return "A hostage was killed. There is no partial credit.";
-    let d = S2(c);
+    let d = protectBuildingOf(c);
     return d && !d.standing ? "The outpost was levelled. There was nothing left to hold." : c.map.objective === "collect" && c.supplies.some(g => !g.alive && !g.collected) ? "The supplies went up. There was nothing left to recover." : c.map.timeLimit > 0 && c.time >= c.map.timeLimit ? "The clock ran out." : c.map.nokill && c.kills > 0 ? "Somebody died. A covert approach is over the moment it makes a body." : "The squad was wiped out. Nobody else was coming.";
 }
-var ur = class {
+var RoundEndOverlay = class {
         constructor(c) {
             this.ov = c;
         } ["stopTally"] = null;
@@ -3566,7 +3566,7 @@ var ur = class {
             }
             H.appendChild(Object.assign(document.createElement("div"), {
                 className: "result-sub",
-                textContent: A ? j.map.name + " · " + C.length + " / " + j.soldiers.length + " came home" : S3(j)
+                textContent: A ? j.map.name + " · " + C.length + " / " + j.soldiers.length + " came home" : failReasonText(j)
             }));
             let I = document.createElement("div");
             I.className = "result-stats";
@@ -3613,7 +3613,7 @@ var ur = class {
                     textContent: '0'
                 });
                 a7.appendChild(a8), Y.appendChild(a7), H.appendChild(Y);
-                let a9 = w3(a8, E.bonds.total, {
+                let a9 = countUpTo(a8, E.bonds.total, {
                         onTick: () => Ft()
                     }),
                     aj = () => {
@@ -3641,7 +3641,7 @@ var ur = class {
                 })), P.appendChild(Q), F.append(H, P), jo()) {
                 let ak = IT("Feedback", "result-rate dark", () => {
                     const HC = Hx;
-                    this.stopCallout?.(), this.stopCallout = null, k3({
+                    this.stopCallout?.(), this.stopCallout = null, openMapFeedback({
                         mission: j.map.id,
                         difficulty: j.difficulty,
                         outcome: A ? "won" : "lost",
@@ -3657,7 +3657,7 @@ var ur = class {
             this.ov.raise(F, {
                 interactive: true,
                 keys: true
-            }), this.stopCallout?.(), this.stopCallout = A && qu(q.record, j.difficulty, q.difficulties, q.missionNumber) ? x3(R, "Fancy something harder?") : null;
+            }), this.stopCallout?.(), this.stopCallout = A && qu(q.record, j.difficulty, q.difficulties, q.missionNumber) ? showCallout(R, "Fancy something harder?") : null;
         }
     },
     E3 = "cf.challenge",
@@ -3692,7 +3692,7 @@ var ur = class {
         }
     };
 
-function _6() {
+function loadBestScores() {
     const HE = cX;
     let c = null;
     try {
@@ -3717,7 +3717,7 @@ function C3(c, d, g) {
     let j = g[0] ?? "time",
         l = pr[j],
         m = l.read(d),
-        p = _6(),
+        p = loadBestScores(),
         q = p[c] ?? 0,
         u = l.lower ? d.phase === 1 && m > 0 && (q === 0 || m < q) : m > q;
     if (u) {
@@ -3737,14 +3737,14 @@ function C3(c, d, g) {
         newBest: u
     };
 }
-var mr = ["ABLE", "BAKER", "CHARLIE", "DOG", "EASY", "FOX"];
+var SQUAD_NAMES = ["ABLE", "BAKER", "CHARLIE", "DOG", "EASY", "FOX"];
 
 function A3(c) {
     const HG = cX;
     let d = [];
     for (let g = 0; g < c; g++) {
-        let i = Math.floor(g / mr.length),
-            j = i === 0 ? mr[g] : mr[g % mr.length] + ' ' + (i + 1);
+        let i = Math.floor(g / SQUAD_NAMES.length),
+            j = i === 0 ? SQUAD_NAMES[g] : SQUAD_NAMES[g % SQUAD_NAMES.length] + ' ' + (i + 1);
         d.push({
             name: j,
             missions: 0,
@@ -3754,7 +3754,7 @@ function A3(c) {
     }
     return d;
 }
-var fr = class {
+var ScoreOverlay = class {
         constructor(c) {
             this.ov = c;
         } show(g, j) {
@@ -3819,7 +3819,7 @@ var fr = class {
     },
     x6 = 2;
 
-function hr(d) {
+function renderStepper(d) {
     const HI = cX;
     let g = w("div", "bl-col");
     g.appendChild(w("span", "bl-label", d.label));
@@ -3870,7 +3870,7 @@ function hr(d) {
     }
     return y.childElementCount > 0 && g.appendChild(y), g;
 }
-var M2 = c => bW.find(d => d.id === c)?.blurb ?? '',
+var itemBlurbOf = c => bW.find(d => d.id === c)?.blurb ?? '',
     R3 = {
         id: null,
         name: "None",
@@ -3886,13 +3886,13 @@ var M2 = c => bW.find(d => d.id === c)?.blurb ?? '',
     })),
     A2 = new Map();
 
-function k6(j, q, A) {
+function buildLoadoutChoices(j, q, A) {
     const HN = cX;
     let C = za(j),
         E = [...C.map(a7 => ({
             id: a7,
             name: ci[a7],
-            blurb: M2(a7) || "Standard issue. Slow, steady, and longer-reaching than it looks."
+            blurb: itemBlurbOf(a7) || "Standard issue. Slow, steady, and longer-reaching than it looks."
         })), ...C2("weapon", C)],
         F = Math.max(0, C.indexOf(li(j))),
         H = Vf(j),
@@ -3900,14 +3900,14 @@ function k6(j, q, A) {
         K = [R3, ...H.map(a7 => ({
             id: I(a7),
             name: bW.find(a8 => a8.id === I(a7))?.name ?? a7,
-            blurb: M2(I(a7))
+            blurb: itemBlurbOf(I(a7))
         })), ...C2("throwable", H.map(I))],
         L = Math.max(0, K.findIndex((a7, a8) => a8 > 0 && a8 <= H.length && H[a8 - 1] === j.loadout.throwable)),
         M = Xa(j),
         N = [R3, ...M.map(a7 => ({
             id: a7,
             name: di[a7],
-            blurb: M2(a7)
+            blurb: itemBlurbOf(a7)
         })), ...C2("callin", M)],
         P = _n(j),
         Q = Math.max(0, N.findIndex((a7, a8) => a8 > 0 && a8 <= M.length && M[a8 - 1] === P)),
@@ -3921,7 +3921,7 @@ function k6(j, q, A) {
             let aj = A2.get(a7);
             return aj !== void 0 && aj < a9.length && a9[aj]?.locked ? aj : a8;
         };
-    return [...A ? [] : [hr({
+    return [...A ? [] : [renderStepper({
         label: "WEAPON",
         options: E,
         at: Y("WEAPON", F, E),
@@ -3930,7 +3930,7 @@ function k6(j, q, A) {
             const HP = HN;
             X("WEAPON", E, a7) || (Wt(j, "weapon", C[a7]), q());
         }
-    })], hr({
+    })], renderStepper({
         icon: 1,
         label: "THROWABLE",
         options: K,
@@ -3955,7 +3955,7 @@ function k6(j, q, A) {
                 Wt(j, "take", a7), q();
             }
         } : void 0
-    }), hr({
+    }), renderStepper({
         icon: 1,
         label: "CALL-IN",
         options: N,
@@ -3967,7 +3967,7 @@ function k6(j, q, A) {
         }
     })];
 }
-var gr = class {
+var BriefingOverlay = class {
         constructor(c) {
             this.ov = c;
         } show(g, j) {
@@ -3999,7 +3999,7 @@ var gr = class {
             }
             if (j.campaign && j.onLoadout) {
                 let Q = w("div", "briefing-kit");
-                for (let S of k6(j.campaign, j.onLoadout, g.map.weapons !== null)) Q.appendChild(S);
+                for (let S of buildLoadoutChoices(j.campaign, j.onLoadout, g.map.weapons !== null)) Q.appendChild(S);
                 q.appendChild(Q);
                 let R = w("button", "briefing-shop");
                 R.type = "button", R.appendChild(w("span", "briefing-shop-label", "THE ARMOURY")), R.addEventListener("click", () => {
@@ -4130,9 +4130,9 @@ var gr = class {
         ["lastGrenades"] = -1;
         ["lastStatus"] = '';
         ['ov'] = new lr();
-        ["resultPanel"] = new ur(this.ov);
-        ["scorePanel"] = new fr(this.ov);
-        ["briefingPanel"] = new gr(this.ov);
+        ["resultPanel"] = new RoundEndOverlay(this.ov);
+        ["scorePanel"] = new ScoreOverlay(this.ov);
+        ["briefingPanel"] = new BriefingOverlay(this.ov);
         ["arena"] = new br();
         ["clock"];
         ["matchPanel"];

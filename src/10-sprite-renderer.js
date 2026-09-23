@@ -120,7 +120,7 @@ var yi = class {
         return j.swim ? f.swim.cost * i : j.wade && i > 1 ? f.swim.wadeCost * i : 1;
     };
 
-function _i(c, d, g) {
+function segmentWades(c, d, g) {
     const wB = cX;
     let j = g.x - d.x,
         m = g.y - d.y,
@@ -134,7 +134,7 @@ function _i(c, d, g) {
     }
     return false;
 }
-var h0 = [
+var NEIGHBOR_STEPS = [
         [1, 0, 1],
         [-1, 0, 1],
         [0, 1, 1],
@@ -196,7 +196,7 @@ function yW(j, q, A = false, C = 1) {
             R = Q % F,
             S = (Q - R) / F,
             U = I[Q];
-        for (let [V, X, Y] of h0) {
+        for (let [V, X, Y] of NEIGHBOR_STEPS) {
             let a7 = R + V,
                 a8 = S + X;
             if (a7 < 0 || a8 < 0 || a7 >= F || a8 >= H || p1(j, a7, a8, A) || V !== 0 && X !== 0 && (p1(j, R + V, S, A) || p1(j, R, S + X, A))) continue;
@@ -219,7 +219,7 @@ function yW(j, q, A = false, C = 1) {
         height: H
     };
 }
-var W2 = (c, d) => {
+var posToTileIndex = (c, d) => {
     const wH = cX;
     let g = Math.floor(d.x / c.tile),
         i = Math.floor(d.y / c.tile);
@@ -228,9 +228,9 @@ var W2 = (c, d) => {
 
 function f1(d, g, j, m) {
     const wI = cX;
-    let p = y => DW(g, j, y, m, d.swims) && !(d.dry && _i(g, j, y));
+    let p = y => DW(g, j, y, m, d.swims) && !(d.dry && segmentWades(g, j, y));
     if (p(d.goal)) return d.goal;
-    let q = W2(g, j);
+    let q = posToTileIndex(g, j);
     if (q < 0 || !Number.isFinite(d.dist[q])) return null;
     let u = d.next[q],
         v = null;
@@ -278,12 +278,12 @@ function fT(g, j, p, q, v = false) {
     return false;
 }
 
-function xi(q, F, H, K = 3000, L = false, N = 1) {
+function findPath(q, F, H, K = 3000, L = false, N = 1) {
     const wL = cX;
     let {
         width: P,
         height: Q
-    } = q, U = W2(q, F), V = W2(q, H);
+    } = q, U = posToTileIndex(q, F), V = posToTileIndex(q, H);
     if (U < 0 || V < 0) return [];
     let X = V % P,
         Y = (V - X) / P,
@@ -308,7 +308,7 @@ function xi(q, F, H, K = 3000, L = false, N = 1) {
         a9[ax] = 1;
         let az = ax % P,
             aA = (ax - az) / P;
-        for (let [aB, aC, aD] of h0) {
+        for (let [aB, aC, aD] of NEIGHBOR_STEPS) {
             let aE = az + aB,
                 aF = aA + aC;
             if (aE < 0 || aF < 0 || aE >= P || aF >= Q || p1(q, aE, aF, L) || aB !== 0 && aC !== 0 && (p1(q, az + aB, aA, L) || p1(q, az, aA + aC, L))) continue;
@@ -395,7 +395,7 @@ var g0 = 0.08,
     },
     rv = 3;
 
-function e2(c) {
+function smokeRadius(c) {
     const wU = cX;
     let {
         growUntil: d,
@@ -409,12 +409,12 @@ function e2(c) {
     return c.radius * (1 - (1 - i) * Math.min(1, l));
 }
 
-function t2(c, d, g) {
+function smokeConcealment(c, d, g) {
     const wV = cX;
     if (!c || c.length === 0) return 1;
     let j = 1;
     for (let l of c) {
-        let m = e2(l);
+        let m = smokeRadius(l);
         if (m <= 0) continue;
         let p = Math.hypot(d - l.pos.x, g - l.pos.y);
         if (p >= m) continue;
@@ -424,14 +424,14 @@ function t2(c, d, g) {
     return j;
 }
 
-function b0(c, d, g, i) {
+function sightDistance(c, d, g, i) {
     const wX = cX;
-    return (i && t2(i, d, g) < 1 ? f.smoke.sightFloor : rv) * c.tile;
+    return (i && smokeConcealment(i, d, g) < 1 ? f.smoke.sightFloor : rv) * c.tile;
 }
 
 function y0(c, d, g, i) {
     const wY = cX;
-    return Math.min(TT[oW(c, d, g)].concealment, t2(i, d, g));
+    return Math.min(TT[oW(c, d, g)].concealment, smokeConcealment(i, d, g));
 }
 
 function v0(c, d, g, j, l) {
@@ -439,15 +439,15 @@ function v0(c, d, g, j, l) {
     let m = y0(d, g.x, g.y, l);
     if (m >= 1) return c;
     let p = 1 - (1 - m) * Math.max(0, Math.min(1, j));
-    return Math.max(b0(d, g.x, g.y, l), c * p);
+    return Math.max(sightDistance(d, g.x, g.y, l), c * p);
 }
 
-function ki(c, d, g, j, l, m) {
+function hasLineOfSight(c, d, g, j, l, m) {
     const x5 = cX;
     let p = g.x - d.x,
         q = g.y - d.y,
         u = v0(j, c, g, l, m);
-    return t2(m, d.x, d.y) < 1 && (u = Math.min(u, b0(c, d.x, d.y, m))), p * p + q * q > u * u ? false : kW(c, d, g);
+    return smokeConcealment(m, d.x, d.y) < 1 && (u = Math.min(u, sightDistance(c, d.x, d.y, m))), p * p + q * q > u * u ? false : kW(c, d, g);
 }
 
 function n2(d, g, i, j, m, p) {
@@ -470,7 +470,7 @@ function wi(c, d, g) {
     let i = c.map.critterNotice;
     return i === null ? false : g <= i;
 }
-var _0 = (c, d) => c * 73856093 ^ d * 19349663,
+var hashCell = (c, d) => c * 73856093 ^ d * 19349663,
     Si = class {
         ["cell"];
         ["buckets"] = new Map();
@@ -482,7 +482,7 @@ var _0 = (c, d) => c * 73856093 ^ d * 19349663,
             this.buckets.clear();
             for (let d of c) {
                 if (!d.alive) continue;
-                let g = _0(Math.floor(d.pos.x / this.cell), Math.floor(d.pos.y / this.cell)),
+                let g = hashCell(Math.floor(d.pos.x / this.cell), Math.floor(d.pos.y / this.cell)),
                     i = this.buckets.get(g);
                 i ? i.push(d) : this.buckets.set(g, [d]);
             }
@@ -495,7 +495,7 @@ var _0 = (c, d) => c * 73856093 ^ d * 19349663,
                 y = Math.floor((j + m) / this.cell);
             for (let A = v; A <= y; A++)
                 for (let C = q; C <= u; C++) {
-                    let E = this.buckets.get(_0(C, A));
+                    let E = this.buckets.get(hashCell(C, A));
                     if (E) {
                         for (let F of E) p.push(F);
                     }
@@ -538,7 +538,7 @@ function Ei(K, L, Q, U, Y, a7, a8) {
             aX = a9 / aV,
             aY = aj / aV;
         for (let aZ of a8) {
-            let b4 = e2(aZ);
+            let b4 = smokeRadius(aZ);
             if (b4 <= 0) continue;
             let b7 = aZ.pos.x - K.pos.x,
                 b8 = aZ.pos.y - K.pos.y;
@@ -739,11 +739,11 @@ function E0(c, d) {
     }, c.stillFor = 0) : c.stillFor += d, c.stillFor < i.settle && (c.pressure = Math.max(0, c.pressure - i.relief * d));
 }
 
-function M0(c) {
+function tickCampingPressure(c) {
     const xH = cX;
     c.stillFor < f.camping.settle || (c.pressure = Math.min(f.camping.cap, c.pressure + 1));
 }
-var C0 = (c, d) => d.traits.hunter || c.pressure >= f.camping.huntFrom,
+var shouldHunt = (c, d) => d.traits.hunter || c.pressure >= f.camping.huntFrom,
     mT = (c, d) => kT(c + 1, d);
 
 function FW(c, d, g, j) {
@@ -762,7 +762,7 @@ function FW(c, d, g, j) {
 }
 var be = c => !c.map.arena && !c.map.skirmish && c.map.doctrine !== "horde";
 
-function o2(c) {
+function alertFactor(c) {
     const xJ = cX;
     return c.alert <= 0 ? 0 : Math.min(1, c.alert / f.enemy.alert.fade);
 }
@@ -775,13 +775,13 @@ function re(c, d) {
     return d.alert = Math.max(d.alert, g.duration), i && (d.exclaim = g.exclaim), i;
 }
 
-function A0(c, d) {
+function decayAlert(c, d) {
     const xL = cX;
     c.alert > 0 && (c.alert = Math.max(0, c.alert - d)), c.exclaim > 0 && (c.exclaim = Math.max(0, c.exclaim - d));
 }
-var R0 = c => 1 + f.enemy.alert.sight * o2(c),
-    j0 = c => 1 + f.enemy.alert.hearing * o2(c),
-    I0 = c => 1 - (1 - f.enemy.alert.reaction) * o2(c),
+var alertSightMult = c => 1 + f.enemy.alert.sight * alertFactor(c),
+    j0 = c => 1 + f.enemy.alert.hearing * alertFactor(c),
+    I0 = c => 1 - (1 - f.enemy.alert.reaction) * alertFactor(c),
     P0 = Math.PI / 180,
     i2 = (c, d) => {
         const xM = cX;
@@ -795,7 +795,7 @@ var R0 = c => 1 + f.enemy.alert.sight * o2(c),
         return g > Math.PI && (g -= Math.PI * 2), g <= -Math.PI && (g += Math.PI * 2), g;
     };
 
-function lv(c, d, g) {
+function getFlankField(c, d, g) {
     const xN = cX;
     let j = c.map,
         l = Math.floor(d.x / j.tile) + ',' + Math.floor(d.y / j.tile) + ',' + (g.canSwim ? 1 : 0),
@@ -810,7 +810,7 @@ function lv(c, d, g) {
     }, p;
 }
 
-function cv(c, d, g, j) {
+function flowDirectionToGoal(c, d, g, j) {
     const xO = cX;
     let l = c.map,
         m = d.goal,
@@ -824,17 +824,17 @@ function cv(c, d, g, j) {
     return null;
 }
 
-function L0(q, F, H, K, L = 0) {
+function computeFlankMove(q, F, H, K, L = 0) {
     const xP = cX;
     let N = f.enemy.flanking,
         P = N[K],
         Q = q.map,
-        U = lv(q, H, F),
+        U = getFlankField(q, H, F),
         V = i2(q, F.pos);
     if (V < 0) return null;
     let X = U.dist[V] * Q.tile;
     if (!Number.isFinite(X) || X < N.minDistance) return null;
-    let Y = cv(q, U, F.pos, P.ring);
+    let Y = flowDirectionToGoal(q, U, F.pos, P.ring);
     if (Y === null) return null;
     let a7 = Math.min(X * P.ratio, X + P.extra),
         a8 = null,
@@ -855,7 +855,7 @@ function L0(q, F, H, K, L = 0) {
             let aB = U.dist[aA] * Q.tile;
             if (!Number.isFinite(aB) || Math.hypot(az.x - F.pos.x, az.y - F.pos.y) + aB > a7) continue;
             a9++, q.pathSearches++;
-            let aC = xi(Q, F.pos, az, 3000, F.canSwim, F.traits.swimCost);
+            let aC = findPath(Q, F.pos, az, 3000, F.canSwim, F.traits.swimCost);
             if (aC.length === 0) continue;
             let aD = 0,
                 aE = 1 / 0,
@@ -875,7 +875,7 @@ function L0(q, F, H, K, L = 0) {
     };
 }
 
-function O0(g, j, q) {
+function assignFlanks(g, j, q) {
     const xQ = cX;
     if (!be(g) || j.length < 2) return;
     let v = f.enemy.flanking,
@@ -893,8 +893,8 @@ function O0(g, j, q) {
             M = !E && L < A ? "wide" : L < A + C ? "drift" : null;
         if (!M) continue;
         let N = F ? -F : 0,
-            P = L0(g, K, q, M, N);
-        !P && M === "wide" && (M = "drift", P = L0(g, K, q, M, N)), P && (K.flank = {
+            P = computeFlankMove(g, K, q, M, N);
+        !P && M === "wide" && (M = "drift", P = computeFlankMove(g, K, q, M, N)), P && (K.flank = {
             via: P.via,
             style: M,
             time: 0,
@@ -904,7 +904,7 @@ function O0(g, j, q) {
     H && (g.driftCooldown = v.driftCooldown);
 }
 
-function N0(c, d) {
+function shouldBreakFlank(c, d) {
     const xR = cX;
     let g = c.flank;
     if (!g) return null;
@@ -926,7 +926,7 @@ function UT(j, q, y, A = null, C = 0) {
         let Q = P.pos.x - q.x,
             R = P.pos.y - q.y;
         if (C > 0 && be(j) && Q * Q + R * R <= C * C) {
-            re(j, P), b1(P, q);
+            re(j, P), glanceAt(P, q);
             continue;
         }
         let S = P.traits.hearing,
@@ -934,7 +934,7 @@ function UT(j, q, y, A = null, C = 0) {
             V = S * j0(P);
         if (!((Q * Q + R * R) / (V * V) > H)) {
             if (U > E) {
-                b1(P, q);
+                glanceAt(P, q);
                 continue;
             }
             I.push({
@@ -953,7 +953,7 @@ function UT(j, q, y, A = null, C = 0) {
         }
         of I) {
         if (M.length >= L) {
-            b1(X, q);
+            glanceAt(X, q);
             continue;
         }
         M.push(X);
@@ -961,10 +961,10 @@ function UT(j, q, y, A = null, C = 0) {
     if (M.length === 0) return;
     let N = M.length > 1 ? f.enemy.searchSpread * Math.sqrt(M.length) : 0;
     for (let Y of M) re(j, Y), Y.state = 4, Y.investigate = FW(j, q, Y.id, N), Y.glance = null, Y.searchTime = 0, Y.memory = f.enemy.alertMemory, Y.path.length = 0;
-    O0(j, M, q);
+    assignFlanks(j, M, q);
 }
 
-function r2(c, d, g) {
+function emitShout(c, d, g) {
     const xU = cX;
     let i = f.enemy.shoutRadius;
     for (let j of c.shouts)
@@ -985,11 +985,11 @@ function Ai(c, d, g) {
         let m = l.pos.x - d.x,
             p = l.pos.y - d.y,
             q = l.traits.hearing;
-        (m * m + p * p) / (q * q) > j || b1(l, d);
+        (m * m + p * p) / (q * q) > j || glanceAt(l, d);
     }
 }
 
-function b1(c, d) {
+function glanceAt(c, d) {
     const xW = cX;
     c.glance = {
         at: {
@@ -1000,7 +1000,7 @@ function b1(c, d) {
     };
 }
 
-function D0(c, d, g) {
+function tickBleeding(c, d, g) {
     const xX = cX;
     if (d.bleeding += g, d.bleeding >= f.enemy.bleedOut) {
         Ye(c, d, d.hp, null, null);
@@ -1014,29 +1014,29 @@ function D0(c, d, g) {
         y: d.pos.y
     });
 }
-var F0 = c => c.state === 0 || c.state === 1;
+var isIdleOrPatrol = c => c.state === 0 || c.state === 1;
 
-function B0(c, d, g) {
+function enterSearchState(c, d, g) {
     const xY = cX;
     d.state = 4, d.investigate = FW(c, g, d.id, f.enemy.searchSpread), d.glance = null, d.searchTime = 0, d.memory = f.enemy.alertMemory, d.path.length = 0;
 }
 
 function H0(c, d, g) {
     const xZ = cX;
-    !re(c, d) && d.alert <= 0 || (b1(d, g), !(!F0(d) || d.rooted || d.traits.coward) && B0(c, d, g));
+    !re(c, d) && d.alert <= 0 || (glanceAt(d, g), !(!isIdleOrPatrol(d) || d.rooted || d.traits.coward) && enterSearchState(c, d, g));
 }
 
-function G0(c, d) {
+function checkCorpseSighting(c, d) {
     const y7 = cX;
-    if (c.bodies.length === 0 || !F0(d)) return;
+    if (c.bodies.length === 0 || !isIdleOrPatrol(d)) return;
     let g = f.enemy.alert,
         i = d.stats.aggroRadius * d.traits.vision * g.bodySight * g.sensitivity;
     if (!(i <= 0))
         for (let j = 0; j < c.bodies.length; j++) {
             let l = c.bodies[j];
-            if (l.faction === d.faction && !(Math.hypot(l.x - d.pos.x, l.y - d.pos.y) > i) && ki(c.map, d.pos, l, i, c.levers.concealment, c.clouds)) {
+            if (l.faction === d.faction && !(Math.hypot(l.x - d.pos.x, l.y - d.pos.y) > i) && hasLineOfSight(c.map, d.pos, l, i, c.levers.concealment, c.clouds)) {
                 if (c.bodies.splice(j, 1), !re(c, d) && d.alert <= 0) return;
-                b1(d, l), d.rooted || B0(c, d, l);
+                glanceAt(d, l), d.rooted || enterSearchState(c, d, l);
                 return;
             }
         }
@@ -1052,31 +1052,31 @@ var mt = 2,
     }),
     wn = c => c.lastSeen ?? c.target?.pos ?? null;
 
-function s2(c, d) {
+function shouldPursue(c, d) {
     const y8 = cX;
-    return C0(c, d) ? true : !d.fought || !d.home ? d.fought : Math.hypot(d.home.x - d.pos.x, d.home.y - d.pos.y) <= f.enemy.pursuitLeash;
+    return shouldHunt(c, d) ? true : !d.fought || !d.home ? d.fought : Math.hypot(d.home.x - d.pos.x, d.home.y - d.pos.y) <= f.enemy.pursuitLeash;
 }
 
-function q0(c, d, g) {
+function senseStep(c, d, g) {
     const y9 = cX;
     c.senseCalls++, d.target && !d.target.alive && (d.target = null, d.lastSeen = null);
-    let i = dv(c, d);
+    let i = findVisibleEnemy(c, d);
     if (i) {
         c.lastKnown = {
             x: i.pos.x,
             y: i.pos.y
-        }, c.lastKnownAge = 0, d.target || (d.state = 2, d.reaction = d.stats.reactionTime * I0(d), re(c, d), d.path.length = 0, r2(c, i.pos, c.levers.hearing)), d.target = i, d.lastSeen = {
+        }, c.lastKnownAge = 0, d.target || (d.state = 2, d.reaction = d.stats.reactionTime * I0(d), re(c, d), d.path.length = 0, emitShout(c, i.pos, c.levers.hearing)), d.target = i, d.lastSeen = {
             x: i.pos.x,
             y: i.pos.y
         }, d.memory = f.enemy.alertMemory;
         return;
     }
     if (!d.target) {
-        G0(c, d);
+        checkCorpseSighting(c, d);
         return;
     }
     if (d.memory -= g, !(d.memory > 0)) {
-        if (d.target = null, d.lastSeen = null, d.path.length = 0, s2(c, d) && c.lastKnown) d.state = 4, d.investigate = FW(c, c.lastKnown, d.id, f.enemy.searchSpread * mt), d.searchTime = 0;
+        if (d.target = null, d.lastSeen = null, d.path.length = 0, shouldPursue(c, d) && c.lastKnown) d.state = 4, d.investigate = FW(c, c.lastKnown, d.id, f.enemy.searchSpread * mt), d.searchTime = 0;
         else {
             let j = d.state;
             d.state = d.patrols ? 1 : 0, j !== 0 && j !== 1 && (d.goal = null);
@@ -1084,7 +1084,7 @@ function q0(c, d, g) {
     }
 }
 
-function dv(c, d) {
+function findVisibleEnemy(c, d) {
     const ye = cX;
     let g = null,
         j = 1 / 0;
@@ -1092,8 +1092,8 @@ function dv(c, d) {
         if (!l.alive || l.faction === d.faction) continue;
         let m = Math.hypot(l.pos.x - d.pos.x, l.pos.y - d.pos.y);
         if (m >= j || !wi(c, l, m)) continue;
-        let p = d.stats.aggroRadius * d.traits.vision * R0(d);
-        ki(c.map, d.pos, l.pos, p, c.levers.concealment, c.clouds) && (j = m, g = l);
+        let p = d.stats.aggroRadius * d.traits.vision * alertSightMult(d);
+        hasLineOfSight(c.map, d.pos, l.pos, p, c.levers.concealment, c.clouds) && (j = m, g = l);
     }
     return g;
 }
@@ -1106,28 +1106,28 @@ function $0(c, d) {
     return Math.hypot(i.x - d.pos.x, i.y - d.pos.y) < f.movement.enemyArrived * 2 ? null : f1(g, c.map, d.pos, d.radius) ?? i;
 }
 
-function K0(c, d, g) {
+function nextPathTarget(c, d, g) {
     const yk = cX;
     if (d.stuck < f.movement.enemyStuckTrigger) {
         if (d.path.length === 0) {
-            if (!pv(c, d, g)) return g;
-            let i = uv(c, d, g);
+            if (!tryLookAhead(c, d, g)) return g;
+            let i = searchHerdField(c, d, g);
             if (i) return i;
-            if (d.path = U0(c, d, g), d.path.length === 0) return g;
+            if (d.path = computeEnemyPath(c, d, g), d.path.length === 0) return g;
         }
     } else {
-        if (d.path.length === 0 && (d.path = U0(c, d, g), d.stuck = 0, d.path.length === 0)) return g;
+        if (d.path.length === 0 && (d.path = computeEnemyPath(c, d, g), d.stuck = 0, d.path.length === 0)) return g;
     }
     for (; d.path.length > 0 && Math.hypot(d.path[0].x - d.pos.x, d.path[0].y - d.pos.y) < 7;) d.path.shift();
-    return d.path.length === 0 || mv(c, d, g) ? (d.path.length = 0, g) : d.path[0];
+    return d.path.length === 0 || canTraverse(c, d, g) ? (d.path.length = 0, g) : d.path[0];
 }
 
-function U0(c, d, g) {
+function computeEnemyPath(c, d, g) {
     const yq = cX;
-    return c.pathSearches++, xi(c.map, d.pos, g, 3000, d.canSwim, d.traits.swimCost).slice(0, 40);
+    return c.pathSearches++, findPath(c.map, d.pos, g, 3000, d.canSwim, d.traits.swimCost).slice(0, 40);
 }
 
-function uv(c, d, g) {
+function searchHerdField(c, d, g) {
     const yw = cX;
     if (!Sn(c)) return null;
     let j = c.lastKnown;
@@ -1147,12 +1147,12 @@ function uv(c, d, g) {
     return v || (c.fieldBuilds++, v = yW(m, j, d.canSwim, u === "minds" ? f.enemy.swimCostBase : 1), q.fields.set(u, v)), f1(v, m, d.pos, d.radius);
 }
 
-function mv(c, d, g) {
+function canTraverse(c, d, g) {
     const yx = cX;
-    return DW(c.map, d.pos, g, d.radius, d.canSwim) ? d.traits.swimCost <= 1 ? true : !_i(c.map, d.pos, g) : false;
+    return DW(c.map, d.pos, g, d.radius, d.canSwim) ? d.traits.swimCost <= 1 ? true : !segmentWades(c.map, d.pos, g) : false;
 }
 
-function pv(c, d, g) {
+function tryLookAhead(c, d, g) {
     const yz = cX;
     let j = d.traits.foresight;
     if (j <= 0 || d.lookAhead > 0) return false;
@@ -1165,21 +1165,21 @@ function pv(c, d, g) {
             x: d.pos.x + l * q,
             y: d.pos.y + m * q
         };
-    return DW(c.map, d.pos, u, d.radius, d.canSwim) ? d.traits.swimCost <= 1 ? false : _i(c.map, d.pos, u) : true;
+    return DW(c.map, d.pos, u, d.radius, d.canSwim) ? d.traits.swimCost <= 1 ? false : segmentWades(c.map, d.pos, u) : true;
 }
-var z0 = new WeakMap();
+var lowWallCache = new WeakMap();
 
 function fv(c) {
     const yA = cX;
-    let d = z0.get(c);
+    let d = lowWallCache.get(c);
     if (!d) {
         d = [];
         for (let g = 0; g < c.grid.length; g++) TT[c.grid[g]].lowWall && d.push(g);
-        z0.set(c, d);
+        lowWallCache.set(c, d);
     }
     return d;
 }
-var Y0 = (c, d, g) => !PW(c, g, d) && PW(c, d, g),
+var hasCoverAdvantage = (c, d, g) => !PW(c, g, d) && PW(c, d, g),
     hv = [
         [1, 0],
         [-1, 0],
@@ -1188,7 +1188,7 @@ var Y0 = (c, d, g) => !PW(c, g, d) && PW(c, d, g),
     ],
     gv = (c, d, g) => c.enemies.some(i => i !== d && i.alive && i.state === 3 && i.coverSpot !== null && i.coverSpot.x === g.x && i.coverSpot.y === g.y);
 
-function bv(g, j, q) {
+function findCoverSpot(g, j, q) {
     const yB = cX;
     let {
         map: v
@@ -1210,7 +1210,7 @@ function bv(g, j, q) {
                     x: (M + 0.5) * y,
                     y: (N + 0.5) * y
                 };
-                if (!Y0(v, P, q) || gv(g, j, P)) continue;
+                if (!hasCoverAdvantage(v, P, q) || gv(g, j, P)) continue;
                 let Q = Math.hypot(P.x - j.pos.x, P.y - j.pos.y);
                 Q < C && (C = Q, A = P);
             }
@@ -1218,17 +1218,17 @@ function bv(g, j, q) {
     return A;
 }
 
-function X0(c, d, g) {
+function updateCoverSpot(c, d, g) {
     const yC = cX;
     if (!d.traits.cover || d.rooted || d.alert <= 0 || uW(d.weapon).melee === true) return d.coverSpot = null, null;
     if (d.coverSpot) {
-        if (Y0(c.map, d.coverSpot, g)) return d.coverSpot;
+        if (hasCoverAdvantage(c.map, d.coverSpot, g)) return d.coverSpot;
         d.coverSpot = null, d.coverLookAt = c.time + f.cover.relook;
     }
-    return c.time < d.coverLookAt ? null : (d.coverLookAt = c.time + f.cover.relook, d.coverSpot = bv(c, d, g), d.coverSpot);
+    return c.time < d.coverLookAt ? null : (d.coverLookAt = c.time + f.cover.relook, d.coverSpot = findCoverSpot(c, d, g), d.coverSpot);
 }
 
-function Q0(d, g) {
+function tryFire(d, g) {
     const yD = cX;
     let j = g.target;
     if (!j) return g.state = g.patrols ? 1 : 0, g.coverSpot = null, null;
@@ -1242,15 +1242,15 @@ function Q0(d, g) {
         let E = g.traits.triggerHappy ? f.enemy.triggerHappy : null;
         g.fireCooldown = g.stats.fireInterval * (E ? E.rate : 1) * (0.8 + d.jitter(g.faction) * 0.4), y1(d, g, m, g.stats.spread * (E ? E.spread : 1)), g.fought = true;
     }
-    yv(d, g, u);
-    let A = X0(d, g, m);
+    pickGrenadeTarget(d, g, u);
+    let A = updateCoverSpot(d, g, m);
     if (A) return Math.hypot(A.x - g.pos.x, A.y - g.pos.y) > f.cover.arrive ? A : null;
     if (g.rooted) return u < g.stats.preferredRange * 0.45 ? Z0(d, g, p, q, u, 20) : null;
     let C = g.traits.rusher ? f.enemy.rushRange : g.traits.coward ? Math.min(g.stats.fireRange * 0.9, g.stats.preferredRange * f.enemy.cowardRange) : g.stats.preferredRange;
-    return !y || u > C * 1.15 ? J0(g, m, p, q, u) : !g.traits.rusher && !v && u < C * 0.6 ? Z0(d, g, p, q, u, 24) : null;
+    return !y || u > C * 1.15 ? flankOffset(g, m, p, q, u) : !g.traits.rusher && !v && u < C * 0.6 ? Z0(d, g, p, q, u, 24) : null;
 }
 
-function J0(c, d, g, j, l) {
+function flankOffset(c, d, g, j, l) {
     const yE = cX;
     if (c.traits.flank <= 0) return d;
     let m = Math.min(1, l / 140),
@@ -1272,7 +1272,7 @@ function Z0(c, d, g, j, l, m) {
     return fT(c.map, p.x, p.y, d.radius) ? null : p;
 }
 
-function yv(d, g, j) {
+function pickGrenadeTarget(d, g, j) {
     const yG = cX;
     if (!g.traits.grenadier || g.grenades <= 0 || g.grenadeCooldown > 0 || g.wading || j > f.enemy.grenadeRange || j < f.enemy.grenadeMinRange) return;
     let m = d.actors.filter(v => v.alive && v.faction !== g.faction),
@@ -1292,7 +1292,7 @@ function yv(d, g, j) {
     !p || q < u || Math.hypot(p.x - g.pos.x, p.y - g.pos.y) > f.enemy.grenadeRange || (g.grenades--, g.grenadeCooldown = f.enemy.grenadeCooldown, Ri(d, g.pos, p, g.faction, g.traits.grenadeKind));
 }
 
-function Th(c, d, g) {
+function tickFidget(c, d, g) {
     const yH = cX;
     let j = f.enemy.fidgetRange * c.levers.wander * d.traits.wander;
     if (d.home && Math.hypot(d.home.x - d.pos.x, d.home.y - d.pos.y) > j * 2) return d.home;
@@ -1313,7 +1313,7 @@ function Th(c, d, g) {
     }, d.goal;
 }
 
-function Wh(c, d, g) {
+function tickPatrol(c, d, g) {
     const yI = cX;
     if (d.pause > 0) return d.pause -= g, null;
     if (d.route) {
@@ -1350,12 +1350,12 @@ function vv(c, d) {
     };
 }
 
-function eh(c, d, g) {
+function refreshTrailSearch(c, d, g) {
     const yK = cX;
-    return s2(c, d) && c.lastKnown && c.lastKnownAge < f.enemy.trailMemory && (d.investigate = FW(c, c.lastKnown, d.id, f.enemy.searchSpread * mt)), d.investigate ? Math.hypot(d.investigate.x - d.pos.x, d.investigate.y - d.pos.y) > f.movement.enemyArrived ? d.investigate : (d.searchTime += g, d.angle += g * 2.2, d.searchTime > f.enemy.searchTime && (d.investigate = null, d.searchTime = 0, d.state = d.patrols ? 1 : 0, d.goal = null), null) : (d.state = d.patrols ? 1 : 0, null);
+    return shouldPursue(c, d) && c.lastKnown && c.lastKnownAge < f.enemy.trailMemory && (d.investigate = FW(c, c.lastKnown, d.id, f.enemy.searchSpread * mt)), d.investigate ? Math.hypot(d.investigate.x - d.pos.x, d.investigate.y - d.pos.y) > f.movement.enemyArrived ? d.investigate : (d.searchTime += g, d.angle += g * 2.2, d.searchTime > f.enemy.searchTime && (d.investigate = null, d.searchTime = 0, d.state = d.patrols ? 1 : 0, d.goal = null), null) : (d.state = d.patrols ? 1 : 0, null);
 }
 
-function a2(c, d) {
+function protectBuilding(c, d) {
     const yL = cX;
     let g = c.buildings.find(q => q.role === "protect" && q.standing);
     if (!g) return null;
@@ -1370,7 +1370,7 @@ function a2(c, d) {
     });
 }
 
-function _v(c, d, g) {
+function surfaceAt(c, d, g) {
     const yM = cX;
     let i = z(c, Math.floor(d / c.tile), Math.floor(g / c.tile));
     return i === 19 || i === 9 || i === 32 ? "mud" : c.theme !== "arctic" ? null : i === 0 || i === 1 || i === 11 ? "snow" : null;
@@ -1384,7 +1384,7 @@ function ji(g, j) {
     let p = f.fx.printStride,
         q = Math.floor(j.walkPhase / p);
     if (q === Math.floor((j.walkPhase - m) / p)) return;
-    let u = _v(g.map, j.pos.x, j.pos.y);
+    let u = surfaceAt(g.map, j.pos.x, j.pos.y);
     if (!u) return;
     let v = Math.atan2(j.pos.y - j.prev.y, j.pos.x - j.prev.x),
         y = (Math.round(v / (Math.PI / 4)) % 8 + 8) % 8,
@@ -1404,26 +1404,26 @@ function th(c, d) {
     c.flankCooldown > 0 && (c.flankCooldown = Math.max(0, c.flankCooldown - d)), c.driftCooldown > 0 && (c.driftCooldown = Math.max(0, c.driftCooldown - d));
     for (let g of c.enemies) {
         if (!g.alive) continue;
-        if (g.prev.x = g.pos.x, g.prev.y = g.pos.y, g.fireCooldown -= d, g.grenadeCooldown -= d, A0(g, d), g.wounded) {
-            D0(c, g, d);
+        if (g.prev.x = g.pos.x, g.prev.y = g.pos.y, g.fireCooldown -= d, g.grenadeCooldown -= d, decayAlert(g, d), g.wounded) {
+            tickBleeding(c, g, d);
             continue;
         }
         if (Mi(g, c.map, d)) continue;
         g.senseDebt += d;
         let j = Math.max(1, Math.round(f.enemy.senseInterval / d));
-        (c.stepIndex + g.id) % j === 0 && (q0(c, g, g.senseDebt), g.senseDebt = 0), g.glance && (g.glance.time -= d, (g.glance.time <= 0 || g.state === 3 || g.state === 2) && (g.glance = null));
+        (c.stepIndex + g.id) % j === 0 && (senseStep(c, g, g.senseDebt), g.senseDebt = 0), g.glance && (g.glance.time -= d, (g.glance.time <= 0 || g.state === 3 || g.state === 2) && (g.glance = null));
         let l = g.glance !== null && (g.state === 0 || g.state === 1);
         l && g.glance && (g.angle = Math.atan2(g.glance.at.y - g.pos.y, g.glance.at.x - g.pos.x), g.goal = null);
         let m = null;
         switch (g.state) {
             case 0:
-                m = l ? null : a2(c, g) ?? Th(c, g, d);
+                m = l ? null : protectBuilding(c, g) ?? tickFidget(c, g, d);
                 break;
             case 1:
-                m = l ? null : a2(c, g) ?? Wh(c, g, d);
+                m = l ? null : protectBuilding(c, g) ?? tickPatrol(c, g, d);
                 break;
             case 4:
-                m = eh(c, g, d);
+                m = refreshTrailSearch(c, g, d);
                 break;
             case 2:
                 g.reaction -= d;
@@ -1440,13 +1440,13 @@ function th(c, d) {
                 }));
                 break;
             case 3:
-                m = Q0(c, g);
+                m = tryFire(c, g);
                 break;
             case 5:
                 m = $0(c, g);
                 break;
         }
-        if (g.flank && (m = N0(g, d) ?? m), m ??= ut(c.map, g), m && (m = K0(c, g, m)), Ei(g, m, c.hash, c.map, V0(g), d, c.clouds), h1(g, c.map, d), g1(g, c.map), ji(c, g), g.wading && c.jitter(g.faction) < 0.08 && Math.hypot(g.vel.x, g.vel.y) > 8) {
+        if (g.flank && (m = shouldBreakFlank(g, d) ?? m), m ??= ut(c.map, g), m && (m = nextPathTarget(c, g, m)), Ei(g, m, c.hash, c.map, V0(g), d, c.clouds), h1(g, c.map, d), g1(g, c.map), ji(c, g), g.wading && c.jitter(g.faction) < 0.08 && Math.hypot(g.vel.x, g.vel.y) > 8) {
             let s = z(c.map, Math.floor(g.pos.x / c.map.tile), Math.floor(g.pos.y / c.map.tile));
             c.fx.splash(g.pos, s === 9);
         }
@@ -1461,26 +1461,26 @@ function th(c, d) {
     }
 }
 
-function nh(c, d) {
+function isSwimAt(c, d) {
     const yP = cX;
     return TT[oW(c.map, d.pos.x, d.pos.y)].swim;
 }
 
-function En(c, d) {
+function tickCorpseFade(c, d) {
     const yQ = cX;
     return c.alive || c.deathTime < 0 || c.deathTime >= f.fx.deathTime || (c.deathTime += d, c.deathTime < f.fx.deathTime) ? false : (c.deathTime = f.fx.deathTime, true);
 }
 
 function oh(c, d) {
     const yR = cX;
-    for (let g of c.actors) I1(g) || En(g, d);
+    for (let g of c.actors) I1(g) || tickCorpseFade(g, d);
 }
 
 function Ii(c, d) {
     const yS = cX;
     for (let g of c.actors)
-        if (!I1(g) && En(g, d)) {
-            if (nh(c, g)) {
+        if (!I1(g) && tickCorpseFade(g, d)) {
+            if (isSwimAt(c, g)) {
                 c.fx.slick(g.pos, g.id);
                 continue;
             }
@@ -1488,14 +1488,14 @@ function Ii(c, d) {
         }
 }
 
-function xv(c, d) {
+function applyWound(c, d) {
     const yT = cX;
     return c.map.arena || c.skirmish || d.faction !== D.Enemy || d.wounded || c.jitter() >= f.enemy.woundChance ? false : (d.wounded = true, d.hp = 1, d.vel.x = 0, d.vel.y = 0, d.screamTimer = 0, c.fx.blood(d.pos), true);
 }
 
 function Ye(c, d, g = 1, j = null, m = null) {
     const yU = cX;
-    if (!d.alive || (d.hp -= g, d.hp > 0) || xv(c, d)) return;
+    if (!d.alive || (d.hp -= g, d.hp > 0) || applyWound(c, d)) return;
     if (I1(d)) {
         pt(c, d);
         return;
@@ -1507,7 +1507,7 @@ function Ye(c, d, g = 1, j = null, m = null) {
         pos: {
             ...d.pos
         }
-    }), nh(c, d) ? c.fx.drown(d.pos) : c.fx.blood(d.pos), c.deaths.push({
+    }), isSwimAt(c, d) ? c.fx.drown(d.pos) : c.fx.blood(d.pos), c.deaths.push({
         x: d.pos.x,
         y: d.pos.y
     }), d.faction !== c.viewSide && be(c) && (c.bodies.push({
@@ -1526,7 +1526,7 @@ function Ye(c, d, g = 1, j = null, m = null) {
             y: d.pos.y + y / A * p
         });
     }
-    UT(c, q, c.levers.hearing * f.enemy.deathAlarm), d.faction === D.Enemy && (c.kills++, M0(c)), m !== null && m !== d.faction && (c.killsBySide[m] = (c.killsBySide[m] ?? 0) + 1);
+    UT(c, q, c.levers.hearing * f.enemy.deathAlarm), d.faction === D.Enemy && (c.kills++, tickCampingPressure(c)), m !== null && m !== d.faction && (c.killsBySide[m] = (c.killsBySide[m] ?? 0) + 1);
     let u = d.spawnedBy ?? -1;
     if (u >= 0) {
         let C = c.buildings.find(E => E.id === u);
@@ -1563,7 +1563,7 @@ function rh(c, d) {
     return true;
 }
 
-function kv(c) {
+function critterDashDelay(c) {
     const yY = cX;
     let [d, g] = f.critter.dashEvery;
     return d + c.jitter() * (g - d);
@@ -1577,11 +1577,11 @@ function sh(c, d) {
         let j = (mT(i.id, 4127) - 0.5) * 0.5;
         i.heading.x = Math.cos(g + j), i.heading.y = Math.sin(g + j), i.state = 2, i.stateTime = f.critter.dashTime, i.goal = null;
     }
-    d.clock = kv(c);
+    d.clock = critterDashDelay(c);
 }
 var ah = 0.25;
 
-function wv(j, m, q) {
+function scanBirdsInRadius(j, m, q) {
     const z2 = cX;
     let A = f.birds,
         C = j.map,
@@ -1623,7 +1623,7 @@ function wv(j, m, q) {
 
 function v1(g, j, p) {
     const z4 = cX;
-    wv(g, j, p);
+    scanBirdsInRadius(g, j, p);
     let q = false;
     for (let v of g.critters) {
         if (!v.alive) continue;
@@ -1649,20 +1649,20 @@ function v1(g, j, p) {
         v.stateTime = f.critter.fleeTime * v.traits.skittish;
     }
 }
-var Pi = {
+var TRAIT_SEEDS = {
     pace: 4101,
     restless: 4103,
     skittish: 4107,
     flocking: 4111
 };
 
-function Sv(c) {
+function critterTraits(c) {
     const z7 = cX;
     return {
-        pace: 0.85 + mT(c, Pi.pace) * 0.3,
-        restless: 0.7 + mT(c, Pi.restless) * 0.6,
-        skittish: 0.8 + mT(c, Pi.skittish) * 0.6,
-        flocking: 0.5 + mT(c, Pi.flocking) * 0.5
+        pace: 0.85 + mT(c, TRAIT_SEEDS.pace) * 0.3,
+        restless: 0.7 + mT(c, TRAIT_SEEDS.restless) * 0.6,
+        skittish: 0.8 + mT(c, TRAIT_SEEDS.skittish) * 0.6,
+        flocking: 0.5 + mT(c, TRAIT_SEEDS.flocking) * 0.5
     };
 }
 var Mn = (c, d) => !TT[oW(c, d.x, d.y)].swim,
@@ -1682,7 +1682,7 @@ function dh(g, j, p) {
     let q = [],
         v = g.chickens;
     if (v <= 0) return q;
-    let y = g.henhouses.length > 0 ? g.henhouses : Ev(g, v, p);
+    let y = g.henhouses.length > 0 ? g.henhouses : spawnFlock(g, v, p);
     for (let A = 0; A < v; A++) {
         let C = A % y.length,
             E = y[C],
@@ -1739,7 +1739,7 @@ function dh(g, j, p) {
                 y: 0
             },
             clock: f.critter.dashEvery[0] + p() * (f.critter.dashEvery[1] - f.critter.dashEvery[0]),
-            traits: Sv(H),
+            traits: critterTraits(H),
             deathTime: -1,
             visible: true
         });
@@ -1747,7 +1747,7 @@ function dh(g, j, p) {
     return q;
 }
 
-function Ev(d, g, j) {
+function spawnFlock(d, g, j) {
     const zd = cX;
     let m = Math.max(1, Math.round(g / f.critter.perFlock)),
         p = f.critter.flockSpacing ** 2,
@@ -1756,7 +1756,7 @@ function Ev(d, g, j) {
         let v = null,
             y = -1;
         for (let A = 0; A < 12; A++) {
-            let C = Mv(d, j),
+            let C = pickCritterSpawn(d, j),
                 E = q.reduce((F, H) => Math.min(F, (H.x - C.x) ** 2 + (H.y - C.y) ** 2), 1 / 0);
             if (E > p) {
                 v = C;
@@ -1769,7 +1769,7 @@ function Ev(d, g, j) {
     return q;
 }
 
-function Mv(c, d) {
+function pickCritterSpawn(c, d) {
     const zj = cX;
     for (let g = 0; g < 32; g++) {
         let i = uT(c, {
@@ -1796,7 +1796,7 @@ function pt(c, d) {
 
 function uh(c, d) {
     const zq = cX;
-    for (let g of c.critters) En(g, d);
+    for (let g of c.critters) tickCorpseFade(g, d);
 }
 
 function Cv(c, d, g) {
@@ -1806,5 +1806,5 @@ function Cv(c, d, g) {
 
 function c2(c, d) {
     const zx = cX;
-    for (let g of c.critters) En(g, d) && (c.fx.blood(g.pos, f.critter.bloodParticles), c.fx.corpse(g.pos, "chicken", g.id));
+    for (let g of c.critters) tickCorpseFade(g, d) && (c.fx.blood(g.pos, f.critter.bloodParticles), c.fx.corpse(g.pos, "chicken", g.id));
 }

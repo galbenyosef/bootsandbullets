@@ -9,7 +9,7 @@ function T5(c) {
     } = c;
     return d();
 }
-var cW = f.audio.ambience,
+var AMBIENCE_CONFIG = f.audio.ambience,
     e5 = {
         jungle: {
             windCutoff: 400,
@@ -64,12 +64,12 @@ var cW = f.audio.ambience,
         const LC = cX;
         if (!bT) return;
         let c = bT.ctx.currentTime;
-        bT.bus.gain.setTargetAtTime(document.hidden ? 0 : cW.level, c, document.hidden ? 0.05 : 0.3);
+        bT.bus.gain.setTargetAtTime(document.hidden ? 0 : AMBIENCE_CONFIG.level, c, document.hidden ? 0.05 : 0.3);
     };
 
-function Je(c) {
+function startAmbience(c) {
     const LD = cX;
-    Dn && (window.clearTimeout(Dn), Dn = 0), n5(), k1 = c, ke = no(c), we = e5[c.theme], Xe = {
+    Dn && (window.clearTimeout(Dn), Dn = 0), teardownAmbienceNodes(), k1 = c, ke = no(c), we = e5[c.theme], Xe = {
         water: 0,
         wind: 0,
         rustle: 0,
@@ -80,16 +80,16 @@ function Je(c) {
     }, Nn = 0, jr || (document.addEventListener("visibilitychange", t5), jr = true);
 }
 
-function Ze() {
+function stopAmbience() {
     const LE = cX;
     if (k1 = null, ke = null, jr && (document.removeEventListener("visibilitychange", t5), jr = false), !bT) return;
     let c = bT.ctx.currentTime;
     bT.bus.gain.cancelScheduledValues(c), bT.bus.gain.setValueAtTime(bT.bus.gain.value, c), bT.bus.gain.linearRampToValueAtTime(0, c + 0.5), Dn = window.setTimeout(() => {
-        Dn = 0, n5();
+        Dn = 0, teardownAmbienceNodes();
     }, 700);
 }
 
-function n5() {
+function teardownAmbienceNodes() {
     const LF = cX;
     if (bT) {
         for (let c of bT.sources) try {
@@ -102,7 +102,7 @@ function n5() {
     }
 }
 
-function o5() {
+function ambienceStatus() {
     const LG = cX;
     return k1 ? {
         ...Xe,
@@ -112,10 +112,10 @@ function o5() {
     } : null;
 }
 
-function T_(g, j) {
+function createAmbienceGraph(g, j) {
     const LH = cX;
     let l = g.createGain();
-    l.gain.value = document.hidden ? 0 : cW.level, l.connect(j);
+    l.gain.value = document.hidden ? 0 : AMBIENCE_CONFIG.level, l.connect(j);
     let q = [],
         s = [],
         y = Math.floor(g.sampleRate * 4),
@@ -162,7 +162,7 @@ function T_(g, j) {
     };
 }
 
-function W_(d) {
+function scheduleBirdCalls(d) {
     const LL = cX;
     let g = d.ctx,
         j = g.currentTime + 0.02,
@@ -194,15 +194,15 @@ function W_(d) {
     }
 }
 
-function Qe(j, q, A, C) {
+function tickAmbience(j, q, A, C) {
     const LN = cX;
-    if (!k1 || !ke || (Nn += A, Nn < cW.tick)) return;
+    if (!k1 || !ke || (Nn += A, Nn < AMBIENCE_CONFIG.tick)) return;
     let F = Nn;
     if (Nn = 0, !bT) {
         let aj = Ot(),
             ak = Nt();
         if (!aj || !ak) return;
-        bT = T_(aj, ak);
+        bT = createAmbienceGraph(aj, ak);
     }
     let H = f.wind,
         I = j.x + j.viewW / 2,
@@ -210,50 +210,50 @@ function Qe(j, q, A, C) {
         L = performance.now() / 1000,
         N = (aq, aw) => wW(ke.wetSdf, ke.width, ke.height, k1.tile, aq, aw),
         P = Math.min(N(I, K), N(j.x + j.viewW * 0.25, K), N(j.x + j.viewW * 0.75, K), N(I, j.y + j.viewH * 0.25), N(I, j.y + j.viewH * 0.75)),
-        Q = W5(1 - P / cW.waterRange),
+        Q = W5(1 - P / AMBIENCE_CONFIG.waterRange),
         R = wW(ke.foliageSdf, ke.width, ke.height, k1.tile, I, K),
-        S = W5(1 - R / cW.foliageRange),
+        S = W5(1 - R / AMBIENCE_CONFIG.foliageRange),
         U = 0.65 + 0.35 * Math.sin((I + K) * H.gustScale + q * H.gustSpeed),
-        V = L - zn() < cW.scareTime,
+        V = L - zn() < AMBIENCE_CONFIG.scareTime,
         X = we.insects === "none" ? 0 : Math.max(S, we.insectsFloor),
         Y = L - zn() < 2 ? 0.4 : 1;
     Xe = {
-        water: C ? cW.water * Q * Q : 0,
-        wind: C ? cW.wind * we.windTrim * U * U : 0,
-        rustle: C ? cW.rustle * S * Math.pow(Math.max(0, U - 0.5), 3) * 8 : 0,
-        insects: C ? cW.insects * X * Y : 0,
-        birds: C && !V ? cW.birds : 0,
+        water: C ? AMBIENCE_CONFIG.water * Q * Q : 0,
+        wind: C ? AMBIENCE_CONFIG.wind * we.windTrim * U * U : 0,
+        rustle: C ? AMBIENCE_CONFIG.rustle * S * Math.pow(Math.max(0, U - 0.5), 3) * 8 : 0,
+        insects: C ? AMBIENCE_CONFIG.insects * X * Y : 0,
+        birds: C && !V ? AMBIENCE_CONFIG.birds : 0,
         gust: U,
         scared: V
     };
     let a7 = bT.ctx.currentTime,
-        a8 = C ? cW.ramp : 0.4;
-    bT.water.gain.setTargetAtTime(Xe.water, a7, a8), bT.insects.gain.setTargetAtTime(Xe.insects, a7, a8), bT.wind.gain.setTargetAtTime(Xe.wind, a7, C ? 0.2 : 0.4), bT.rustle.gain.setTargetAtTime(Xe.rustle, a7, C ? 0.2 : 0.4), bT.birds.gain.setTargetAtTime(Xe.birds, a7, V || !C ? 0.15 : cW.birdRecover);
+        a8 = C ? AMBIENCE_CONFIG.ramp : 0.4;
+    bT.water.gain.setTargetAtTime(Xe.water, a7, a8), bT.insects.gain.setTargetAtTime(Xe.insects, a7, a8), bT.wind.gain.setTargetAtTime(Xe.wind, a7, C ? 0.2 : 0.4), bT.rustle.gain.setTargetAtTime(Xe.rustle, a7, C ? 0.2 : 0.4), bT.birds.gain.setTargetAtTime(Xe.birds, a7, V || !C ? 0.15 : AMBIENCE_CONFIG.birdRecover);
     let a9 = Math.max(S, we.birdFloor);
     if (C && !V && G().sound && a9 >= 0.1) {
-        let aq = Q6(cW.birdMaxGap, cW.birdMinGap, a9);
-        Math.random() < F / aq * we.birdRate && W_(bT);
+        let aq = Q6(AMBIENCE_CONFIG.birdMaxGap, AMBIENCE_CONFIG.birdMinGap, a9);
+        Math.random() < F / aq * we.birdRate && scheduleBirdCalls(bT);
     }
 }
-var e_ = "loading",
+var LOADING_ID = "loading",
     t_ = "#f0d878",
     n_ = "#4a4326",
     _W = null,
     O2 = 0;
 
-function i5() {
+function ensureLoadingWidget() {
     const LO = cX;
     if (_W && _W.isConnected) return _W;
-    _W = document.createElement("div"), _W.id = e_;
+    _W = document.createElement("div"), _W.id = LOADING_ID;
     let c = document.createElement("canvas");
     return c.width = 124, c.height = 124, c.style.width = "62px", c.style.height = "62px", _W.appendChild(c), _W.appendChild(Object.assign(document.createElement('p'), {
         className: "loading-word"
     })), document.body.appendChild(_W), _W;
 }
 
-function r5() {
+function drawLoadingSpinner() {
     const LP = cX;
-    let c = i5().querySelector("canvas");
+    let c = ensureLoadingWidget().querySelector("canvas");
     if (!c) return;
     let d = c.getContext('2d');
     if (!d) return;
@@ -271,33 +271,33 @@ function r5() {
     }
 }
 
-function s5() {
+function showLoading() {
     const LQ = cX;
     O2 = 0;
-    let c = i5();
-    c.hidden = false, r5(), l5('');
+    let c = ensureLoadingWidget();
+    c.hidden = false, drawLoadingSpinner(), setLoadingLabel('');
 }
 
-function a5(c) {
+function stepLoading(c) {
     const LR = cX;
-    !_W || _W.hidden || (O2++, r5(), l5(c));
+    !_W || _W.hidden || (O2++, drawLoadingSpinner(), setLoadingLabel(c));
 }
 
-function l5(c) {
+function setLoadingLabel(c) {
     const LS = cX;
     let d = _W?.querySelector(".loading-word");
     d && (d.textContent = c.toUpperCase());
 }
 
-function c5() {
+function hideLoading() {
     const LU = cX;
     _W && (_W.hidden = true);
 }
-var N2 = () => new Promise(c => {
+var doubleFrame = () => new Promise(c => {
     requestAnimationFrame(() => requestAnimationFrame(() => c()));
 });
 
-function T1(c) {
+function waitForValue(c) {
     return new Promise(d => {
         let g = () => {
             const LV = b;
@@ -311,14 +311,14 @@ function T1(c) {
         g();
     });
 }
-async function Et(c, d, g) {
+async function prepareWithLoading(c, d, g) {
     const LX = cX;
-    s5(), await N2(), await c.prepareStaged(d, BW(d, g), async i => {
-        a5(i), await N2();
-    }), c5();
+    showLoading(), await doubleFrame(), await c.prepareStaged(d, BW(d, g), async i => {
+        stepLoading(i), await doubleFrame();
+    }), hideLoading();
 }
 
-function Mt(c, d, g) {
+function openPauseDialog(c, d, g) {
     const LY = cX;
     Go("Paused", c, [{
         label: d,
@@ -331,8 +331,8 @@ function Mt(c, d, g) {
         onPick: () => Vo()
     }], true);
 }
-var d5 = "arena-forest";
-async function u5(d) {
+var SPECTATOR_MAP = "arena-forest";
+async function enterSpectatorMode(d) {
     const LZ = cX;
     let {
         camera: g,
@@ -342,7 +342,7 @@ async function u5(d) {
         layout: q
     } = d.shell, u = null;
     nt();
-    let v = Te(aT[d5], d5);
+    let v = Te(aT[SPECTATOR_MAP], SPECTATOR_MAP);
     j.prepare(v, BW(v, "veteran")), m.mode = "spectator", document.body.dataset.mode = "spectator", q.apply(), u = new St(v, g, m, () => j.clearDecals());
     let y = u;
     d.set({
@@ -354,9 +354,9 @@ async function u5(d) {
         },
         draw: (F, H) => {
             const M5 = LZ;
-            j.draw(y.world, g, F, H), Qe(g, j.windTime, H, true);
+            j.draw(y.world, g, F, H), tickAmbience(g, j.windTime, H, true);
         }
-    }), Je(v);
+    }), startAmbience(v);
     let A = () => {
             const M6 = LZ;
             u && (G().arenaShowScore ? p.showArena(u.readout(), G().arenaLockCamera) : p.hideArena());
@@ -374,9 +374,9 @@ async function u5(d) {
         const M8 = LZ;
         u && (u.exitRequested = true);
     };
-    m.onPause = E, MW(1), He(f.banner.fade), await T1(() => u?.exitRequested ? (u = null, d.set(null), m.mode = "play", delete document.body.dataset.mode, q.apply(), m.onPause = null, window.removeEventListener("keydown", C), Ze(), p.hideArena(), true) : null);
+    m.onPause = E, MW(1), He(f.banner.fade), await waitForValue(() => u?.exitRequested ? (u = null, d.set(null), m.mode = "play", delete document.body.dataset.mode, q.apply(), m.onPause = null, window.removeEventListener("keydown", C), stopAmbience(), p.hideArena(), true) : null);
 }
-var m5 = {
+var DEFAULT_LOADOUT = {
         weapon: "basicRifle",
         throwable: "frag",
         grenades: 2
@@ -390,7 +390,7 @@ var m5 = {
         fresh: true
     }));
 
-function Ir(g, j = f.skirmish.seconds, m = m5, p = m5, q = [], u = 0, v = f.skirmish.squad, y = 0) {
+function createSkirmishWorld(g, j = f.skirmish.seconds, m = DEFAULT_LOADOUT, p = DEFAULT_LOADOUT, q = [], u = 0, v = f.skirmish.squad, y = 0) {
     const M9 = cX;
     let A = Number.isInteger(v) && v > 0 ? v : f.skirmish.squad,
         C = Math.max(1, Math.min(A, g.playerSpawns.length, g.playerSpawnsB.length)),
@@ -423,9 +423,9 @@ function Ir(g, j = f.skirmish.seconds, m = m5, p = m5, q = [], u = 0, v = f.skir
         reason: null
     }, E;
 }
-var f5 = (c, d) => c.soldiers.filter(g => g.alive && g.faction === d);
+var livingSoldiers = (c, d) => c.soldiers.filter(g => g.alive && g.faction === d);
 
-function h5(c) {
+function checkSkirmishEnd(c) {
     const Mj = cX;
     let d = c.skirmish;
     if (!d || d.over) return;
@@ -437,7 +437,7 @@ function h5(c) {
     }
     c.time >= d.endsAt && (d.over = true, d.reason = "time", d.winner = g2(g));
 }
-var Fn = class {
+var SideCommander = class {
         constructor(c, d) {
             const Mk = cX;
             this.side = c, this.ctx = d;
@@ -451,9 +451,9 @@ var Fn = class {
             let m = f.skirmish,
                 p = this.lastSeenAge < m.memory ? m.contactThink : m.think;
             this.thinkIn = p * (0.8 + g.jitter(this.side) * 0.4);
-            let q = f5(g, this.side);
+            let q = livingSoldiers(g, this.side);
             if (q.length === 0) return;
-            let u = f5(g, this.side === D.Player ? D.Enemy : D.Player);
+            let u = livingSoldiers(g, this.side === D.Player ? D.Enemy : D.Player);
             if (u.length === 0) return;
             let v = null,
                 y = 1 / 0;
@@ -519,7 +519,7 @@ var Fn = class {
         y: c.reduce((d, g) => d + g.y, 0) / Math.max(1, c.length)
     });
 
-function Bn(c) {
+function centroidOf(c) {
     const MB = cX;
     if (c.length === 0) return null;
     let d = 0,
@@ -531,16 +531,16 @@ function Bn(c) {
     };
 }
 
-function F2(c, d) {
+function squadFocus(c, d) {
     return hT(c, d);
 }
 
-function r_(g, j) {
+function commandedFocus(g, j) {
     const MC = cX;
     let p = b2(g, j);
-    if (p.length <= 1) return Bn(p);
+    if (p.length <= 1) return centroidOf(p);
     let q = g.orderGoal,
-        v = Bn(p);
+        v = centroidOf(p);
     if (!q || !v) return v;
     let y = q.x - v.x,
         A = q.y - v.y,
@@ -555,13 +555,13 @@ function r_(g, j) {
         I.push(M), M > H && (H = M);
     }
     let K = p.filter((N, P) => H - I[P] <= f.camera.stragglerDistance);
-    return Bn(K) ?? v;
+    return centroidOf(K) ?? v;
 }
 
-function s_(d, g) {
+function largestGroupFocus(d, g) {
     const MD = cX;
     let j = b2(d, g);
-    if (j.length <= 1) return Bn(j);
+    if (j.length <= 1) return centroidOf(j);
     let m = f.camera.clusterRadius,
         p = new Int32Array(j.length).fill(-1),
         q = 0;
@@ -580,22 +580,22 @@ function s_(d, g) {
         let H = j.filter((I, K) => p[K] === F);
         H.length > u.length && (u = H);
     }
-    return Bn(u);
+    return centroidOf(u);
 }
-var a_ = {
-    squad: F2,
-    commanded: r_,
-    largestGroup: s_
+var CAMERA_FOCUS_MODES = {
+    squad: squadFocus,
+    commanded: commandedFocus,
+    largestGroup: largestGroupFocus
 };
 
-function Ct(c, d = D.Player) {
+function cameraFocusFor(c, d = D.Player) {
     const ME = cX;
-    return (a_[f.camera.focus] ?? F2)(c, d) ?? F2(c, d);
+    return (CAMERA_FOCUS_MODES[f.camera.focus] ?? squadFocus)(c, d) ?? squadFocus(c, d);
 }
-var Pr = class {
+var SkirmishSession = class {
         constructor(c, d, g, i, j = f.skirmish.seconds) {
             const MF = cX;
-            this.map = c, this.camera = d, this.renderer = g, this.input = i, this.seconds = j, (this.world = this.newWorld(), this.commander = new Fn(D.Enemy, this.world.sideB));
+            this.map = c, this.camera = d, this.renderer = g, this.input = i, this.seconds = j, (this.world = this.newWorld(), this.commander = new SideCommander(D.Enemy, this.world.sideB));
         } ["world"];
         ["exitRequested"] = false;
         ["onOver"] = null;
@@ -603,20 +603,20 @@ var Pr = class {
         ["overFired"] = false;
         newWorld() {
             const MG = cX;
-            let c = Ir(this.map, this.seconds, void 0, void 0, [], 0, f.skirmish.squad, f.skirmish.fog);
+            let c = createSkirmishWorld(this.map, this.seconds, void 0, void 0, [], 0, f.skirmish.squad, f.skirmish.fog);
             this.renderer.clearDecals();
             let d = hT(c);
             return d && this.camera.centreOn(d, this.map), this.camera.release(), c;
         } restart() {
             const MH = cX;
-            this.world = this.newWorld(), this.commander = new Fn(D.Enemy, this.world.sideB), this.overFired = false;
+            this.world = this.newWorld(), this.commander = new SideCommander(D.Enemy, this.world.sideB), this.overFired = false;
         } step(c) {
             const MI = cX;
             let d = this.world;
             this.input.syncWorld(this.camera), this.input.syncAim(d), this.handleCommands(), this.moveCamera(c), d.skirmish?.over || this.commander.step(d, c), wt(d, c, {
                 manualAim: this.input.firing ? this.input.aim.point : null,
                 cursor: this.input.inside ? this.input.world : null
-            }), h5(d), d.status = w2(d).status, d.skirmish?.over && !this.overFired && (this.overFired = true, d.skirmish.winner === d.viewSide ? d.sounds.push({
+            }), checkSkirmishEnd(d), d.status = w2(d).status, d.skirmish?.over && !this.overFired && (this.overFired = true, d.skirmish.winner === d.viewSide ? d.sounds.push({
                 kind: "win"
             }) : d.sounds.push({
                 kind: "lose"
@@ -673,7 +673,7 @@ var Pr = class {
                 g = this.input.edgeScroll(c);
             this.camera.pan(d.x + g.x, d.y + g.y, this.map, this.input.isTouch ? "timed" : "sticky");
             let i = this.world.fx.takeShake();
-            i > 0 && this.camera.addShake(i), this.camera.update(c, Ct(this.world), this.map), xe(this.world, this.camera);
+            i > 0 && this.camera.addShake(i), this.camera.update(c, cameraFocusFor(this.world), this.map), xe(this.world, this.camera);
         } standing() {
             const MM = cX;
             return {
@@ -683,7 +683,7 @@ var Pr = class {
         }
     },
     l_ = "the-crossings";
-async function g5(g, j) {
+async function enterSkirmish(g, j) {
     const MN = cX;
     let {
         camera: m,
@@ -692,7 +692,7 @@ async function g5(g, j) {
         hud: u,
         controls: v
     } = g.shell, y = null, A = j && aT[j]?.objective === "skirmish" ? j : l_, C = Te(aT[A], A);
-    await Et(p, C, "rookie"), y = new Pr(C, m, p, q);
+    await prepareWithLoading(p, C, "rookie"), y = new SkirmishSession(C, m, p, q);
     let E = y;
     g.set({
         name: "skirmish",
@@ -705,9 +705,9 @@ async function g5(g, j) {
         },
         draw: (I, K) => {
             const MP = MN;
-            p.draw(E.world, m, I, K, q.aim), Qe(m, p.windTime, K, !st() && !E.world.skirmish?.over);
+            p.draw(E.world, m, I, K, q.aim), tickAmbience(m, p.windTime, K, !st() && !E.world.skirmish?.over);
         }
-    }), Je(C), He(f.banner.fade), q.mode = "play", je(EW.trumper, "The other lot want the glade. They have been told it is spoken for; persuade them.", {
+    }), startAmbience(C), He(f.banner.fade), q.mode = "play", je(EW.trumper, "The other lot want the glade. They have been told it is spoken for; persuade them.", {
         seconds: 9
     });
     let F = () => {
@@ -716,7 +716,7 @@ async function g5(g, j) {
         },
         H = () => {
             const MR = MN;
-            JT() || Mt("The Glade", "Resume", {
+            JT() || openPauseDialog("The Glade", "Resume", {
                 label: "Leave the match",
                 onPick: F
             });
@@ -765,14 +765,14 @@ async function g5(g, j) {
             const MY = MX;
             y && (P === "again" ? y.restart() : y.exitRequested = true);
         });
-    }, await T1(() => y?.exitRequested ? (y = null, g.set(null), Ze(), zW(), G1(), q.onPause = null, u.onExit = u.onPause = null, u.setTools({
+    }, await waitForValue(() => y?.exitRequested ? (y = null, g.set(null), stopAmbience(), zW(), G1(), q.onPause = null, u.onExit = u.onPause = null, u.setTools({
         restart: true,
         pause: true,
         exitLabel: "Leave the mission"
     }), true) : null);
 }
 
-function B2(c, d) {
+function stepWorld(c, d) {
     const MZ = cX;
     c.fx.step(d), c.fog.step(c.map, c.soldiers, d, c.viewSide ?? D.Player), Zh(c, d), T3(c, d), gt(c, d), oh(c, d), uh(c, d);
 }
@@ -781,7 +781,7 @@ var b5 = 14,
     Lr = class {
         constructor(c, d, g, j, l) {
             const N5 = cX;
-            this.map = c, this.camera = d, this.input = j, (this.serverSide = l.side, this.roundId = l.roundId, this.world = Ir(c, l.seconds, void 0, void 0, l.colours, 0, l.squad, l.fog ? f.skirmish.fog : 0), this.world.viewSide = l.side, this.input.edgeScrollBlocked = !l.edgeScroll);
+            this.map = c, this.camera = d, this.input = j, (this.serverSide = l.side, this.roundId = l.roundId, this.world = createSkirmishWorld(c, l.seconds, void 0, void 0, l.colours, 0, l.squad, l.fog ? f.skirmish.fog : 0), this.world.viewSide = l.side, this.input.edgeScrollBlocked = !l.edgeScroll);
             let m = (performance.now() - (l.receivedAt ?? performance.now())) / 1000;
             this.world.preroll = Math.max(0, l.preroll - m), this.world.round = l.round, g.clearDecals();
             let p = hT(this.world, this.serverSide);
@@ -946,10 +946,10 @@ var b5 = 14,
             const N9 = cX;
             let d = this.world;
             if (this.sinceSnap += c, this.input.syncWorld(this.camera), this.input.syncAim(d), d.preroll > 0) {
-                d.preroll = Math.max(0, d.preroll - c), B2(d, c), this.moveCamera(c);
+                d.preroll = Math.max(0, d.preroll - c), stepWorld(d, c), this.moveCamera(c);
                 return;
             }
-            this.handleCommands(), this.sendTrigger(), this.moveCamera(c), B2(d, c);
+            this.handleCommands(), this.sendTrigger(), this.moveCamera(c), stepWorld(d, c);
             for (let m of d.soldiers) {
                 if (m.prev.x = m.pos.x, m.prev.y = m.pos.y, !m.alive) continue;
                 let p = this.targets.get(m.id);
@@ -1042,7 +1042,7 @@ var b5 = 14,
                 g = this.input.edgeScroll(c);
             this.camera.pan(d.x + g.x, d.y + g.y, this.map, this.input.isTouch ? "timed" : "sticky");
             let i = this.world.fx.takeShake();
-            i > 0 && this.camera.addShake(i), this.camera.update(c, Ct(this.world, this.serverSide), this.map), xe(this.world, this.camera);
+            i > 0 && this.camera.addShake(i), this.camera.update(c, cameraFocusFor(this.world, this.serverSide), this.map), xe(this.world, this.camera);
         } standing() {
             const Nv = cX;
             return {
@@ -1053,7 +1053,7 @@ var b5 = 14,
     },
     d_ = 3,
     u_ = 1.5;
-async function y5(c, d) {
+async function runNetRoundLoop(c, d) {
     const Nw = cX;
     if (nt(), !(d.mapId in aT)) {
         $.leave(), await yo(d.mapId);
@@ -1066,13 +1066,13 @@ async function y5(c, d) {
             $.leave(), await yo(g.mapId);
             return;
         }
-        let j = await m_(c, g, i);
+        let j = await runNetRound(c, g, i);
         if (j === "left") return;
-        i = v5(g), g = j;
+        i = netMapId(g), g = j;
     }
 }
-var v5 = c => c.mapId;
-async function m_(j, q, y) {
+var netMapId = c => c.mapId;
+async function runNetRound(j, q, y) {
     const Nx = cX;
     let {
         camera: A,
@@ -1080,8 +1080,8 @@ async function m_(j, q, y) {
         input: E,
         hud: F,
         controls: H
-    } = j.shell, I = null, K = null, L = false, M = 0, N = v5(q), P = Te(aT[N], N);
-    y !== N && await Et(C, P, "rookie"), I = new Lr(P, A, C, E, q);
+    } = j.shell, I = null, K = null, L = false, M = 0, N = netMapId(q), P = Te(aT[N], N);
+    y !== N && await prepareWithLoading(C, P, "rookie"), I = new Lr(P, A, C, E, q);
     let Q = I;
     j.set({
         name: "net",
@@ -1099,9 +1099,9 @@ async function m_(j, q, y) {
         },
         draw: (X, Y) => {
             const NA = Nx;
-            C.draw(Q.world, A, X, Y, E.aim), Qe(A, C.windTime, Y, !st() && !Q.over);
+            C.draw(Q.world, A, X, Y, E.aim), tickAmbience(A, C.windTime, Y, !st() && !Q.over);
         }
-    }), Je(P), He(f.banner.fade), E.mode = "play";
+    }), startAmbience(P), He(f.banner.fade), E.mode = "play";
     let R = () => {
             const NB = Nx;
             I && (I.exitRequested = true);
@@ -1112,7 +1112,7 @@ async function m_(j, q, y) {
         },
         U = () => {
             const ND = Nx;
-            JT() || Mt("The Glade", "Back to it", {
+            JT() || openPauseDialog("The Glade", "Back to it", {
                 label: "Leave the match",
                 onPick: S
             });
@@ -1187,14 +1187,14 @@ async function m_(j, q, y) {
         const NJ = Nx;
         X.t === "gone" ? R() : I?.handleMsg(X);
     });
-    let V = await T1(() => I?.exitRequested || L && I?.over?.last ? "left" : L && K || K && !I?.over ? K : L && performance.now() - M > (Fa + d_) * 1000 ? "left" : null);
-    return I = null, j.set(null), E.edgeScrollBlocked = false, $.onGameMsg = null, $.onStart = null, Ze(), F.setLink(null), F.hideClock(), zW(), G1(), E.onPause = null, F.onExit = null, F.setTools({
+    let V = await waitForValue(() => I?.exitRequested || L && I?.over?.last ? "left" : L && K || K && !I?.over ? K : L && performance.now() - M > (Fa + d_) * 1000 ? "left" : null);
+    return I = null, j.set(null), E.edgeScrollBlocked = false, $.onGameMsg = null, $.onStart = null, stopAmbience(), F.setLink(null), F.hideClock(), zW(), G1(), E.onPause = null, F.onExit = null, F.setTools({
         restart: true,
         pause: true,
         exitLabel: "Leave the mission"
     }), V;
 }
-var Or = class {
+var MissionSession = class {
         constructor(c, d, g, j, l, m = () => [], p = () => {}, q = 0) {
             const NK = cX;
             this.map = c, this.camera = d, this.renderer = g, this.input = j, this.difficulty = l, this.roster = m, this.loadout = p, this.runSeed = q, this.world = this.newWorld();
@@ -1303,7 +1303,7 @@ var Or = class {
                 g = this.input.edgeScroll(c);
             this.camera.pan(d.x + g.x, d.y + g.y, this.map, this.input.isTouch ? "timed" : "sticky");
             let i = this.world.fx.takeShake();
-            i > 0 && this.camera.addShake(i), this.camera.update(c, Ct(this.world), this.map), xe(this.world, this.camera);
+            i > 0 && this.camera.addShake(i), this.camera.update(c, cameraFocusFor(this.world), this.map), xe(this.world, this.camera);
         }
     },
     p_ = new Set(["eliminate"]),
@@ -1332,7 +1332,7 @@ var Or = class {
             });
         }
     };
-async function _5(K) {
+async function enterCampaignLevel(K) {
     const NX = cX;
     let {
         camera: L,
@@ -1358,7 +1358,7 @@ async function _5(K) {
     nt();
     let aA = Te(aT[a7.id], a7.id),
         aB = Ha(aT[a7.id]);
-    await Et(P, aA, ak);
+    await prepareWithLoading(P, aA, ak);
     let aC = Kt(Ut[a7.id]).roster === "fresh",
         aD = [],
         aE = !aC && _n(a8) === "reinforcements",
@@ -1399,7 +1399,7 @@ async function _5(K) {
             let b7 = Math.max(0, Math.min(a8.loadout.take, gW(a8, ge[b4])));
             b7 > 0 && Ka(a8, ge[b4], b7);
         };
-    aq = new Or(aA, L, P, Q, ak, aF, aG);
+    aq = new MissionSession(aA, L, P, Q, ak, aF, aG);
     let aJ = aq,
         aK = new Nr(aT[a7.id].order);
     K.set({
@@ -1416,9 +1416,9 @@ async function _5(K) {
         },
         draw: (b4, b7) => {
             const Oj = NX;
-            P.draw(aJ.world, L, b4, b7, Q.aim), Qe(L, P.windTime, b7, !st() && aJ.world.phase === 0);
+            P.draw(aJ.world, L, b4, b7, Q.aim), tickAmbience(L, P.windTime, b7, !st() && aJ.world.phase === 0);
         }
-    }), Je(aA), um(a7.id, ak, aB);
+    }), startAmbience(aA), um(a7.id, ak, aB);
     let aL = a9.findIndex(b4 => b4.id === a7.id),
         aM = q1(a9).find(b4 => b4.levels.some(b7 => b7.id === a7.id)),
         aN = () => {
@@ -1498,7 +1498,7 @@ async function _5(K) {
     };
     let aR = () => {
         const OE = NX;
-        !aq || JT() || U.briefingUp || aq.world.phase !== 0 || Mt(!aC && aP ? aP + '. ' + aA.name : aA.name, "Resume", {
+        !aq || JT() || U.briefingUp || aq.world.phase !== 0 || openPauseDialog(!aC && aP ? aP + '. ' + aA.name : aA.name, "Resume", {
             label: "Restart",
             tone: "warn",
             key: 'R',
@@ -1570,7 +1570,7 @@ async function _5(K) {
             bonds: b8.bonds.total,
             balance: a8.bonds
         }), ua(b4.phase === 1);
-    }, o5, WW, ve, IW, nW;
+    }, ambienceStatus, WW, ve, IW, nW;
     let aV = hT(aq.world);
     aV && L.centreOn(aV, aA);
     let aX = () => {
@@ -1594,13 +1594,13 @@ async function _5(K) {
     try {
         localStorage.setItem(uo, a7.id);
     } catch {}
-    return T1(() => {
+    return waitForValue(() => {
         const ON = NX;
         let b4 = aq?.exitRequested ? "menu" : aq?.nextRequested ? "next" : null;
-        return b4 ? (aq && ai(a8, aq.world), aq = null, K.set(null), Ze(), U.hideOverlay(), U.hideClock(), zW(), aZ(), G1(), aw?.(), aw = null, Q.onPause = null, U.onExit = U.onRestart = U.onPause = null, ax?.release().catch(() => {}), ax = null, b4) : null;
+        return b4 ? (aq && ai(a8, aq.world), aq = null, K.set(null), stopAmbience(), U.hideOverlay(), U.hideClock(), zW(), aZ(), G1(), aw?.(), aw = null, Q.onPause = null, U.onExit = U.onRestart = U.onPause = null, ax?.release().catch(() => {}), ax = null, b4) : null;
     });
 }
-async function f_() {
+async function loadMissionsData() {
     const OO = cX;
     oc();
     let j = await q3(),
@@ -1623,7 +1623,7 @@ async function f_() {
                 E = R;
             }
         }),
-        I = R => _5({
+        I = R => enterCampaignLevel({
             shell: j,
             set: S => {
                 C = S;
@@ -1636,19 +1636,19 @@ async function f_() {
             campaign: A,
             campaignLevels: y
         }),
-        K = R => g5({
+        K = R => enterSkirmish({
             shell: j,
             set: S => {
                 C = S;
             }
         }, R),
-        L = R => y5({
+        L = R => runNetRoundLoop({
             shell: j,
             set: S => {
                 C = S;
             }
         }, R),
-        M = () => u5({
+        M = () => enterSpectatorMode({
             shell: j,
             set: R => {
                 C = R;
@@ -1695,7 +1695,7 @@ async function f_() {
         }
     }
 }
-f_().catch(c => {
+loadMissionsData().catch(c => {
     const OQ = cX;
     console.error(c), Zl(c);
     let d = document.getElementById("overlay"),

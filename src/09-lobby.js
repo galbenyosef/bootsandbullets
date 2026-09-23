@@ -452,18 +452,18 @@
         U.addEventListener("pointerdown", bS);
     });
 }
-var Dy = 3;
+var SHOP_OFFER_LIMIT = 3;
 
-function Fy(c, d) {
+function getAffordableOffers(c, d) {
     const uD = cX;
     return bW.filter(g => g.ready && g.category !== "squad" && !$e(c, g.id)).map(g => ({
         id: g.id,
         name: g.name,
         price: ZW(g.id)
-    })).filter(g => g.price <= d).sort((g, i) => g.price - i.price).slice(0, Dy);
+    })).filter(g => g.price <= d).sort((g, i) => g.price - i.price).slice(0, SHOP_OFFER_LIMIT);
 }
 
-function Zf({
+function renderShopPanel({
     ctx: c,
     campaign: d,
     done: g,
@@ -474,7 +474,7 @@ function Zf({
         p = w('p', "dsp-balance");
     p.append(eT(xn(), 2, "dsp-coin"), w("span", '', c.bonds + " War Bonds, unspent")), m.appendChild(p);
     let q = w("div", "dsp-shelf");
-    for (let u of Fy(d, c.bonds)) {
+    for (let u of getAffordableOffers(d, c.bonds)) {
         let v = w("div", "dsp-good"),
             y = Ke(u.id),
             A = w("div", "dsp-good-stand");
@@ -482,9 +482,9 @@ function Zf({
     }
     return m.appendChild(q), j.append(IT("The Armoury", "dsp-go primary", () => g("armoury", "went")), IT("Get on with it", "dsp-go dark", () => g("continue", "skipped"))), m.classList.add("dsp-centred"), j.classList.add("dsp-centred-row"), m;
 }
-var Za = 5;
+var MAX_STARS = 5;
 
-function kn({
+function renderStarRating({
     label: c,
     prompt: d,
     onChange: g
@@ -502,11 +502,11 @@ function kn({
             q.forEach((A, C) => {
                 const uH = uG;
                 A.firstElementChild.classList.toggle('on', C < y), A.setAttribute("aria-checked", String(C + 1 === j));
-            }), p.classList.toggle("picked", j > 0), u.textContent = j ? j + " out of " + Za : d;
+            }), p.classList.toggle("picked", j > 0), u.textContent = j ? j + " out of " + MAX_STARS : d;
         };
-    for (let y = 1; y <= Za; y++) {
+    for (let y = 1; y <= MAX_STARS; y++) {
         let A = w("button", "dsp-star");
-        A.type = "button", A.setAttribute("role", "radio"), A.setAttribute("aria-label", y + " out of " + Za), A.appendChild(w('i', "fx-star")), A.onclick = () => {
+        A.type = "button", A.setAttribute("role", "radio"), A.setAttribute("aria-label", y + " out of " + MAX_STARS), A.appendChild(w('i', "fx-star")), A.onclick = () => {
             j = y, v(), g?.(j);
         }, A.onpointerenter = () => {
             m = y, v();
@@ -531,9 +531,9 @@ function kn({
         }
     };
 }
-var By = "What would make it better?";
+var REVIEW_PROMPT = "What would make it better?";
 
-function Qf({
+function renderReviewPanel({
     ctx: c,
     campaign: d,
     levels: g,
@@ -542,7 +542,7 @@ function Qf({
 }) {
     const uK = cX;
     let p = w("div", "dsp-review"),
-        q = kn({
+        q = renderStarRating({
             label: "Out of five",
             prompt: "Pick a star.",
             onChange: C => {
@@ -551,7 +551,7 @@ function Qf({
             }
         });
     p.append(q.row, q.hint);
-    let u = w("label", "dsp-plain dsp-question", By),
+    let u = w("label", "dsp-plain dsp-question", REVIEW_PROMPT),
         v = w("textarea", "dsp-box");
     v.rows = 3, v.maxLength = 2000, v.placeholder = "Optional.", u.htmlFor = v.id = "dsp-comment", p.append(u, v);
     let y = w('p', "dsp-note");
@@ -582,9 +582,9 @@ function Qf({
         }), j("continue", "skipped");
     })), jo() || (y.textContent = "The line is down, so this would not reach anybody. No harm done.", A.disabled = true, q.disable()), p;
 }
-var Hy = {
-    armoury: Zf,
-    review: Qf,
+var DISPATCH_PANELS = {
+    armoury: renderShopPanel,
+    review: renderReviewPanel,
     offer: ({
         campaign: c,
         levels: d,
@@ -602,7 +602,7 @@ var Hy = {
     })
 };
 
-function T0(c, d) {
+function startDispatch(c, d) {
     const uP = cX;
     let {
         ctx: g,
@@ -616,7 +616,7 @@ function T0(c, d) {
     return Po({
         line: Io(c, m),
         raised: u,
-        build: (y, A) => Hy[c]({
+        build: (y, A) => DISPATCH_PANELS[c]({
             ctx: g,
             campaign: j,
             levels: l,
@@ -632,7 +632,7 @@ function T0(c, d) {
         answer: y
     }));
 }
-var iI = f.timing.dispatchFade,
+var DISPATCH_FADE = f.timing.dispatchFade,
     W0 = false,
     e0 = false;
 
@@ -640,12 +640,12 @@ function t0(c = true) {
     e0 = c;
 }
 
-function Gy(c) {
+function getCheapestOffer(c) {
     const uQ = cX;
     let d = bW.filter(g => g.ready && g.category !== "squad" && !$e(c, g.id)).map(g => ZW(g.id));
     return d.length ? Math.min(...d) : null;
 }
-async function Vy(c, d = na, g = Date.now()) {
+async function buildDispatchStats(c, d = na, g = Date.now()) {
     const uR = cX;
     let i = it();
     return {
@@ -654,7 +654,7 @@ async function Vy(c, d = na, g = Date.now()) {
         playSeconds: i.playSeconds,
         missionsCompleted: i.missionsCompleted,
         bonds: c.bonds,
-        cheapestUnowned: Gy(c),
+        cheapestUnowned: getCheapestOffer(c),
         declinedAt: Em(),
         state: await d.load(),
         shownThisSession: W0
@@ -664,14 +664,14 @@ async function n0(c, d, g = na) {
     const uS = cX;
     if (e0) return "continue";
     try {
-        let j = await Vy(c, g),
+        let j = await buildDispatchStats(c, g),
             l = im(j);
         if (!l) return "continue";
         W0 = true, await rm(g, l, j);
         let {
             outcome: m,
             answer: p
-        } = await T0(l, {
+        } = await startDispatch(l, {
             ctx: j,
             campaign: c,
             levels: d
@@ -952,9 +952,9 @@ function a0(K, L) {
                 bq = aS * (0.3 + (aN.at(b4, aZ) - 0.5) * 0.72) + bk * 2.6 + b9 * 2.4 + aR.tint * 0.5;
             b9 > 0.72 && bk > 0.35 && (bq += 1.4), b8 < 1 && (bq -= (1 - b8) * 1.35), aE[bj] = iW(aA.canopy, bq, b4, aZ), aR.dist > Qa * 0.8 && (aE[bj] = Bt(aE[bj], aA.canopy[1], 0.7));
         }
-    l0(aE, ax, az, aw, L, Y, Ky, aA, aU, aR, aK, aL, aM, aN);
-    let aX = Yy(ax, az, aw, L, aA, aU, aR, aK, aL, aM, aN);
-    Xy(aE, aI, ax, az, aw, L, Fl(K.theme), aU, aR, aK, aL, aM, aN);
+    fillTerrainPixels(aE, ax, az, aw, L, Y, GRASS_PARAMS, aA, aU, aR, aK, aL, aM, aN);
+    let aX = renderTerrainCanvas(ax, az, aw, L, aA, aU, aR, aK, aL, aM, aN);
+    fillStonePixels(aE, aI, ax, az, aw, L, Fl(K.theme), aU, aR, aK, aL, aM, aN);
     for (let bw = 0; bw < az; bw++)
         for (let bx = 0; bx < ax; bx++) {
             let bz = bx - r0,
@@ -967,7 +967,7 @@ function a0(K, L) {
         understorey: aX
     };
 }
-var Ky = {
+var GRASS_PARAMS = {
         tuft: 4,
         open: 0.34,
         hemOpen: 0.3,
@@ -983,7 +983,7 @@ var Ky = {
         strands: true
     };
 
-function l0(K, L, U, Y, a7, a8, a9, aj, ak, aq, aw, ax, az, aA) {
+function fillTerrainPixels(K, L, U, Y, a7, a8, a9, aj, ak, aq, aw, ax, az, aA) {
     const vD = cX;
     let {
         width: aB,
@@ -1039,17 +1039,17 @@ function l0(K, L, U, Y, a7, a8, a9, aj, ak, aq, aw, ax, az, aA) {
     return true;
 }
 
-function Yy(g, j, p, q, v, y, A, C, E, F, H) {
+function renderTerrainCanvas(g, j, p, q, v, y, A, C, E, F, H) {
     const vE = cX;
     let I = document.createElement("canvas");
     I.width = g, I.height = j;
     let K = I.getContext('2d'),
         L = K.createImageData(g, j),
         M = new Uint32Array(L.data.buffer);
-    return l0(M, g, j, p, q, q.longSdf, zy, v, y, A, C, E, F, H) ? (K.putImageData(L, 0, 0), I) : (I.width = 0, I.height = 0, null);
+    return fillTerrainPixels(M, g, j, p, q, q.longSdf, zy, v, y, A, C, E, F, H) ? (K.putImageData(L, 0, 0), I) : (I.width = 0, I.height = 0, null);
 }
 
-function Xy(q, H, K, L, P, Q, U, V, Y, a7, a8, a9, aj) {
+function fillStonePixels(q, H, K, L, P, Q, U, V, Y, a7, a8, a9, aj) {
     const vF = cX;
     let {
         stoneSdf: ak,
@@ -1198,10 +1198,10 @@ function m0(K, L, U) {
                 bz = bk * Y;
             !aK(bx + 3, bz + 4) || !aK(bx + 13, bz + 4) || !aK(bx + 8, bz + 11) || !aK(bx + 13, bz + 11) || aF.push([bq, bk]);
         }
-    Jy(aq, a7, a8, Y, U, a9), Zy(aq, a7, a8, Y, U, a9, ax(zT(a9, 1).scale), aB);
+    scatterSnowDetail(aq, a7, a8, Y, U, a9), Zy(aq, a7, a8, Y, U, a9, ax(zT(a9, 1).scale), aB);
     let aL = new bi(),
         aM = new bi();
-    return Tv(aq, a7, a8, Y, U, az, aA, aC, aD, L, aL, aM), Wv(aq, a7, a8, Y, U, az, aA, aB, aC, aE), Qy(aq, a7, a8, Y, U, az, aA, aC, aE), aL.prune(aq, a7), aM.prune(aq, a7), K.putImageData(ak, 0, 0), nv(K, L, U, aB), {
+    return Tv(aq, a7, a8, Y, U, az, aA, aC, aD, L, aL, aM), fillFoliagePixels(aq, a7, a8, Y, U, az, aA, aB, aC, aE), scatterFoliage(aq, a7, a8, Y, U, az, aA, aC, aE), aL.prune(aq, a7), aM.prune(aq, a7), K.putImageData(ak, 0, 0), nv(K, L, U, aB), {
         waterTiles: aF,
         shore: {
             wet: aL.freeze(),
@@ -1210,7 +1210,7 @@ function m0(K, L, U) {
     };
 }
 
-function Jy(q, A, E, F, H, K) {
+function scatterSnowDetail(q, A, E, F, H, K) {
     const vN = cX;
     let L = H.width,
         N = H.height,
@@ -1283,7 +1283,7 @@ function Zy(j, q, A, F, H, K, L, N) {
         }
 }
 
-function Qy(q, A, F, H, K, L, N, P, Q) {
+function scatterFoliage(q, A, F, H, K, L, N, P, Q) {
     const vP = cX;
     let {
         foliageSdf: U,
@@ -1369,7 +1369,7 @@ function Tv(q, F, H, K, L, N, P, Q, U, V, X, Y) {
         }
 }
 
-function Wv(j, q, A, C, E, F, H, I, K, L) {
+function fillFoliagePixels(j, q, A, C, E, F, H, I, K, L) {
     const vS = cX;
     let {
         foliageSdf: N,
@@ -1395,7 +1395,7 @@ function Wv(j, q, A, C, E, F, H, I, K, L) {
             }
     }
 }
-var ev = "#5c4f28",
+var DIRT_COLOR = "#5c4f28",
     tv = "#a08a4e";
 
 function nv(K, L, Q, U) {
@@ -1584,7 +1584,7 @@ function nv(K, L, Q, U) {
                                     ck = c8 > 0.9 ? 3 : c8 > 0.76 ? 2 : 1;
                                 for (let cq = 0; cq < ck; cq++) {
                                     let cw = 2 + cq * 2 + (c8 * 13 % 4 | 0);
-                                    K.fillStyle = cq % 2 === 0 ? ev : tv;
+                                    K.fillStyle = cq % 2 === 0 ? DIRT_COLOR : tv;
                                     for (let cx = -cw; cx <= cw; cx++) {
                                         let cz = Math.round(Math.sqrt(Math.max(0, cw * cw - cx * cx)) * 1.6),
                                             cA = cj + Math.round(cx * 0.62);
