@@ -845,6 +845,6 @@ function Jf(q, A, F, H, K, L) {
         let aH = false,
             aI = bU => {
                 const tx = b;
-                aH || (aH = true, MW(1), N.classList.add("leaving"), window.setTimeout(() => {
+                aH || (aH = true, setBlackout(1), N.classList.add("leaving"), window.setTimeout(() => {
                     const tz = tx;
                     bO(), bP.remove(), bQ(), bD(), document.removeEventListener("keydown", bR), U.removeEventListener("pointerdown", bS), $.onChange = null, $.onStart = null, $.onJoin = null, window.clearInterval(bz), N.hidden = true, N.classList.remove("leaving"), aG(bU);

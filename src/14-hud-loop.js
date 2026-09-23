@@ -341,7 +341,7 @@ async function enterSpectatorMode(d) {
         hud: p,
         layout: q
     } = d.shell, u = null;
-    nt();
+    fadeOutMusic();
     let v = Te(aT[SPECTATOR_MAP], SPECTATOR_MAP);
     j.prepare(v, BW(v, "veteran")), m.mode = "spectator", document.body.dataset.mode = "spectator", q.apply(), u = new St(v, g, m, () => j.clearDecals());
     let y = u;
@@ -374,7 +374,7 @@ async function enterSpectatorMode(d) {
         const M8 = LZ;
         u && (u.exitRequested = true);
     };
-    m.onPause = E, MW(1), He(f.banner.fade), await waitForValue(() => u?.exitRequested ? (u = null, d.set(null), m.mode = "play", delete document.body.dataset.mode, q.apply(), m.onPause = null, window.removeEventListener("keydown", C), stopAmbience(), p.hideArena(), true) : null);
+    m.onPause = E, setBlackout(1), He(f.banner.fade), await waitForValue(() => u?.exitRequested ? (u = null, d.set(null), m.mode = "play", delete document.body.dataset.mode, q.apply(), m.onPause = null, window.removeEventListener("keydown", C), stopAmbience(), p.hideArena(), true) : null);
 }
 var DEFAULT_LOADOUT = {
         weapon: "basicRifle",
@@ -1055,15 +1055,15 @@ var b5 = 14,
     u_ = 1.5;
 async function runNetRoundLoop(c, d) {
     const Nw = cX;
-    if (nt(), !(d.mapId in aT)) {
-        $.leave(), await yo(d.mapId);
+    if (fadeOutMusic(), !(d.mapId in aT)) {
+        $.leave(), await promptAppUpdate(d.mapId);
         return;
     }
     let g = d,
         i = null;
     for (;;) {
         if (!(g.mapId in aT)) {
-            $.leave(), await yo(g.mapId);
+            $.leave(), await promptAppUpdate(g.mapId);
             return;
         }
         let j = await runNetRound(c, g, i);
@@ -1355,7 +1355,7 @@ async function enterCampaignLevel(K) {
                 ax = await navigator.wakeLock?.request("screen") ?? null;
             } catch {}
         };
-    nt();
+    fadeOutMusic();
     let aA = Te(aT[a7.id], a7.id),
         aB = Ha(aT[a7.id]);
     await prepareWithLoading(P, aA, ak);
@@ -1575,7 +1575,7 @@ async function enterCampaignLevel(K) {
     aV && L.centreOn(aV, aA);
     let aX = () => {
             const OK = NX;
-            MW(1), U.showBriefing(aq.world), window.addEventListener("pointerdown", aY, true), window.addEventListener("keydown", aY, true);
+            setBlackout(1), U.showBriefing(aq.world), window.addEventListener("pointerdown", aY, true), window.addEventListener("keydown", aY, true);
         },
         aY = b4 => {
             const OL = NX;
@@ -1654,7 +1654,7 @@ async function loadMissionsData() {
                 C = R;
             }
         });
-    xm(oi().userId), t0;
+    assignExperiment(oi().userId), t0;
     let N = vd(U1),
         P = null,
         Q;

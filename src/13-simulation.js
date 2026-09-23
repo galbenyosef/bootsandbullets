@@ -32,7 +32,7 @@
                     hold: m,
                     fade: p
                 } = f.banner;
-                MW(Math.max(0, Math.min(1, (c.phaseTime - (m - p)) / p)));
+                setBlackout(Math.max(0, Math.min(1, (c.phaseTime - (m - p)) / p)));
             }
             let d = c.map.name + '/' + c.difficulty;
             d !== this.lastMission && (this.lastMission = d, De(this.mission, Object.assign(document.createElement('b'), {

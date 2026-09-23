@@ -1,4 +1,4 @@
-var XT = class {
+var BitGrid = class {
     constructor(c, d) {
         const hF = cX;
         this.w = c, this.h = d, this.bits = new Uint8Array(c * d);
@@ -95,7 +95,7 @@ var XT = class {
     }
 };
 
-function wT(j, q, A, F, H) {
+function drawBevel(j, q, A, F, H) {
     const hQ = cX;
     let {
         w: I,
@@ -133,7 +133,7 @@ function wT(j, q, A, F, H) {
         for (let aI = 0; aI < I; aI++) S(aI, aH) && (U(aI, aH - 1) || U(aI - 1, aH) || V(aI, aH + 1) || V(aI + 1, aH)) && j.fillRect(A + aI, F + aH, 1, 1);
 }
 
-function Sd(c, d, g, j, l, m = 1) {
+function dilateGridFill(c, d, g, j, l, m = 1) {
     const hR = cX;
     c.fillStyle = l;
     for (let p = 0; p < d.h; p++)
@@ -336,9 +336,9 @@ var Ed = ["#1f1c0e", "#5c420b", "#272828", "#42423f", "#646167", "#9b660d", "#d7
             sheen: [i, i]
         };
     },
-    te = (c, d, g, i) => new XT(c, d).rect(g, g, c - g * 2, d - g * 2).chamfer(i);
+    te = (c, d, g, i) => new BitGrid(c, d).rect(g, g, c - g * 2, d - g * 2).chamfer(i);
 
-function Zd(c, d, g, j) {
+function drawButtonFrame(c, d, g, j) {
     const hU = cX;
     c.fillStyle = j.ring, c.fillRect(d + 1, g, OW - 2, OW), c.fillRect(d, g + 1, OW, OW - 2);
     let l = [
@@ -349,14 +349,14 @@ function Zd(c, d, g, j) {
     for (let m = 0; m < l.length; m++)
         for (let p = 0; p < l[m].length; p++) c.fillStyle = l[m][p], c.fillRect(d + 1 + p, g + 1 + m, 1, 1);
 }
-var Qd = (c, d) => ({
+var buttonColors = (c, d) => ({
     ring: c.keyline,
     body: c.rim,
     cap: d,
     under: c.face[0]
 });
 
-function Jt(g, j, m = "brass", p = {}) {
+function drawRivetedPlate(g, j, m = "brass", p = {}) {
     const hV = cX;
     let q = p.cut ?? Math.min(K1, Math.floor(Math.min(g, j) / 5)),
         v = p.rivets ?? true,
@@ -366,19 +366,19 @@ function Jt(g, j, m = "brass", p = {}) {
             c: C,
             g: E
         } = O(Math.max(g, Gd.w), Math.max(j, Gd.h));
-    if (wT(E, te(C.width, C.height, 0, q), 0, 0, A(y.frame)), wT(E, te(C.width, C.height, sW, Math.max(1, q - sW)), 0, 0, A(y.field)), v && C.width >= Hd.w && C.height >= Hd.h) {
+    if (drawBevel(E, te(C.width, C.height, 0, q), 0, 0, A(y.frame)), drawBevel(E, te(C.width, C.height, sW, Math.max(1, q - sW)), 0, 0, A(y.field)), v && C.width >= Hd.w && C.height >= Hd.h) {
         let F = sW + Jd,
-            H = Qd(y.frame, y.rivet[1]);
+            H = buttonColors(y.frame, y.rivet[1]);
         for (let [I, K] of [
                 [F, F],
                 [C.width - F - OW, F],
                 [F, C.height - F - OW],
                 [C.width - F - OW, C.height - F - OW]
-            ]) Zd(E, I, K, H);
+            ]) drawButtonFrame(E, I, K, H);
     }
     return C;
 }
-var sg = {
+var PLATE_STYLES = {
         gold: {
             cellW: 72,
             cellH: 44,
@@ -420,19 +420,19 @@ var sg = {
     },
     cg = 0.6;
 
-function VT(c, d = "normal") {
+function makeButtonSprite(c, d = "normal") {
     const hX = cX;
     let g = d === "disabled" || d === "quiet",
         j = c === "good" || c === "warn",
         l = j && !g ? lg[c] : void 0,
-        m = sg[j ? "olive" : c],
+        m = PLATE_STYLES[j ? "olive" : c],
         {
             c: p,
             g: q
         } = O(m.cellW, m.cellH);
     return UW(q, m, ag[d], l ? u => Ll(u, l.hue, l.sat) : d === "disabled" ? u => Ol(u, cg) : void 0), p;
 }
-var dg = {
+var TINY_PLATE_STYLE = {
         cellW: 17,
         cellH: 17,
         frames: 4,
@@ -450,9 +450,9 @@ function Ie(c = true, d = false) {
         c: g,
         g: i
     } = O(17, 17);
-    return UW(i, dg, c ? 1 : 3, d ? mg : void 0), g;
+    return UW(i, TINY_PLATE_STYLE, c ? 1 : 3, d ? lightenHex : void 0), g;
 }
-var mg = c => {
+var lightenHex = c => {
         const hZ = cX;
         let [d, g, i] = LW(c), j = [255, 251, 232];
         return '#' + [d, g, i].map((l, m) => Math.round(l + (j[m] - l) * 0.5).toString(16).padStart(2, '0')).join('');
@@ -462,7 +462,7 @@ var mg = c => {
         size: 80
     };
 
-function Tu() {
+function buildSparkleFrames() {
     const i7 = cX;
     let {
         frames: g,
@@ -482,16 +482,16 @@ function Tu() {
         }
     return m;
 }
-var Ns = [...Cs].sort((c, d) => {
+var sortByLuminance = [...Cs].sort((c, d) => {
         let g = j => {
             let [l, m, p] = LW(j);
             return 0.299 * l + 0.587 * m + 0.114 * p;
         };
         return g(d) - g(c);
     }),
-    Vd = Ns[0],
-    qd = Ns[2],
-    pg = Ns[4],
+    Vd = sortByLuminance[0],
+    qd = sortByLuminance[2],
+    pg = sortByLuminance[4],
     fg = {
         cellW: 17,
         cellH: 22,
@@ -507,7 +507,7 @@ function Pe(c = false) {
     } = O(17, 22);
     return UW(g, fg, c ? 0 : 1), d;
 }
-var hg = {
+var BRASS_THEME = {
     keyline: "#000000",
     keylineWidth: 2,
     rim: "#d8c47a",
@@ -516,12 +516,12 @@ var hg = {
     sheen: [0.8, 0.35]
 };
 
-function Wu(g, j, m = {}) {
+function buildPillGrid(g, j, m = {}) {
     const i8 = cX;
     let p = Math.max(g, 40),
         q = Math.max(j, 12),
         v = Math.max(3, Math.round(q * 0.25)),
-        y = new XT(p, q).rect(0, 0, p, q),
+        y = new BitGrid(p, q).rect(0, 0, p, q),
         A = (q - 1) / 2;
     for (let F = 0; F < q; F++) {
         let H = Math.abs(F - A) / A,
@@ -532,7 +532,7 @@ function Wu(g, j, m = {}) {
         c: C,
         g: E
     } = O(p, q);
-    if (wT(E, y, 0, 0, hg), m.stars !== false && q >= 14 && p >= 60) {
+    if (drawBevel(E, y, 0, 0, BRASS_THEME), m.stars !== false && q >= 14 && p >= 60) {
         let L = Ie(true),
             M = Math.round((q - L.height) / 2),
             N = v + Math.round(q * 0.35);
@@ -540,7 +540,7 @@ function Wu(g, j, m = {}) {
     }
     return C;
 }
-var gg = ((() => {
+var NOTCH_MASK = ((() => {
         let c = -34 * Math.PI / 180,
             d = 26 * Math.PI / 180,
             g = 44 * Math.PI / 180,
@@ -569,7 +569,7 @@ var gg = ((() => {
         back: [".............", ".....##......", "....###......", "...####......", "..#####......", ".############", ".############", ".############", "..#####......", "...####......", "....###......", ".....##......", "............."],
         pause: [".............", "..###...###..", "..###...###..", "..###...###..", "..###...###..", "..###...###..", "..###...###..", "..###...###..", "..###...###..", "..###...###..", "..###...###..", "..###...###..", "............."],
         door: [".............", "#######......", "#######......", "#######......", "#######...#..", "#######.####.", "#####.#.#####", "#######.####.", "#######...#..", "#######......", "#######......", "#######......", "............."],
-        restart: gg,
+        restart: NOTCH_MASK,
         gear: [".............", ".....###.....", "..#########..", "..#########..", "..#########..", "#############", "#####...#####", "#############", "..#########..", "..#########..", "..#########..", ".....###.....", "............."]
     },
     Ls = {
@@ -663,7 +663,7 @@ function Zt(c, d = "normal") {
 var $1 = 5,
     z1 = 2;
 
-function nu(g, j, m = "brass", p = false) {
+function drawPlainPlate(g, j, m = "brass", p = false) {
     const ik = cX;
     let q = Xt[m],
         v = p ? Os : I => I,
@@ -673,24 +673,24 @@ function nu(g, j, m = "brass", p = false) {
             c: C,
             g: E
         } = O(y, A);
-    wT(E, te(y, A, 0, K1), 0, 0, v(q.frame)), wT(E, te(y, A, sW, Math.max(1, K1 - sW)), 0, 0, {
+    drawBevel(E, te(y, A, 0, K1), 0, 0, v(q.frame)), drawBevel(E, te(y, A, sW, Math.max(1, K1 - sW)), 0, 0, {
         ...q.field,
         face: [q.field.shade, q.field.keyline],
         sheen: [0.5, 0.5]
-    }), wT(E, te(y, A, sW + z1, Math.max(1, K1 - sW - z1)), 0, 0, v(q.frame));
+    }), drawBevel(E, te(y, A, sW + z1, Math.max(1, K1 - sW - z1)), 0, 0, v(q.frame));
     let F = sW * 2 + z1,
-        H = new XT(y, A).rect(F, F, y - F * 2, A - F * 2);
+        H = new BitGrid(y, A).rect(F, F, y - F * 2, A - F * 2);
     for (let [I, K] of [
             [F, F],
             [y - F - $1, F],
             [F, A - F - $1],
             [y - F - $1, A - F - $1]
         ]) H.rect(I, K, $1, $1, 0);
-    return wT(E, H, 0, 0, v(q.field)), C;
+    return drawBevel(E, H, 0, 0, v(q.field)), C;
 }
 var vg = 4;
 
-function ou(j, q = "brass") {
+function drawRoundBadge(j, q = "brass") {
     const iq = cX;
     let y = Xt[q],
         A = j + vg * 2,
@@ -721,7 +721,7 @@ var Yt = 6,
     Ps = 10,
     $d = 3;
 
-function iu(j, q, y = {}) {
+function drawNotchedPlate(j, q, y = {}) {
     const iw = cX;
     let A = Xt.brass,
         C = y.flat === false ? R => R : Os,
@@ -739,29 +739,29 @@ function iu(j, q, y = {}) {
                 for (let V = R + U; V < R + Ps - U; V++) K.set(V, S, 0);
             }
     }
-    wT(I, K, 0, 0, C(A.frame)), wT(I, te(E, F, sW, Math.max(1, Yt - sW)), 0, 0, {
+    drawBevel(I, K, 0, 0, C(A.frame)), drawBevel(I, te(E, F, sW, Math.max(1, Yt - sW)), 0, 0, {
         ...A.field,
         face: [A.field.shade, A.field.keyline],
         sheen: [0.5, 0.5]
-    }), wT(I, te(E, F, sW + z1, Math.max(1, Yt - sW - z1)), 0, 0, C(A.frame));
+    }), drawBevel(I, te(E, F, sW + z1, Math.max(1, Yt - sW - z1)), 0, 0, C(A.frame));
     let L = sW * 2 + z1;
-    wT(I, te(E, F, L, Math.max(1, Yt - L)), 0, 0, C(A.field));
+    drawBevel(I, te(E, F, L, Math.max(1, Yt - L)), 0, 0, C(A.field));
     let M = L + 3,
         N = te(E, F, M, Math.max(1, Yt - M));
     I.fillStyle = A.field.shade;
     for (let X = 0; X < F; X++)
         for (let Y = 0; Y < E; Y++) N.at(Y, X) && (N.at(Y - 1, X) && N.at(Y + 1, X) && N.at(Y, X - 1) && N.at(Y, X + 1) || I.fillRect(Y, X, 1, 1));
     let P = L + Jd,
-        Q = Qd(A.frame, A.rivet[1]);
+        Q = buttonColors(A.frame, A.rivet[1]);
     for (let [a7, a8] of [
             [P, P],
             [E - P - OW, P],
             [P, F - P - OW],
             [E - P - OW, F - P - OW]
-        ]) Zd(I, a7, a8, Q);
+        ]) drawButtonFrame(I, a7, a8, Q);
     return H;
 }
-var RT = 16,
+var SCENE_COLS = 16,
     jT = 16,
     fo = "#0a0d06",
     Y1 = {
@@ -814,10 +814,10 @@ function LT(c, d, g, j, l, m = 0) {
     }
 }
 
-function Le(c) {
-    h(c, 0, 0, RT, 1, fo), h(c, 0, jT - 1, RT, 1, fo), h(c, 0, 0, 1, jT, fo), h(c, RT - 1, 0, 1, jT, fo);
+function fillSceneFrame(c) {
+    h(c, 0, 0, SCENE_COLS, 1, fo), h(c, 0, jT - 1, SCENE_COLS, 1, fo), h(c, 0, 0, 1, jT, fo), h(c, SCENE_COLS - 1, 0, 1, jT, fo);
 }
-var _g = [{
+var CITY_BUILDINGS = [{
         x0: 1,
         x1: 4,
         roof: 7
@@ -836,15 +836,15 @@ var _g = [{
     }],
     Ds = 13;
 
-function xg() {
+function buildCityScene() {
     const ix = cX;
     let {
         c: c,
         g: d
-    } = O(RT, jT);
-    for (let g = 0; g < RT; g++) LT(d, g, 0, Ds - 1, Y1.sky);
-    for (let i = 0; i < RT; i++) LT(d, i, Ds, jT - 1, Y1.road);
-    for (let j of _g)
+    } = O(SCENE_COLS, jT);
+    for (let g = 0; g < SCENE_COLS; g++) LT(d, g, 0, Ds - 1, Y1.sky);
+    for (let i = 0; i < SCENE_COLS; i++) LT(d, i, Ds, jT - 1, Y1.road);
+    for (let j of CITY_BUILDINGS)
         for (let l = j.x0; l <= j.x1; l++) {
             let m = l === j.x1;
             LT(d, l, j.roof, Ds - 1, m ? Y1.side : Y1.face, m ? 1 : 0), k(d, l, j.roof, Y1.roof);
@@ -860,18 +860,18 @@ function xg() {
             [12, 7],
             [13, 9]
         ]) k(d, o, p, Y1.window);
-    return Le(d), c;
+    return fillSceneFrame(d), c;
 }
-var ru = [4, 5, 4, 3, 4, 5, 5, 4, 3, 3, 4, 5, 4, 3, 4, 5],
+var SWAMP_CANOPY_H = [4, 5, 4, 3, 4, 5, 5, 4, 3, 3, 4, 5, 4, 3, 4, 5],
     Fs = [9, 8, 9, 10, 9, 8, 9, 10, 9, 8, 10, 9, 8, 9, 10, 9];
 
-function kg() {
+function buildSwampScene() {
     const iz = cX;
     let {
         c: c,
         g: d
-    } = O(RT, jT);
-    for (let g = 0; g < RT; g++) LT(d, g, 0, ru[g] - 1, NW.canopy), LT(d, g, ru[g], Fs[g] - 1, NW.bed, 1), LT(d, g, Fs[g], jT - 1, NW.water);
+    } = O(SCENE_COLS, jT);
+    for (let g = 0; g < SCENE_COLS; g++) LT(d, g, 0, SWAMP_CANOPY_H[g] - 1, NW.canopy), LT(d, g, SWAMP_CANOPY_H[g], Fs[g] - 1, NW.bed, 1), LT(d, g, Fs[g], jT - 1, NW.water);
     for (let [i, j] of [
             [2, 9],
             [11, 10]
@@ -889,18 +889,18 @@ function kg() {
         let q = Fs[o];
         k(d, o - 1, q, NW.water[1]), k(d, o + 1, q, NW.water[1]);
     }
-    return k(d, 6, 2, NW.reed[1]), Le(d), c;
+    return k(d, 6, 2, NW.reed[1]), fillSceneFrame(d), c;
 }
-var wg = [12, 12, 11, 12, 13, 12, 11, 10, 9, 9, 7, 6, 6, 7, 6, 5];
+var COAST_SEA_DEPTH = [12, 12, 11, 12, 13, 12, 11, 10, 9, 9, 7, 6, 6, 7, 6, 5];
 
-function Sg() {
+function buildCoastScene() {
     const iA = cX;
     let {
         c: c,
         g: d
-    } = O(RT, jT);
-    for (let j = 0; j < RT; j++) {
-        let l = wg[j];
+    } = O(SCENE_COLS, jT);
+    for (let j = 0; j < SCENE_COLS; j++) {
+        let l = COAST_SEA_DEPTH[j];
         LT(d, j, 0, l - 1, r1.sea), LT(d, j, l, jT - 1, r1.sand, 1), k(d, j, l, r1.wet);
     }
     let g = (m, p) => (m + p) % 2 === 0 ? r1.sea[1] : r1.sea[0],
@@ -921,17 +921,17 @@ function Sg() {
             [10, 8],
             [11, 7]
         ]) k(d, q, r, g(q, r));
-    return Le(d), c;
+    return fillSceneFrame(d), c;
 }
-var Bs = [6, 6, 5, 5, 6, 6, 5, 5, 4, 5, 5, 6, 6, 5, 5, 6];
+var JUNGLE_TREE_H = [6, 6, 5, 5, 6, 6, 5, 5, 4, 5, 5, 6, 6, 5, 5, 6];
 
-function Eg() {
+function buildJungleScene() {
     const iB = cX;
     let {
         c: c,
         g: d
-    } = O(RT, jT);
-    for (let g = 0; g < RT; g++) LT(d, g, 0, Bs[g] - 1, i1.tree), LT(d, g, Bs[g], jT - 1, i1.grass, 1), k(d, g, Bs[g], i1.shade);
+    } = O(SCENE_COLS, jT);
+    for (let g = 0; g < SCENE_COLS; g++) LT(d, g, 0, JUNGLE_TREE_H[g] - 1, i1.tree), LT(d, g, JUNGLE_TREE_H[g], jT - 1, i1.grass, 1), k(d, g, JUNGLE_TREE_H[g], i1.shade);
     for (let [j, l, m, p] of [
             [2, 9, 3, 2],
             [9, 8, 4, 2]
@@ -943,17 +943,17 @@ function Eg() {
         let s = 14 - (r - 12);
         LT(d, r, s, jT - 2, i1.water), k(d, r, s - 1, i1.shade);
     }
-    return Le(d), c;
+    return fillSceneFrame(d), c;
 }
-var Hs = [6, 6, 6, 7, 7, 8, 8, 8, 9, 9, 10, 10, 10, 11, 11, 12];
+var DESERT_DUNE_H = [6, 6, 6, 7, 7, 8, 8, 8, 9, 9, 10, 10, 10, 11, 11, 12];
 
-function Mg() {
+function buildDesertScene() {
     const iC = cX;
     let {
         c: c,
         g: d
-    } = O(RT, jT);
-    for (let g = 0; g < RT; g++) LT(d, g, 0, Hs[g] - 1, me.sand), LT(d, g, Hs[g], jT - 1, me.scrub, 1), k(d, g, Hs[g], me.shade);
+    } = O(SCENE_COLS, jT);
+    for (let g = 0; g < SCENE_COLS; g++) LT(d, g, 0, DESERT_DUNE_H[g] - 1, me.sand), LT(d, g, DESERT_DUNE_H[g], jT - 1, me.scrub, 1), k(d, g, DESERT_DUNE_H[g], me.shade);
     for (let [j, l, m, p] of [
             [2, 11, 3, 2],
             [10, 12, 4, 2]
@@ -962,10 +962,10 @@ function Mg() {
             let s = q === j + m - 1;
             LT(d, q, l, l + p - 1, s ? [me.shade, me.rock[0]] : me.rock);
         }
-    return Le(d), c;
+    return fillSceneFrame(d), c;
 }
 
-function Gs(c, d, g, j, l) {
+function drawPineTree(c, d, g, j, l) {
     const iD = cX;
     for (let m = 0; m < j; m++) {
         let p = Math.min(l, Math.floor(m / 3));
@@ -977,55 +977,55 @@ function Gs(c, d, g, j, l) {
     }
     k(c, d, g + j, Qt.pine[0]);
 }
-var su = [11, 11, 12, 12, 11, 12, 13, 12, 12, 11, 12, 12, 13, 12, 11, 12];
+var ARCTIC_DRIFT_H = [11, 11, 12, 12, 11, 12, 13, 12, 12, 11, 12, 12, 13, 12, 11, 12];
 
-function Cg() {
+function buildArcticScene() {
     const iE = cX;
     let {
         c: c,
         g: d
-    } = O(RT, jT);
-    for (let g = 0; g < RT; g++) LT(d, g, 0, su[g] - 1, Qt.snow), LT(d, g, su[g], jT - 1, Qt.ice, 1);
-    return Gs(d, 3, 4, 6, 1), Gs(d, 8, 2, 8, 2), Gs(d, 13, 5, 5, 1), Le(d), c;
+    } = O(SCENE_COLS, jT);
+    for (let g = 0; g < SCENE_COLS; g++) LT(d, g, 0, ARCTIC_DRIFT_H[g] - 1, Qt.snow), LT(d, g, ARCTIC_DRIFT_H[g], jT - 1, Qt.ice, 1);
+    return drawPineTree(d, 3, 4, 6, 1), drawPineTree(d, 8, 2, 8, 2), drawPineTree(d, 13, 5, 5, 1), fillSceneFrame(d), c;
 }
 
-function Ag() {
+function buildArenaScene() {
     const iF = cX;
     let {
         c: c,
         g: d
-    } = O(RT, jT);
-    for (let i = 0; i < RT; i++) LT(d, i, 0, jT - 1, X1.ground);
+    } = O(SCENE_COLS, jT);
+    for (let i = 0; i < SCENE_COLS; i++) LT(d, i, 0, jT - 1, X1.ground);
     let g = (j, l) => {
         let m = j,
-            p = RT - 1 - j;
+            p = SCENE_COLS - 1 - j;
         h(d, m, m, p - m + 1, 1, l), h(d, m, p, p - m + 1, 1, l), h(d, m, m, 1, p - m + 1, l), h(d, p, m, 1, p - m + 1, l);
     };
-    return g(3, X1.ring), g(6, X1.ring), h(d, 7, 7, 2, 2, X1.bull), Le(d), c;
+    return g(3, X1.ring), g(6, X1.ring), h(d, 7, 7, 2, 2, X1.bull), fillSceneFrame(d), c;
 }
 
-function Rg() {
+function buildTestScene() {
     const iG = cX;
     let {
         c: c,
         g: d
-    } = O(RT, jT);
-    for (let g = 0; g < RT; g++) LT(d, g, 0, 9, X1.ground), LT(d, g, 10, jT - 1, me.scrub, 1), k(d, g, 10, me.shade);
+    } = O(SCENE_COLS, jT);
+    for (let g = 0; g < SCENE_COLS; g++) LT(d, g, 0, 9, X1.ground), LT(d, g, 10, jT - 1, me.scrub, 1), k(d, g, 10, me.shade);
     for (let [i, j] of [
             [4, 4],
             [10, 6]
         ]) h(d, i - 1, j, 3, 4, "#e8e0cc"), k(d, i, j + 1, X1.bull), h(d, i, j + 4, 1, 10 - j - 4, me.shade);
-    return Le(d), c;
+    return fillSceneFrame(d), c;
 }
-var au = {
-        jungle: Eg,
-        desert: Mg,
-        arctic: Cg,
-        challenges: Ag,
-        city: xg,
-        swamp: kg,
-        coast: Sg,
-        test: Rg
+var SCENE_BUILDERS = {
+        jungle: buildJungleScene,
+        desert: buildDesertScene,
+        arctic: buildArcticScene,
+        challenges: buildArenaScene,
+        city: buildCityScene,
+        swamp: buildSwampScene,
+        coast: buildCoastScene,
+        test: buildTestScene
     },
     Tn = {
         keyline: "#140c02",
@@ -1114,23 +1114,23 @@ var au = {
     },
     Vs = ["..##########.......", "..###########......", ".#############.....", ".##############....", ".######..######....", ".#####....#####....", ".#####....#####....", ".######..######....", "..############.....", "...##########......", "..##########.####..", ".############.#####", "###################", "#####..############", "#####...##########.", "#####....########..", "##################.", "###################", ".##################", "..##########..#####"];
 
-function du() {
+function gridFromArt() {
     const iP = cX;
     let c = Vs[0].length,
         d = Vs.length,
-        g = new XT(c, d);
+        g = new BitGrid(c, d);
     for (let i = 0; i < d; i++)
         for (let j = 0; j < c; j++) Vs[i][j] === '#' && g.set(j, i, 1);
     return g.chamfer(1), g.chamferHoles(1), g;
 }
 
-function uu(c, d, g, j, l, m = 2) {
+function buildLetterTile(c, d, g, j, l, m = 2) {
     const iQ = cX;
-    let p = new XT(d, g),
+    let p = new BitGrid(d, g),
         q = Ng[c];
     return q && q(p, d, g, j, l), p.chamfer(m), c === 'B' && (p.rect(0, 0, m + 1, m + 1), p.rect(0, g - m - 1, m + 1, m + 1)), p.chamferHoles(1), p;
 }
-var J1 = {
+var BOOTS_WORD_DEF = {
         text: "BOOTS",
         widths: [35, 36, 36, 32, 33],
         capH: 46,
@@ -1150,15 +1150,15 @@ var J1 = {
 
 function go(c) {
     const iR = cX;
-    let d = new XT(Ks(c), c.capH),
+    let d = new BitGrid(Ks(c), c.capH),
         g = 0;
-    for (let i = 0; i < c.text.length; i++) d.blit(uu(c.text[i], c.widths[i], c.capH, c.stem, c.bar), g, 0), g += c.widths[i] + c.track;
+    for (let i = 0; i < c.text.length; i++) d.blit(buildLetterTile(c.text[i], c.widths[i], c.capH, c.stem, c.bar), g, 0), g += c.widths[i] + c.track;
     return d;
 }
 
-function mu() {
+function buildAmpWing() {
     const iS = cX;
-    let c = new XT(56, 40),
+    let c = new BitGrid(56, 40),
         d = 10,
         g = 3,
         j = 11,
@@ -1171,15 +1171,15 @@ function mu() {
     return c.chamfer(1), c;
 }
 
-function Dg(c) {
+function mirrorGrid(c) {
     const iT = cX;
-    let d = new XT(c.w, c.h);
+    let d = new BitGrid(c.w, c.h);
     for (let g = 0; g < c.h; g++)
         for (let i = 0; i < c.w; i++) c.at(i, g) && d.set(c.w - 1 - i, g, 1);
     return d;
 }
 
-function ho(c, d, g, j, l, m) {
+function stampLine(c, d, g, j, l, m) {
     const iU = cX;
     let p = Math.max(Math.abs(j - d), Math.abs(l - g));
     for (let q = 0; q <= p; q++) {
@@ -1190,9 +1190,9 @@ function ho(c, d, g, j, l, m) {
     return c;
 }
 
-function pu() {
+function buildDomeGrid() {
     const iV = cX;
-    let d = new XT(56, 31),
+    let d = new BitGrid(56, 31),
         g = 28,
         j = 24;
     for (let m = 0; m <= 23; m++) {
@@ -1202,27 +1202,27 @@ function pu() {
     }
     return d.rect(g - 28, j, 56, 6), d.chamfer(1), d;
 }
-var qs = [".....#.....", ".....#.....", "....###....", "....###....", "###########", ".#########.", "..#######..", "..#######..", ".###...###.", ".##.....##.", ".#.......#."],
+var LOGO_ART_ROWS = [".....#.....", ".....#.....", "....###....", "....###....", "###########", ".#########.", "..#######..", "..#######..", ".###...###.", ".##.....##.", ".#.......#."],
     Fg = null;
 
-function bo() {
-    return Fg ??= Bg();
+function getTitleArt() {
+    return Fg ??= buildTitleArt();
 }
 
-function Bg() {
+function buildTitleArt() {
     const iX = cX;
     let {
         c: j,
         g: n
-    } = O(307, 128), o = mu(), q = Dg(o), t = pu(), A = go(J1), F = go($s), H = du(), K = {
+    } = O(307, 128), o = buildAmpWing(), q = mirrorGrid(o), t = buildDomeGrid(), A = go(BOOTS_WORD_DEF), F = go($s), H = gridFromArt(), K = {
         wingL: [3, 29],
         wingR: [245, 29],
         helmet: [124, 3],
-        boots: [2 + Math.round((300 - Ks(J1)) / 2), 26],
+        boots: [2 + Math.round((300 - Ks(BOOTS_WORD_DEF)) / 2), 26],
         bullets: [2 + Math.round((300 - Ks($s)) / 2), 74],
         amp: [143, 62]
-    }, L = new XT(300, 42), N = new XT(300, 42);
-    ho(L, 72, 27, 228, 7, 5), ho(L, 228, 27, 72, 7, 5), ho(N, 72, 27, 106, 22, 8), ho(N, 228, 27, 194, 22, 8), L.chamfer(1), N.chamfer(1);
+    }, L = new BitGrid(300, 42), N = new BitGrid(300, 42);
+    stampLine(L, 72, 27, 228, 7, 5), stampLine(L, 228, 27, 72, 7, 5), stampLine(N, 72, 27, 106, 22, 8), stampLine(N, 228, 27, 194, 22, 8), L.chamfer(1), N.chamfer(1);
     let P = [
         [o, K.wingL],
         [q, K.wingR],
@@ -1233,8 +1233,8 @@ function Bg() {
         [A, K.boots],
         [H, K.amp]
     ];
-    for (let [S, [U, V]] of P) Sd(n, S, U + 3, V + 4, Lg, 1);
-    let Q = new XT(j.width, j.height);
+    for (let [S, [U, V]] of P) dilateGridFill(n, S, U + 3, V + 4, Lg, 1);
+    let Q = new BitGrid(j.width, j.height);
     for (let [X, [Y, a7]] of [
             [F, K.bullets],
             [A, K.boots],
@@ -1256,32 +1256,32 @@ function Bg() {
     n.fillStyle = Og;
     for (let az = 0; az < Q.h; az++)
         for (let aA = 0; aA < Q.w; aA++) Q.at(aA, az) && n.fillRect(aA, az, 1, 1);
-    wT(n, o, K.wingL[0], K.wingL[1], Us), wT(n, q, K.wingR[0], K.wingR[1], Us), wT(n, N, 2, 3, Ig), wT(n, L, 2, 3, jg), wT(n, t, K.helmet[0], K.helmet[1], cu), n.fillStyle = Pg;
-    for (let aB = 0; aB < qs.length; aB++)
-        for (let aC = 0; aC < qs[aB].length; aC++) qs[aB][aC] === '#' && n.fillRect(K.helmet[0] + 31 + aC, K.helmet[1] + 7 + aB, 1, 1);
-    return wT(n, F, K.bullets[0], K.bullets[1], lu), wT(n, A, K.boots[0], K.boots[1], Tn), wT(n, H, K.amp[0], K.amp[1], Tn), j;
+    drawBevel(n, o, K.wingL[0], K.wingL[1], Us), drawBevel(n, q, K.wingR[0], K.wingR[1], Us), drawBevel(n, N, 2, 3, Ig), drawBevel(n, L, 2, 3, jg), drawBevel(n, t, K.helmet[0], K.helmet[1], cu), n.fillStyle = Pg;
+    for (let aB = 0; aB < LOGO_ART_ROWS.length; aB++)
+        for (let aC = 0; aC < LOGO_ART_ROWS[aB].length; aC++) LOGO_ART_ROWS[aB][aC] === '#' && n.fillRect(K.helmet[0] + 31 + aC, K.helmet[1] + 7 + aB, 1, 1);
+    return drawBevel(n, F, K.bullets[0], K.bullets[1], lu), drawBevel(n, A, K.boots[0], K.boots[1], Tn), drawBevel(n, H, K.amp[0], K.amp[1], Tn), j;
 }
 
-function fu() {
+function buildTitleSprites() {
     const iY = cX;
     let c = (g, i) => {
             let {
                 c: j,
                 g: l
             } = O(g.w + 6, g.h + 6);
-            return wT(l, g, 3, 3, i), j;
+            return drawBevel(l, g, 3, 3, i), j;
         },
         d = {
-            wordBoots: c(go(J1), Tn),
+            wordBoots: c(go(BOOTS_WORD_DEF), Tn),
             wordBullets: c(go($s), lu),
-            amp: c(du(), Tn),
-            wing: c(mu(), Us),
-            helmet: c(pu(), cu)
+            amp: c(gridFromArt(), Tn),
+            wing: c(buildAmpWing(), Us),
+            helmet: c(buildDomeGrid(), cu)
         };
-    for (let g of "BOTSULE") d["glyph" + g] = c(uu(g, 38, J1.capH, J1.stem, J1.bar), Tn);
+    for (let g of "BOTSULE") d["glyph" + g] = c(buildLetterTile(g, 38, BOOTS_WORD_DEF.capH, BOOTS_WORD_DEF.stem, BOOTS_WORD_DEF.bar), Tn);
     return d;
 }
-var Oe = {
+var ICON_SIZE = {
         w: 64,
         h: 64
     },
@@ -1308,7 +1308,7 @@ var Oe = {
     yu = false,
     vu = false;
 
-function Hg(c) {
+function applyTimingVars(c) {
     const iZ = cX;
     for (let [d, g] of Object.entries(f.timing)) c.style.setProperty("--t-" + d, g + 'ms');
 }
@@ -1317,9 +1317,9 @@ function zs() {
     const j5 = cX;
     if (vu) return;
     vu = true;
-    let c = bo(),
+    let c = getTitleArt(),
         d = document.documentElement;
-    Hg(d), d.style.setProperty("--sk-logo", nT(c)), d.style.setProperty("--sk-logo-w", '' + c.width), d.style.setProperty("--sk-logo-h", '' + c.height);
+    applyTimingVars(d), d.style.setProperty("--sk-logo", nT(c)), d.style.setProperty("--sk-logo-w", '' + c.width), d.style.setProperty("--sk-logo-h", '' + c.height);
 }
 
 function Ne() {
@@ -1327,53 +1327,53 @@ function Ne() {
     if (yu) return;
     yu = true;
     let c = {
-        '--sk-btn': nT(VT("olive", "normal")),
-        '--sk-btn-hot': nT(VT("olive", "active")),
-        '--sk-btn-off': nT(VT("olive", "disabled")),
-        '--sk-btn-quiet': nT(VT("olive", "quiet")),
-        '--sk-btn-down': nT(VT("olive", "pressed")),
-        '--sk-btn-gold': nT(VT("gold", "normal")),
-        '--sk-btn-gold-hot': nT(VT("gold", "active")),
-        '--sk-btn-gold-down': nT(VT("gold", "pressed")),
-        '--sk-btn-dark': nT(VT("dark", "normal")),
-        '--sk-btn-dark-hot': nT(VT("dark", "active")),
-        '--sk-btn-dark-down': nT(VT("dark", "pressed")),
-        '--sk-btn-good': nT(VT("good", "normal")),
-        '--sk-btn-good-hot': nT(VT("good", "active")),
-        '--sk-btn-good-down': nT(VT("good", "pressed")),
-        '--sk-btn-warn': nT(VT("warn", "normal")),
-        '--sk-btn-warn-hot': nT(VT("warn", "active")),
-        '--sk-btn-warn-down': nT(VT("warn", "pressed")),
-        '--sk-plate': nT(Jt(Oe.w, Oe.h, "brass", {
+        '--sk-btn': nT(makeButtonSprite("olive", "normal")),
+        '--sk-btn-hot': nT(makeButtonSprite("olive", "active")),
+        '--sk-btn-off': nT(makeButtonSprite("olive", "disabled")),
+        '--sk-btn-quiet': nT(makeButtonSprite("olive", "quiet")),
+        '--sk-btn-down': nT(makeButtonSprite("olive", "pressed")),
+        '--sk-btn-gold': nT(makeButtonSprite("gold", "normal")),
+        '--sk-btn-gold-hot': nT(makeButtonSprite("gold", "active")),
+        '--sk-btn-gold-down': nT(makeButtonSprite("gold", "pressed")),
+        '--sk-btn-dark': nT(makeButtonSprite("dark", "normal")),
+        '--sk-btn-dark-hot': nT(makeButtonSprite("dark", "active")),
+        '--sk-btn-dark-down': nT(makeButtonSprite("dark", "pressed")),
+        '--sk-btn-good': nT(makeButtonSprite("good", "normal")),
+        '--sk-btn-good-hot': nT(makeButtonSprite("good", "active")),
+        '--sk-btn-good-down': nT(makeButtonSprite("good", "pressed")),
+        '--sk-btn-warn': nT(makeButtonSprite("warn", "normal")),
+        '--sk-btn-warn-hot': nT(makeButtonSprite("warn", "active")),
+        '--sk-btn-warn-down': nT(makeButtonSprite("warn", "pressed")),
+        '--sk-plate': nT(drawRivetedPlate(ICON_SIZE.w, ICON_SIZE.h, "brass", {
             rivets: false,
             flat: true
         })),
-        '--sk-plate-hot': nT(Jt(Oe.w, Oe.h, "gold", {
+        '--sk-plate-hot': nT(drawRivetedPlate(ICON_SIZE.w, ICON_SIZE.h, "gold", {
             rivets: false,
             flat: true
         })),
-        '--sk-plate-off': nT(Jt(Oe.w, Oe.h, "iron", {
+        '--sk-plate-off': nT(drawRivetedPlate(ICON_SIZE.w, ICON_SIZE.h, "iron", {
             rivets: false,
             flat: true
         })),
-        '--sk-plate-toast': nT(Jt(Oe.w, Oe.h, "moss", {
+        '--sk-plate-toast': nT(drawRivetedPlate(ICON_SIZE.w, ICON_SIZE.h, "moss", {
             rivets: false,
             flat: true
         })),
-        '--sk-frame': nT(nu(hu.w, hu.h, "brass", true)),
-        '--sk-banner': nT(Wu(gu.w, gu.h, {
+        '--sk-frame': nT(drawPlainPlate(hu.w, hu.h, "brass", true)),
+        '--sk-banner': nT(buildPillGrid(gu.w, gu.h, {
             stars: false
         })),
-        '--sk-comms': nT(iu(bu.w, bu.h)),
+        '--sk-comms': nT(drawNotchedPlate(bu.w, bu.h)),
         ...Object.fromEntries(tu.flatMap(g => ["normal", "hot", "down", "off"].map(i => [i === "normal" ? "--sk-ic-" + g : "--sk-ic-" + g + '-' + i, nT(Zt(g, i))]))),
         '--sk-star-on': nT(Ie(true)),
         '--sk-star-off': nT(Ie(false)),
         '--sk-star-glint': nT(Ie(true, true)),
-        '--sk-star-sparks': nT(Tu()),
+        '--sk-star-sparks': nT(buildSparkleFrames()),
         '--sk-star-sparks-frames': String(po.frames),
         '--sk-star-sparks-size': po.size + 'px',
         '--sk-lock': nT(Pe(false)),
-        ...Object.fromEntries(Object.entries(au).map(([g, i]) => ["--sk-theatre-" + g, nT(i())])),
+        ...Object.fromEntries(Object.entries(SCENE_BUILDERS).map(([g, i]) => ["--sk-theatre-" + g, nT(i())])),
         '--sk-slice-btn': String(Wn.btn),
         '--sk-slice-plate': String(Wn.plate),
         '--sk-slice-frame': String(Wn.frame),
@@ -1381,33 +1381,33 @@ function Ne() {
         '--sk-slice-comms': Wn.comms.join(' ')
     };
     for (let g of F1) c["--sk-face-" + g] = nT(Gl(g)), c["--sk-face-" + g + '-n'] = String(ue(g).count);
-    c["--sk-face-cell"] = ue(F1[0]).cell + 'px', c["--sk-bezel"] = nT(ou(ue(F1[0]).cell));
+    c["--sk-face-cell"] = ue(F1[0]).cell + 'px', c["--sk-bezel"] = nT(drawRoundBadge(ue(F1[0]).cell));
     let d = document.documentElement;
     for (let [i, j] of Object.entries(c)) d.style.setProperty(i, j);
     zs();
 }
-var Z1 = [],
+var ESCAPE_STACK = [],
     _u = false,
     Gg = c => {
         const j8 = cX;
         if (c.key !== "Escape") return;
-        let d = Z1[Z1.length - 1];
+        let d = ESCAPE_STACK[ESCAPE_STACK.length - 1];
         d && (c.preventDefault(), c.stopPropagation(), d.onEscape());
     };
 
-function s1(c, d) {
+function pushEscapeHandler(c, d) {
     const j9 = cX;
     let g = {
         name: c,
         onEscape: d
     };
-    return Z1.push(g), _u || (window.addEventListener("keydown", Gg, true), _u = true), () => {
+    return ESCAPE_STACK.push(g), _u || (window.addEventListener("keydown", Gg, true), _u = true), () => {
         const jb = j9;
-        let i = Z1.indexOf(g);
-        i !== -1 && Z1.splice(i, 1);
+        let i = ESCAPE_STACK.indexOf(g);
+        i !== -1 && ESCAPE_STACK.splice(i, 1);
     };
 }
-var JT = () => Z1.length > 0,
+var JT = () => ESCAPE_STACK.length > 0,
     w = (c, d, g) => {
         const jj = cX;
         let i = document.createElement(c);
@@ -1420,12 +1420,12 @@ function xu() {
     return c instanceof HTMLInputElement || c instanceof HTMLTextAreaElement || c instanceof HTMLSelectElement || c instanceof HTMLElement && c.isContentEditable;
 }
 
-function en(c) {
+function speakerSvg(c) {
     const jq = cX;
     return "<svg viewBox=\"0 0 24 24\" aria-hidden=\"true\"><path class=\"cone\" d=\"M4 9.5h3.6L12 5.4v13.2L7.6 14.5H4z\"/>" + (c === 'on' ? "<path class=\"wave\" d=\"M15.4 9.3a4 4 0 0 1 0 5.4\"/><path class=\"wave\" d=\"M18.1 6.7a7.6 7.6 0 0 1 0 10.6\"/>" : "<path class=\"slash\" d=\"M15.6 9.6l5 4.8\"/><path class=\"slash\" d=\"M20.6 9.6l-5 4.8\"/>") + "</svg>";
 }
 
-function ku(c) {
+function renderBriefingControls(c) {
     const jw = cX;
     let d = w("div", c);
     for (let g of R1()) {
@@ -1522,7 +1522,7 @@ function Eu(c) {
     };
 }
 
-function Mu(c) {
+function renderSegmented(c) {
     const jK = cX;
     let d = w("div", "ui-segmented"),
         g = c.options.map(({
@@ -1546,7 +1546,7 @@ function Mu(c) {
     };
 }
 
-function Cu(c) {
+function renderSlider(c) {
     const jO = cX;
     let d = w("div", "ui-slider"),
         g = w("div", "ui-slider-track"),
@@ -1607,7 +1607,7 @@ function eT(c, d, g = '') {
 }
 var Au = 0;
 
-function Ru(c) {
+function buildConfirmField(c) {
     const jY = cX;
     let d = document.createElement("div");
     if (d.className = "confirm-field", c.label !== void 0) {
@@ -1689,7 +1689,7 @@ function ST(c) {
             }, 1000);
         }
         let M = c.dismiss,
-            N = s1("confirm", M !== void 0 ? () => C(M) : () => {});
+            N = pushEscapeHandler("confirm", M !== void 0 ? () => C(M) : () => {});
         q.addEventListener("pointerdown", ak => {
             const kk = k7;
             ak.target === q && c.dismiss !== void 0 && C(c.dismiss);
@@ -1698,7 +1698,7 @@ function ST(c) {
 }
 var ju = false,
     Vg = c => c.replace(/-/g, ' ').toUpperCase();
-async function yo(c) {
+async function promptAppUpdate(c) {
     const kq = cX;
     ju = true, await ST({
         title: "OUT OF DATE",
@@ -1712,14 +1712,14 @@ async function yo(c) {
 }
 
 function Iu(c) {
-    ju || yo(c);
+    ju || promptAppUpdate(c);
 }
-var Pu = [] = ["JOOLS", "JOPS", "STOO", 'RJ', "GARY", "ANDY", "BUZZ", "TEDDY", "HAWK", "MAC", "FRANK", "WILL", "CHRIS", "DAVE", "ROB", "JIM", "KEV", "PAUL", "NOBBY", "TAFF", "SCOUSE", "SMUDGE", "DUSTY", "BROCK", "HAGGIS", "PIKE", "WALKER", "JONES", "FRAZER", "BILKO", "DOYLE", "HUDSON", "DRAKE", "APONE", "CHALKY", "DUTCH", "GINGE", "JOCK", "LOFTY", "BLONDY", "PADDY", "RAMBO", "RATTY", "SHORTY", "SPUD", "STICKY", "TINY", "TOMBO", "WIGGY", "BUNNY", "CHIEF", "CURLY", "DODGER", "FLASH", "GRUMPY", "HAPPY", "LURCH", "MOOSE", "NUTTY", "PIGGY", "PORKY", "RUSTY", "SHARKY", "SLIM", "SNOWY", "SPARKY", "STUMPY", "TANK", "TITCH", "WHEELS", "BADGER", "BEANS", "BONES", "BRICK", "CHOPS", "CRUMBS", "DINGER", "FLAPS", "GIZMO", "HOOTER", "JAFFA", "KIPPER", "MUFFIN", "NIPPER", "ODDBOD", "PICKLE", "RHUBRB", "SCRAPS", "SHUNT", "SPANNR", "TICKER", "WOBBLE", "ZIPPO", "BUNGLE", "ABBOT", "ADAMS", "ALLEN", "ARCHER", "ASHBY", "ATKINS", "BAKER", "BANKS", "BARLOW", "BARNES", "BATES", "BAXTER", "BEALE", "BELL", "BENNET", "BERRY", "BEST", "BIRCH", "BISHOP", "BLAKE", "BOLTON", "BOND", "BOOTH", "BOWEN", "BOYCE", "BOYD", "BRADY", "BRIGGS", "BROOKS", "BROWN", "BRYANT", "BUCK", "BURKE", "BURNS", "BUTLER", "BYRNE", "CAIN", "CARR", "CARTER", "CASEY", "CHAPEL", "CLARK", "CLARKE", "CLAY", "CLEGG", "COBB", "COLE", "COLLIN", "COOK", "COOPER", "COX", "CRAIG", "CRANE", "CROSS", "CROWE", "CURTIS", "DALE", "DALTON", "DAVIES", "DAWSON", "DAY", "DEAN", "DENNIS", "DIXON", "DODD", "DOWNS", "DRURY", "DUNN", "DYER", "EATON", "EDGAR", "ELLIS", "ELTON", "EVANS", "FAIRLY", "FARR", "FIELD", "FINCH", "FISHER", "FLYNN", "FORD", "FOSTER", "FOWLER", "FOX", "FRENCH", "FROST", "FULLER", "GALE", "GARNER", "GIBBS", "GILL", "GLOVER", "GODDEN", "GOULD", "GRAHAM", "GRANT", "GRAVES", "GRAY", "GREEN", "GREGG", "GRIMES", "HALL", "HAMER", "HANLEY", "HARDY", "HARPER", "HARRIS", "HART", "HAYES", "HEATH", "HENRY", "HERON", "HICKS", "HILL", "HOBBS", "HODGE", "HOLDEN", "HOLT", "HOOPER", "HOPE", "HORNE", "HOWARD", "HOWE", "HUGHES", "HUNT", "HUNTER", "HURST", "HYDE", "INGRAM", "IRVINE", "JACKS", "JARVIS", "JEFFS", "JENNER", "JOYCE", "JUDD", "KANE", "KEANE", "KEATS", "KEELER", "KELLY", "KEMP", "KENT", "KERR", "KIDD", "KING", "KIRK", "KNIGHT", "LAMB", "LANE", "LANG", "LARK", "LAWSON", "LEACH", "LEE", "LEIGH", "LEWIS", "LLOYD", "LOCK", "LOCKE", "LOGAN", "LONG", "LOWE", "LUCAS", "LYNCH", "LYONS", "MADDOX", "MALONE", "MANN", "MARSH", "MASON", "MAY", "MAYES", "MCBAIN", "MCCOY", "MCLEAN", "MEAD", "MERCER", "MILES", "MILLER", "MILLS", "MOODY", "MOON", "MOORE", "MORAN", "MORGAN", "MORRIS", "MOSS", "MOULD", "MUNRO", "MURPHY", "MURRAY", "NASH", "NEAL", "NELSON", "NEWMAN", "NOBLE", "NOLAN", "NORRIS", "NORTON", "NUNN", "OAKES", "ODELL", "OGDEN", "OLIVER", "ORTON", "OSMAN", "OWEN", "PAGE", "PALMER", "PARKER", "PARR", "PATON", "PAYNE", "PEARCE", "PECK", "PERRY", "PETERS", "PHILIP", "PILE", "PITT", "POOLE", "POPE", "PORTER", "POTTER", "POWELL", "PRATT", "PRICE", "PRIOR", "PUGH", "QUINN", "RAINE", "RAMSEY", "RAND", "RANKIN", "READ", "REEVES", "REID", "REYNER", "RHODES", "RICE", "RIDLEY", "RILEY", "RIVERS", "ROACH", "ROBSON", "ROGERS", "ROOKE", "ROSE", "ROSS", "ROWE", "RUSSEL", "RYAN", "SANDS", "SAVAGE", "SAYER", "SCOTT", "SEARLE", "SHARP", "SHAW", "SHEEHY", "SHIELD", "SHORT", "SIMS", "SLADE", "SLOAN", "SMART", "SMITH", "SNOW", "SPEARS", "SPICER", "STACEY", "STARK", "STEELE", "STOKES", "STONE", "STOTT", "STRONG", "SUMNER", "SUTTON", "SWAIN", "SWIFT", "TALBOT", "TATE", "TAYLOR", "TERRY", "THORN", "TILLEY", "TODD", "TOMLIN", "TOWNS", "TRAVIS", "TUCKER", "TURNER", "TWIGG", "TYSON", "UNWIN", "VANCE", "VAUGHN", "VERNON", "VICKER", "VINCE", "WADE", "WAGNER", "WALSH", "WARD", "WARNER", "WARREN", "WATSON", "WATTS", "WEAVER", "WEBB", "WEBLEY", "WELCH", "WELLS", "WEST", "WHEELR", "WHITE", "WILDE", "WILKES", "WINTER", "WOLFE", "WOOD", "WOODS", "WRAY", "WREN", "WRIGHT", "WYATT", "YATES", "YOUNG"],
-    qg = Pu,
+var SQUAD_NAME_POOL = [] = ["JOOLS", "JOPS", "STOO", 'RJ', "GARY", "ANDY", "BUZZ", "TEDDY", "HAWK", "MAC", "FRANK", "WILL", "CHRIS", "DAVE", "ROB", "JIM", "KEV", "PAUL", "NOBBY", "TAFF", "SCOUSE", "SMUDGE", "DUSTY", "BROCK", "HAGGIS", "PIKE", "WALKER", "JONES", "FRAZER", "BILKO", "DOYLE", "HUDSON", "DRAKE", "APONE", "CHALKY", "DUTCH", "GINGE", "JOCK", "LOFTY", "BLONDY", "PADDY", "RAMBO", "RATTY", "SHORTY", "SPUD", "STICKY", "TINY", "TOMBO", "WIGGY", "BUNNY", "CHIEF", "CURLY", "DODGER", "FLASH", "GRUMPY", "HAPPY", "LURCH", "MOOSE", "NUTTY", "PIGGY", "PORKY", "RUSTY", "SHARKY", "SLIM", "SNOWY", "SPARKY", "STUMPY", "TANK", "TITCH", "WHEELS", "BADGER", "BEANS", "BONES", "BRICK", "CHOPS", "CRUMBS", "DINGER", "FLAPS", "GIZMO", "HOOTER", "JAFFA", "KIPPER", "MUFFIN", "NIPPER", "ODDBOD", "PICKLE", "RHUBRB", "SCRAPS", "SHUNT", "SPANNR", "TICKER", "WOBBLE", "ZIPPO", "BUNGLE", "ABBOT", "ADAMS", "ALLEN", "ARCHER", "ASHBY", "ATKINS", "BAKER", "BANKS", "BARLOW", "BARNES", "BATES", "BAXTER", "BEALE", "BELL", "BENNET", "BERRY", "BEST", "BIRCH", "BISHOP", "BLAKE", "BOLTON", "BOND", "BOOTH", "BOWEN", "BOYCE", "BOYD", "BRADY", "BRIGGS", "BROOKS", "BROWN", "BRYANT", "BUCK", "BURKE", "BURNS", "BUTLER", "BYRNE", "CAIN", "CARR", "CARTER", "CASEY", "CHAPEL", "CLARK", "CLARKE", "CLAY", "CLEGG", "COBB", "COLE", "COLLIN", "COOK", "COOPER", "COX", "CRAIG", "CRANE", "CROSS", "CROWE", "CURTIS", "DALE", "DALTON", "DAVIES", "DAWSON", "DAY", "DEAN", "DENNIS", "DIXON", "DODD", "DOWNS", "DRURY", "DUNN", "DYER", "EATON", "EDGAR", "ELLIS", "ELTON", "EVANS", "FAIRLY", "FARR", "FIELD", "FINCH", "FISHER", "FLYNN", "FORD", "FOSTER", "FOWLER", "FOX", "FRENCH", "FROST", "FULLER", "GALE", "GARNER", "GIBBS", "GILL", "GLOVER", "GODDEN", "GOULD", "GRAHAM", "GRANT", "GRAVES", "GRAY", "GREEN", "GREGG", "GRIMES", "HALL", "HAMER", "HANLEY", "HARDY", "HARPER", "HARRIS", "HART", "HAYES", "HEATH", "HENRY", "HERON", "HICKS", "HILL", "HOBBS", "HODGE", "HOLDEN", "HOLT", "HOOPER", "HOPE", "HORNE", "HOWARD", "HOWE", "HUGHES", "HUNT", "HUNTER", "HURST", "HYDE", "INGRAM", "IRVINE", "JACKS", "JARVIS", "JEFFS", "JENNER", "JOYCE", "JUDD", "KANE", "KEANE", "KEATS", "KEELER", "KELLY", "KEMP", "KENT", "KERR", "KIDD", "KING", "KIRK", "KNIGHT", "LAMB", "LANE", "LANG", "LARK", "LAWSON", "LEACH", "LEE", "LEIGH", "LEWIS", "LLOYD", "LOCK", "LOCKE", "LOGAN", "LONG", "LOWE", "LUCAS", "LYNCH", "LYONS", "MADDOX", "MALONE", "MANN", "MARSH", "MASON", "MAY", "MAYES", "MCBAIN", "MCCOY", "MCLEAN", "MEAD", "MERCER", "MILES", "MILLER", "MILLS", "MOODY", "MOON", "MOORE", "MORAN", "MORGAN", "MORRIS", "MOSS", "MOULD", "MUNRO", "MURPHY", "MURRAY", "NASH", "NEAL", "NELSON", "NEWMAN", "NOBLE", "NOLAN", "NORRIS", "NORTON", "NUNN", "OAKES", "ODELL", "OGDEN", "OLIVER", "ORTON", "OSMAN", "OWEN", "PAGE", "PALMER", "PARKER", "PARR", "PATON", "PAYNE", "PEARCE", "PECK", "PERRY", "PETERS", "PHILIP", "PILE", "PITT", "POOLE", "POPE", "PORTER", "POTTER", "POWELL", "PRATT", "PRICE", "PRIOR", "PUGH", "QUINN", "RAINE", "RAMSEY", "RAND", "RANKIN", "READ", "REEVES", "REID", "REYNER", "RHODES", "RICE", "RIDLEY", "RILEY", "RIVERS", "ROACH", "ROBSON", "ROGERS", "ROOKE", "ROSE", "ROSS", "ROWE", "RUSSEL", "RYAN", "SANDS", "SAVAGE", "SAYER", "SCOTT", "SEARLE", "SHARP", "SHAW", "SHEEHY", "SHIELD", "SHORT", "SIMS", "SLADE", "SLOAN", "SMART", "SMITH", "SNOW", "SPEARS", "SPICER", "STACEY", "STARK", "STEELE", "STOKES", "STONE", "STOTT", "STRONG", "SUMNER", "SUTTON", "SWAIN", "SWIFT", "TALBOT", "TATE", "TAYLOR", "TERRY", "THORN", "TILLEY", "TODD", "TOMLIN", "TOWNS", "TRAVIS", "TUCKER", "TURNER", "TWIGG", "TYSON", "UNWIN", "VANCE", "VAUGHN", "VERNON", "VICKER", "VINCE", "WADE", "WAGNER", "WALSH", "WARD", "WARNER", "WARREN", "WATSON", "WATTS", "WEAVER", "WEBB", "WEBLEY", "WELCH", "WELLS", "WEST", "WHEELR", "WHITE", "WILDE", "WILKES", "WINTER", "WOLFE", "WOOD", "WOODS", "WRAY", "WREN", "WRIGHT", "WYATT", "YATES", "YOUNG"],
+    qg = SQUAD_NAME_POOL,
     Fe = qg,
     Ug = ["JR.", "III", 'IV', 'V', 'VI', "VII", "VIII", 'IX', 'X', 'XI', "XII", "XIII", "XIV", 'XV', "XVI", "XVII", "XVIII", "XIX", 'XX'];
 
-function Lu(c) {
+function soldierNameAt(c) {
     const kw = cX;
     let d = Fe.length;
     if (c < d) return Fe[c];
@@ -1728,7 +1728,7 @@ function Lu(c) {
         j = Ug[g] ?? '' + (g + 2);
     return i + ' ' + j;
 }
-var Ou = "cf.campaign",
+var CAMPAIGN_KEY = "cf.campaign",
     Xs = 1,
     Tt = [{
         at: 0,
@@ -1818,7 +1818,7 @@ var $g = ["frag", "smoke", "flashbang", "supplyDrop", "airstrike", "reinforcemen
         }
     });
 
-function zg(c) {
+function buildPayoutRows(c) {
     const kB = cX;
     let d = f.economy,
         g = [],
@@ -1847,16 +1847,16 @@ function zg(c) {
         total: l + p
     };
 }
-var Yg = {
+var DIFFICULTY_ALIAS = {
         regular: "rookie"
     },
-    Ys = c => typeof c != "string" ? null : P1(c) ? c : Yg[c] ?? null;
+    Ys = c => typeof c != "string" ? null : P1(c) ? c : DIFFICULTY_ALIAS[c] ?? null;
 
 function Bu() {
     const kD = cX;
     let c = null;
     try {
-        c = localStorage.getItem(Ou);
+        c = localStorage.getItem(CAMPAIGN_KEY);
     } catch {
         return vo();
     }
@@ -1933,15 +1933,15 @@ function Bu() {
 function pe(c) {
     const kG = cX;
     try {
-        localStorage.setItem(Ou, JSON.stringify(c));
+        localStorage.setItem(CAMPAIGN_KEY, JSON.stringify(c));
     } catch {}
 }
 
-function Xg(c) {
+function uniqueSoldierName(c) {
     const kH = cX;
     let d = new Set([...c.squad.map(g => g.name), ...c.fallen.map(g => g.name)]);
     for (;;) {
-        let g = Lu(c.issued++);
+        let g = soldierNameAt(c.issued++);
         if (!d.has(g)) return g;
     }
 }
@@ -1950,7 +1950,7 @@ function Hu(c, d) {
     const kI = cX;
     let g = new Set();
     for (; c.squad.length < d;) {
-        let i = Xg(c);
+        let i = uniqueSoldierName(c);
         g.add(i), c.squad.push({
             name: i,
             missions: 0
@@ -1997,7 +1997,7 @@ function Gu(j, q) {
             difficulty: K,
             own: !!aB?.own
         };
-    }), S = j.records[F], U = S?.bestTime ?? 1 / 0, V = S?.bestHome ?? 0, X = !!S?.clears.includes(K), Y = q.packagesFound ?? [], a7 = zg({
+    }), S = j.records[F], U = S?.bestTime ?? 1 / 0, V = S?.bestHome ?? 0, X = !!S?.clears.includes(K), Y = q.packagesFound ?? [], a7 = buildPayoutRows({
         won: A,
         kills: q.kills,
         survived: q.survived.length,
@@ -2092,14 +2092,14 @@ function KW(c) {
     let d = Math.max(0, Math.round(c));
     return Math.floor(d / 60) + ':' + String(d % 60).padStart(2, '0');
 }
-var Jg = 132,
-    a1 = 30 / Jg,
+var MUSIC_BPM = 132,
+    a1 = 30 / MUSIC_BPM,
     Zs = 8,
     Ku = Zs * 4,
     Zg = [69, null, 74, 72, 69, null, 67, null, 65, null, 67, 69, 70, null, 69, null, 74, null, 72, 70, 69, null, 65, null, 67, 69, 67, 65, 62, null, null, null],
     Qg = [38, 34, 41, 33],
     Js = c => 440 * Math.pow(2, (c - 69) / 12),
-    _o = class {
+    MusicEngine = class {
         constructor(c) {
             const kS = cX;
             this.ctx = c, (this.bus = c.createGain(), this.bus.gain.value = 0);
@@ -2243,7 +2243,7 @@ var on = () => {
     Ju = () => ET !== null && !ET.paused || (rn?.running ?? false);
 
 function Zu(c = 20000) {
-    let d = Ta ??= Qu();
+    let d = Ta ??= probeMirror();
     return new Promise(g => {
         const lw = b;
         d.then(i => {
@@ -2266,7 +2266,7 @@ function Zu(c = 20000) {
         });
     });
 }
-async function Qu() {
+async function probeMirror() {
     const lA = cX;
     for (let c of Tb) try {
         if ((await fetch(c, {
@@ -2276,23 +2276,23 @@ async function Qu() {
     return null;
 }
 
-function zu() {
+function armMusicUnlock() {
     const lC = cX;
     if (Qs) return;
     Qs = true;
     let c = d => {
         const lB = b;
-        d.target?.closest?.("#music-toggle") || (Qs = false, window.removeEventListener("pointerdown", c), window.removeEventListener("keydown", c), l1());
+        d.target?.closest?.("#music-toggle") || (Qs = false, window.removeEventListener("pointerdown", c), window.removeEventListener("keydown", c), updateMusic());
     };
     window.addEventListener("pointerdown", c), window.addEventListener("keydown", c);
 }
-async function l1() {
+async function updateMusic() {
     const lD = cX;
     if (!(et && G().music)) {
         ET?.pause(), rn?.stop(), on();
         return;
     }
-    Ta ??= Qu();
+    Ta ??= probeMirror();
     let c = await Ta;
     if (!(et && G().music)) return;
     if (c) {
@@ -2300,7 +2300,7 @@ async function l1() {
         try {
             await ET.play();
         } catch {
-            zu();
+            armMusicUnlock();
         }
         on();
         return;
@@ -2310,20 +2310,20 @@ async function l1() {
         ko = "none", on();
         return;
     }
-    rn ??= new _o(d), ko = "synth", rn.start(), d.state === "suspended" && zu(), on();
+    rn ??= new MusicEngine(d), ko = "synth", rn.start(), d.state === "suspended" && armMusicUnlock(), on();
 }
 
 function wo() {
-    et = true, l1();
+    et = true, updateMusic();
 }
 var Yu = 0;
 
-function nt() {
+function fadeOutMusic() {
     const lE = cX;
     et = false, on();
     let c = ET;
     if (!c || c.paused) {
-        l1();
+        updateMusic();
         return;
     }
     let d = ++Yu,
@@ -2338,7 +2338,7 @@ function nt() {
                     window.setTimeout(p, l / g);
                     return;
                 }
-                l1();
+                updateMusic();
             }
         };
     window.setTimeout(p, l / g);
@@ -2347,21 +2347,21 @@ var sn = () => G().music,
     ot = () => et && G().music && !Ju();
 
 function So() {
-    l1();
+    updateMusic();
 }
 A1(c => {
     const lG = cX;
     let d = Math.max(0, Math.min(1, c.musicVolume * xo));
-    ET && (ET.volume = d), rn?.setLevel(d * 0.5), l1();
+    ET && (ET.volume = d), rn?.setLevel(d * 0.5), updateMusic();
 });
 
 function Tm() {
-    l1();
+    updateMusic();
 }
-var Wb = en('on'),
-    eb = en("off");
+var SOUND_ICON_ON = speakerSvg('on'),
+    eb = speakerSvg("off");
 
-function ea() {
+function toggleMusic() {
     if (ot()) {
         So();
         return;
@@ -2379,16 +2379,16 @@ function Wm(c) {
         const lI = lH;
         let j = sn(),
             l = ot();
-        d.classList.toggle('on', j && !l), d.classList.toggle("blocked", l), d.setAttribute("aria-pressed", String(j)), d.title = j ? l ? "Start the music  (M)" : Xu() === "synth" ? "Music on — house march  (M)" : "Music on  (M)" : "Music off  (M)", d.setAttribute("aria-label", d.title), d.innerHTML = j ? Wb : eb;
+        d.classList.toggle('on', j && !l), d.classList.toggle("blocked", l), d.setAttribute("aria-pressed", String(j)), d.title = j ? l ? "Start the music  (M)" : Xu() === "synth" ? "Music on — house march  (M)" : "Music on  (M)" : "Music off  (M)", d.setAttribute("aria-label", d.title), d.innerHTML = j ? SOUND_ICON_ON : eb;
     };
-    d.addEventListener("click", ea);
+    d.addEventListener("click", toggleMusic);
     let i = tt(g);
     return g(), c.appendChild(d), () => {
         const lJ = lH;
         i(), d.remove();
     };
 }
-var em = ["review", "armoury", "offer"],
+var DISPATCH_KINDS = ["review", "armoury", "offer"],
     tm = "cf.dispatch",
     ta = 1,
     an = () => ({
@@ -2401,9 +2401,9 @@ var em = ["review", "armoury", "offer"],
         lastPurchaseAt: null
     }),
     ln = c => typeof c == "number" && Number.isFinite(c) && c >= 0 ? c : null,
-    Eo = c => em.includes(c);
+    Eo = c => DISPATCH_KINDS.includes(c);
 
-function nm() {
+function loadDispatchState() {
     const lK = cX;
     let c = null;
     try {
@@ -2438,7 +2438,7 @@ function nm() {
     }
 }
 
-function om(c) {
+function saveDispatchState(c) {
     const lL = cX;
     try {
         localStorage.setItem(tm, JSON.stringify({
@@ -2453,12 +2453,12 @@ function om(c) {
     } catch {}
 }
 var na = {
-        load: () => Promise.resolve(nm()),
-        save: c => (om(c), Promise.resolve())
+        load: () => Promise.resolve(loadDispatchState()),
+        save: c => (saveDispatchState(c), Promise.resolve())
     },
     Mo = 86400000;
 
-function tb(c, d) {
+function dispatchSuppressReason(c, d) {
     const lM = cX;
     let g = f.dispatch;
     if (d.missionsCleared < g.quietUntilCleared) return "onboarding: " + d.missionsCleared + " of " + g.quietUntilCleared + " missions cleared";
@@ -2490,8 +2490,8 @@ function tb(c, d) {
 }
 
 function im(c) {
-    for (let d of em)
-        if (tb(d, c) === null) return d;
+    for (let d of DISPATCH_KINDS)
+        if (dispatchSuppressReason(d, c) === null) return d;
     return null;
 }
 async function rm(c, d, g) {
@@ -2510,12 +2510,12 @@ async function am(c, d, g) {
     i.answered[d] = g.slice(0, 40), await c.save(i);
 }
 
-function lm(c = Date.now()) {
+function markArmouryPurchase(c = Date.now()) {
     const lQ = cX;
-    let d = nm();
-    d.lastPurchaseAt = c, om(d);
+    let d = loadDispatchState();
+    d.lastPurchaseAt = c, saveDispatchState(d);
 }
-var oa = window,
+var globalWindow = window,
     nb = 60000,
     ia = 0,
     ra = "cf.playtest",
@@ -2536,15 +2536,15 @@ function hW(c, d) {
             ...d,
             playtest: cm
         });
-        let g = oa.cf_track;
+        let g = globalWindow.cf_track;
         if (g && !g.q) {
             g(c, d);
             return;
         }
-        g || (oa.cf_track = Object.assign(() => {}, {
+        g || (globalWindow.cf_track = Object.assign(() => {}, {
             q: []
         }));
-        let i = oa.cf_track.q;
+        let i = globalWindow.cf_track.q;
         if (ia || (ia = Date.now() + nb), Date.now() > ia) {
             i.length = 0;
             return;
@@ -2608,7 +2608,7 @@ var dm = c => {
             id: c,
             price: d,
             balance: g ?? null
-        }), lm();
+        }), markArmouryPurchase();
     },
     pm = () => hW("room_create"),
     fm = c => hW("room_join", {
@@ -2649,7 +2649,7 @@ function it() {
     return c1;
 }
 
-function ym() {
+function saveEventQueue() {
     const lZ = cX;
     if (c1) {
         da = 0;
@@ -2662,13 +2662,13 @@ function ym() {
 function vm(c) {
     const m7 = cX;
     let d = it();
-    d.playSeconds += c, da += c, da >= ob && ym();
+    d.playSeconds += c, da += c, da >= ob && saveEventQueue();
 }
 
 function ua(c) {
     const m8 = cX;
     let d = it();
-    c ? d.missionsCompleted++ : d.missionsFailed++, ym();
+    c ? d.missionsCompleted++ : d.missionsFailed++, saveEventQueue();
 }
 var ib = 3;
 
@@ -2748,13 +2748,13 @@ var Ao = {
         } catch {}
     };
 
-function rb(c, d) {
+function hashToUnit(c, d) {
     const mq = cX;
     let g = 2654435769;
     for (let i = 0; i < c.length; i++) g = xT(g, c.charCodeAt(i), d);
     return g / 4294967296;
 }
-var sb = c => {
+var hash751 = c => {
     const mw = cX;
     let d = 0;
     for (let g = 0; g < c.length; g++) d = xT(d, c.charCodeAt(g), 751);
@@ -2767,28 +2767,28 @@ function ab(c, d = f.demand.current) {
     if (!g) throw new Error("no experiment \"" + d + '"');
     let i = g.variants.reduce((l, m) => l + m.weight, 0);
     if (i <= 0) throw new Error("experiment \"" + d + "\" has no variant with weight");
-    let j = rb(c, sb(d)) * i;
+    let j = hashToUnit(c, hash751(d)) * i;
     for (let l of g.variants)
         if (!(l.weight <= 0)) {
             if (j < l.weight) return l;
             j -= l.weight;
         } return g.variants[g.variants.length - 1];
 }
-var Be = null;
+var assignedExperiment = null;
 
-function xm(c) {
+function assignExperiment(c) {
     const mz = cX;
-    Be = ab(c);
+    assignedExperiment = ab(c);
     let d = f.demand.current,
         g = cn();
-    return g.assigned[d] !== Be.id && (g.assigned[d] = Be.id, ma(g), hW("experiment_assigned", wm({}))), Be;
+    return g.assigned[d] !== assignedExperiment.id && (g.assigned[d] = assignedExperiment.id, ma(g), hW("experiment_assigned", wm({}))), assignedExperiment;
 }
-var km = () => Be,
+var getAssignedExperiment = () => assignedExperiment,
     wm = c => ({
         experiment: f.demand.current,
-        variant: Be?.id ?? null,
-        price_cents: Be?.priceCents ?? null,
-        offer_key: Be?.offerKey ?? null,
+        variant: assignedExperiment?.id ?? null,
+        price_cents: assignedExperiment?.priceCents ?? null,
+        offer_key: assignedExperiment?.offerKey ?? null,
         ...c
     });
 
@@ -2824,7 +2824,7 @@ function ZT(c, d = {}) {
         i.emailGiven = true, ma(i);
     }
 }
-var Sm = () => cn().emailGiven,
+var hasGivenEmail = () => cn().emailGiven,
     Em = () => cn().declinedAt,
     pa = {
         full_game: {
@@ -2884,8 +2884,8 @@ function Am() {
     const mE = cX;
     return (new Map(R1().map(c => [c.action, c.keys])).get("move") ?? "CLICK") + " where you want it. They will hit that, or somewhere they can see from it.";
 }
-var fa = ["Marked. They are on their way, and they have the correct map this time.", "Passed on. The pilot repeated it back to me, mostly.", "It is with the air corps now. I have washed my hands of it.", "Inbound. Do stand somewhere that is not there.", "Logged and airborne. The paperwork will follow in about a fortnight.", "They are coming. I would move, in your position, which I am not in.", "Confirmed. I gave them the grid twice and the second one was right.", "On its way. They are very good at this, or something near it.", "Away. That corner of the map is spoken for now.", "Understood and forwarded. Nothing to do now but stand clear and look busy.", "Received. I have told them it is urgent, which I say every time.", "Wheels up. He has done this before, he says, and I believe about half of it.", "Noted. The spot you picked is now a matter for the air corps.", "Called. Whatever is standing there has about a minute to reconsider.", "They have it. The wireless was clear for once, which unnerved me.", "Sent. I have circled it on my map in a pen that will not come off.", "On the way. I would not linger, though I am not there to check.", "Acknowledged. The squadron is between meals, so this may be brisk.", "Given. They are keen, and keen is most of what we have.", "Away and clear. That ground is no longer ours in any useful sense."],
-    Rm = c => fa[Math.min(fa.length - 1, Math.floor(c * fa.length))],
+var DISPATCH_QUIPS = ["Marked. They are on their way, and they have the correct map this time.", "Passed on. The pilot repeated it back to me, mostly.", "It is with the air corps now. I have washed my hands of it.", "Inbound. Do stand somewhere that is not there.", "Logged and airborne. The paperwork will follow in about a fortnight.", "They are coming. I would move, in your position, which I am not in.", "Confirmed. I gave them the grid twice and the second one was right.", "On its way. They are very good at this, or something near it.", "Away. That corner of the map is spoken for now.", "Understood and forwarded. Nothing to do now but stand clear and look busy.", "Received. I have told them it is urgent, which I say every time.", "Wheels up. He has done this before, he says, and I believe about half of it.", "Noted. The spot you picked is now a matter for the air corps.", "Called. Whatever is standing there has about a minute to reconsider.", "They have it. The wireless was clear for once, which unnerved me.", "Sent. I have circled it on my map in a pen that will not come off.", "On the way. I would not linger, though I am not there to check.", "Acknowledged. The squadron is between meals, so this may be brisk.", "Given. They are keen, and keen is most of what we have.", "Away and clear. That ground is no longer ours in any useful sense."],
+    Rm = c => DISPATCH_QUIPS[Math.min(DISPATCH_QUIPS.length - 1, Math.floor(c * DISPATCH_QUIPS.length))],
     lb = ["The quartermaster has things you have not looked at. He counts them on Sundays.", "Your bonds sit unspent. They gather no interest. I asked, and was given a leaflet.", "The stores are open. The men prefer the shorter barrel, and I have never asked why.", "Spend the bonds. Mine went on a desk in 1974 and I regret none of it."],
     cb = ["Somebody upstairs wants to know how this is going. I have put \"fine\" since 1961.", "There is a form about morale. This one goes somewhere, which mine never did.", "Command wants an opinion of all this. They asked you and not me, which I noted."],
     db = ["There is talk of a bigger war. Cities, apparently, and a swamp nobody has costed.", "They are deciding whether to extend the campaign. A coast is mentioned, and a budget.", "A larger front is being discussed. I have seen the map and it is mostly blue."],
@@ -2914,7 +2914,7 @@ var pb = 35,
     fb = 120,
     hb = /[\s.,;:!?'"()-]/;
 
-function Po({
+function playTypewriterLine({
     line: c,
     raised: d,
     build: g
@@ -2939,7 +2939,7 @@ function Po({
             },
             R = g(P, Q);
         R.classList.add("dsp-body"), H.append(R, P);
-        let S = s1("dispatch", () => Q("skipped")),
+        let S = pushEscapeHandler("dispatch", () => Q("skipped")),
             U = Q1(F),
             V = ue(A.portrait ?? '').talk.frames,
             X = 0,
@@ -2966,9 +2966,9 @@ function Po({
         document.body.appendChild(F), requestAnimationFrame(() => F.classList.add('in')), P.querySelector("button")?.focus();
     });
 }
-var gb = c => c === null ? '' : Mm(c);
+var formatPrice = c => c === null ? '' : Mm(c);
 
-function ga({
+function renderOfferPanel({
     campaign: g,
     levels: j,
     done: q,
@@ -2977,9 +2977,9 @@ function ga({
     lead: A
 }) {
     const mM = cX;
-    let C = km(),
+    let C = getAssignedExperiment(),
         E = pa[C?.offerKey ?? "full_game"] ?? pa.full_game,
-        F = gb(C?.priceCents ?? null),
+        F = formatPrice(C?.priceCents ?? null),
         H = {
             ...Ro(g, j)
         },
@@ -3027,7 +3027,7 @@ function ga({
             const mR = mM;
             let R = w("div");
             R.append(w('h2', "dsp-headline", E.reveal.headline), w('p', "dsp-plain", E.reveal.sub));
-            let S = !Sm(),
+            let S = !hasGivenEmail(),
                 U = w("input", "dsp-input");
             U.type = "email", U.placeholder = "you@example.com", U.autocomplete = "email", U.setAttribute("aria-label", "Email address");
             let V = false;
@@ -3083,10 +3083,10 @@ function ga({
 async function Lo(c, d, g, i) {
     const mZ = cX;
     try {
-        await Po({
+        await playTypewriterLine({
             line: Io("offer", Math.random()),
             raised: true,
-            build: (j, l) => ga({
+            build: (j, l) => renderOfferPanel({
                 campaign: d,
                 levels: g,
                 actions: j,
@@ -3116,12 +3116,12 @@ function Pm(c, d, g) {
         source: "home_cta"
     }), () => i.remove();
 }
-var yb = en('on');
+var MUSIC_ICON_ON = speakerSvg('on');
 
-function Lm(c) {
+function renderMusicCta(c) {
     const n9 = cX;
     let d = document.createElement("button");
-    d.type = "button", d.className = "fx-cta", d.innerHTML = yb + "<span>Play some awesome music</span>", d.title = "The browser will not start music on its own. This is the click it wants.";
+    d.type = "button", d.className = "fx-cta", d.innerHTML = MUSIC_ICON_ON + "<span>Play some awesome music</span>", d.title = "The browser will not start music on its own. This is the click it wants.";
     let g = false,
         i = l => {
             const ng = n9;
@@ -3146,15 +3146,15 @@ function Lm(c) {
         j(), d.remove();
     }) : (j(), () => {});
 }
-var vb = () => document.getElementById("blackout"),
+var getBlackoutEl = () => document.getElementById("blackout"),
     Oo = 0;
 
-function MW(c) {
+function setBlackout(c) {
     const nk = cX;
     let d = Math.max(0, Math.min(1, c));
     if (Math.abs(d - Oo) < 0.004) return;
     Oo = d;
-    let g = vb();
+    let g = getBlackoutEl();
     g && (g.style.opacity = String(d));
 }
 
@@ -3170,8 +3170,8 @@ function Om(c) {
             j = () => {
                 const nw = nq;
                 let l = Math.min(1, (performance.now() - i) / (c * 1000));
-                if (MW(g + (1 - g) * l), l >= 1) {
-                    MW(1), d();
+                if (setBlackout(g + (1 - g) * l), l >= 1) {
+                    setBlackout(1), d();
                     return;
                 }
                 requestAnimationFrame(j);
@@ -3192,8 +3192,8 @@ function He(c) {
             j = () => {
                 const nz = nx;
                 let l = Math.min(1, (performance.now() - i) / (c * 1000));
-                if (MW(g * (1 - l)), l >= 1) {
-                    MW(0), d();
+                if (setBlackout(g * (1 - l)), l >= 1) {
+                    setBlackout(0), d();
                     return;
                 }
                 requestAnimationFrame(j);
@@ -3201,19 +3201,19 @@ function He(c) {
         requestAnimationFrame(j);
     });
 }
-var _b = 1600,
+var HINT_DURATION = 1600,
     No = 8,
     ba = null,
     Do = null;
 
-function Nm() {
+function clearHint() {
     const nA = cX;
     Do !== null && (clearTimeout(Do), Do = null), ba?.remove(), ba = null;
 }
 
 function CW(c, d) {
     const nB = cX;
-    Nm();
+    clearHint();
     let g = w("div", "toast", d.toUpperCase());
     g.style.left = "-9999px", g.style.top = '0', document.body.appendChild(g), ba = g;
     let j = c.getBoundingClientRect(),
@@ -3221,10 +3221,10 @@ function CW(c, d) {
         m = j.top - l.height - No,
         p = m >= 0 ? m : j.bottom + No,
         q = Math.round(Math.min(Math.max(No, j.left + j.width / 2 - l.width / 2), window.innerWidth - l.width - No));
-    g.classList.toggle("below", m < 0), g.style.left = q + 'px', g.style.top = Math.round(p) + 'px', Do = window.setTimeout(Nm, _b);
+    g.classList.toggle("below", m < 0), g.style.left = q + 'px', g.style.top = Math.round(p) + 'px', Do = window.setTimeout(clearHint, HINT_DURATION);
 }
 
-function Dm(c) {
+function clearCfKeys(c) {
     const nC = cX;
     let d = [];
     try {
@@ -3242,21 +3242,21 @@ function Dm(c) {
     return g;
 }
 
-function xb() {
+function clearAllCfData() {
     const nD = cX;
     let c = [];
     try {
-        c.push(...Dm(localStorage));
+        c.push(...clearCfKeys(localStorage));
     } catch {}
     try {
-        c.push(...Dm(sessionStorage));
+        c.push(...clearCfKeys(sessionStorage));
     } catch {}
     return c;
 }
 
-function Fm() {
+function wipeAndReload() {
     const nE = cX;
-    xb(), window.location.replace(window.location.pathname);
+    clearAllCfData(), window.location.replace(window.location.pathname);
 }
 
 function Fo(c, {
@@ -3299,7 +3299,7 @@ function Fo(c, {
         }
     };
 }
-var kb = () => document.getElementById("sheet"),
+var getSheetEl = () => document.getElementById("sheet"),
     Bo = null,
     st = () => Bo !== null;
 
@@ -3310,7 +3310,7 @@ function zW() {
 function Ho(d, g, j = {}) {
     const nI = cX;
     zW();
-    let m = kb(),
+    let m = getSheetEl(),
         p = document.createElement("div");
     p.className = j.wide ? "sheet-wrap wide" : "sheet-wrap";
     let q = document.createElement("div");
@@ -3328,7 +3328,7 @@ function Ho(d, g, j = {}) {
     };
     m.addEventListener("pointerdown", y);
     let A = Q1(m),
-        C = s1("sheet", u),
+        C = pushEscapeHandler("sheet", u),
         E = () => {
             const nL = nI;
             m.removeEventListener("pointerdown", y), C(), A();
@@ -3362,10 +3362,10 @@ function Go(c, d, g, i = false) {
             });
             q.primary ? (u.classList.add("sheet-primary"), m.appendChild(u)) : (p || (p = document.createElement("div"), p.className = "sheet-split", m.appendChild(p)), p.appendChild(u));
         }
-        return i && l.appendChild(ku("sheet-controls")), [l, m];
+        return i && l.appendChild(renderBriefingControls("sheet-controls")), [l, m];
     });
 }
-async function wb() {
+async function confirmWipeData() {
     const nO = cX;
     await ST({
         title: "CLEAR MY DATA",
@@ -3379,7 +3379,7 @@ async function wb() {
             value: "clear"
         }],
         dismiss: "cancel"
-    }) === "clear" && Fm();
+    }) === "clear" && wipeAndReload();
 }
 
 function Vo() {
@@ -3402,7 +3402,7 @@ function Vo() {
                     textContent: az
                 })), aF.appendChild(Object.assign(document.createElement("span"), {
                     textContent: aA
-                })), aE.appendChild(aF), aE.appendChild(Mu({
+                })), aE.appendChild(aF), aE.appendChild(renderSegmented({
                     options: aB,
                     value: aC,
                     onChange: aD
@@ -3417,7 +3417,7 @@ function Vo() {
                     textContent: az
                 })), aE.appendChild(Object.assign(document.createElement("span"), {
                     textContent: aA
-                })), aD.appendChild(aE), aD.appendChild(Cu({
+                })), aD.appendChild(aE), aD.appendChild(renderSlider({
                     value: aB,
                     onChange: aC
                 }).root), F.appendChild(aD);
@@ -3525,7 +3525,7 @@ function Vo() {
                         const nX = nU;
                         aF.preventDefault(), aF.stopPropagation(), window.removeEventListener("keydown", aE, true), aD?.(), aC(aF.key.toLowerCase());
                     };
-                aD = s1("rebind", () => {
+                aD = pushEscapeHandler("rebind", () => {
                     const nY = nU;
                     window.removeEventListener("keydown", aE, true), aD?.(), aC("escape");
                 }), window.addEventListener("keydown", aE, true);
@@ -3550,7 +3550,7 @@ function Vo() {
         })), ak.appendChild(aq), ak.appendChild($W("Clear", {
             tone: "warn",
             onClick: () => {
-                j(), wb();
+                j(), confirmWipeData();
             }
         })), L.appendChild(ak);
         let aw = Fo([{
@@ -3580,7 +3580,7 @@ function Vo() {
         }), ax.appendChild(P), [q, aw.root, A, ax];
     });
 }
-var Sb = "7 September 2026",
+var PRIVACY_DATE = "7 September 2026",
     Eb = [
         ["What we collect", "\n    <p><strong>A guest identity.</strong> A random id and a secret, minted by your browser and kept in its local storage. They are how multiplayer knows a seat is yours across a reload. There is no account and no password; the display name you choose is the only thing other players see.</p>\n    <p><strong>What you tell us, if you choose to.</strong> The game occasionally asks what you make of it. A rating, and anything you write in the box, are stored on our server along with how far into the campaign you were. If you ask to be told whether the full game gets built, the email address you give is stored with it. Both are optional, every time, and skipping them changes nothing about the game.</p>\n    <p><strong>Play data.</strong> Your campaign progress, squad and Armoury are saved in your browser's local storage and never leave it. Multiplayer matches -- who played, which map, who won -- are recorded on our server.</p>\n    <p><strong>Analytics.</strong> First-party only, on our own server: page visits, which screens and missions you open, mission results, matches, and how long a visit lasts. Each event carries your guest id, your browser's language, the screen size and whether it is a touch screen, and the page that linked you here. Your network address is hashed with a secret before it is stored and the address itself is never kept.</p>"],
         ["How we use it", "\n    <ul><li>To run multiplayer and remember your progress.</li>\n    <li>To see which missions are too hard, which screens lose people, and whether the game is worth building further.</li>\n    <li>To keep the servers up and abuse out.</li></ul>"],
@@ -3592,7 +3592,7 @@ var Sb = "7 September 2026",
 function Bm() {
     const o7 = cX;
     let c = document.createElement("div");
-    return c.className = "privacy", c.innerHTML = "<p class=\"privacy-updated\">Last updated " + Sb + "</p>" + Eb.map(([d, g]) => "<h3>" + d + "</h3>" + g).join(''), ST({
+    return c.className = "privacy", c.innerHTML = "<p class=\"privacy-updated\">Last updated " + PRIVACY_DATE + "</p>" + Eb.map(([d, g]) => "<h3>" + d + "</h3>" + g).join(''), ST({
         title: "Privacy",
         body: c,
         buttons: [{
@@ -3602,7 +3602,7 @@ function Bm() {
         dismiss: 'ok'
     }).then(() => {});
 }
-var Mb = {
+var CHANGELOG_TAGS = {
     FEATURE: {
         label: "NEW",
         cls: "is-feature"
@@ -3617,24 +3617,24 @@ var Mb = {
     }
 };
 
-function Cb(c) {
+function formatLongDate(c) {
     const o8 = cX;
     let d = new Date(c + "T00:00:00Z");
     return Number.isNaN(d.getTime()) ? c : d.getUTCDate() + ' ' + ["January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December"][d.getUTCMonth()] + ' ' + d.getUTCFullYear();
 }
-var Hm = () => (x ?? []).filter(c => c.version !== "Unreleased"),
-    Gm = () => Hm().length > 0;
+var releasedVersions = () => (x ?? []).filter(c => c.version !== "Unreleased"),
+    Gm = () => releasedVersions().length > 0;
 
-function Vm() {
+function renderChangelog() {
     const o9 = cX;
     let c = document.createElement("div");
-    return c.className = "changelog", c.innerHTML = Hm().map(d => {
+    return c.className = "changelog", c.innerHTML = releasedVersions().map(d => {
         const og = o9;
         let g = d.version === "0.3.0" ? "<span class=\"changelog-here\">you are here</span>" : '',
-            i = d.date ? "<span class=\"changelog-when\">" + Cb(d.date) + "</span>" : '',
+            i = d.date ? "<span class=\"changelog-when\">" + formatLongDate(d.date) + "</span>" : '',
             j = d.entries.map(l => {
                 const oj = og;
-                let m = l.tag ? Mb[l.tag] : void 0;
+                let m = l.tag ? CHANGELOG_TAGS[l.tag] : void 0;
                 return m ? "<li class=\"changelog-entry " + m.cls + "\"><span class=\"changelog-tag\">" + m.label + "</span><span>" + l.html + "</span></li>" : "<li class=\"changelog-entry is-note\"><span>" + l.html + "</span></li>";
             }).join('');
         return "<section class=\"changelog-release\"><h3><span class=\"changelog-version\">v" + d.version + "</span>" + i + g + "</h3><ul>" + j + "</ul></section>";
@@ -3665,7 +3665,7 @@ function QT(c, d) {
             }
     }
 }
-var lT = {
+var THEME_PALETTES = {
         jungle: {
             edge: "#24251a",
             stone: ["#36372a", "#60604b", "#96927a"],
@@ -3699,7 +3699,7 @@ var lT = {
     },
     qm = 4;
 
-function qo(c, d, g, j, l) {
+function drawStoneColumn(c, d, g, j, l) {
     const oq = cX;
     let m = [0.45, 0.75, 0.9, 1, 1, 0.9, 0.7],
         p = Math.round(j * 0.85);
@@ -3711,13 +3711,13 @@ function qo(c, d, g, j, l) {
     k(c, d + 3, g + 3, l.stone[1]);
 }
 
-function Um(c, d) {
+function drawLeafyTree(c, d) {
     const ow = cX;
     let {
         c: g,
         g: j
-    } = O(24, 24), l = lT[c];
-    qo(j, 5 - d, 3 + d, 14, l), qo(j, 2, 13, 8, l), qo(j, 14, 12 - d, 7, l), d !== 1 && qo(j, 11, 17, 5, l), h(j, 7, 5 + d, 4, 1, c === "arctic" ? l.snow : l.leaf[1]), k(j, 5, 18, l.leaf[2]), k(j, 18, 19, l.leaf[1]), c === "arctic" && (h(j, 5, 14, 3, 1, l.snow), h(j, 16, 13, 3, 1, l.snow)), QT(g, [l.stone]);
+    } = O(24, 24), l = THEME_PALETTES[c];
+    drawStoneColumn(j, 5 - d, 3 + d, 14, l), drawStoneColumn(j, 2, 13, 8, l), drawStoneColumn(j, 14, 12 - d, 7, l), d !== 1 && drawStoneColumn(j, 11, 17, 5, l), h(j, 7, 5 + d, 4, 1, c === "arctic" ? l.snow : l.leaf[1]), k(j, 5, 18, l.leaf[2]), k(j, 18, 19, l.leaf[1]), c === "arctic" && (h(j, 5, 14, 3, 1, l.snow), h(j, 16, 13, 3, 1, l.snow)), QT(g, [l.stone]);
     for (let [m, p] of [
             [4, 17],
             [7, 18],
@@ -3731,7 +3731,7 @@ function $m(c, d) {
     let {
         c: g,
         g: j
-    } = O(24, 20), l = lT[c];
+    } = O(24, 20), l = THEME_PALETTES[c];
     h(j, 2, 9, 19, 8, l.wood[0]), h(j, 3, 8, 18, 5, l.wood[1]), h(j, 4, 8, 14, 1, l.wood[2]), h(j, 7 + d, 6, 3, 4, l.wood[0]), h(j, 9 + d, 4, 2, 3, l.wood[1]), h(j, 2, 10, 3, 5, l.wood[2]), h(j, 3, 11, 1, 3, l.wood[0]);
     for (let [m, p, q] of [
             [7, 11, 6],
@@ -3749,12 +3749,12 @@ function $m(c, d) {
     return B(g, l.edge), g;
 }
 
-function Km(c, d) {
+function drawBush(c, d) {
     const oz = cX;
     let {
         c: g,
         g: j
-    } = O(20, 20), l = lT[c];
+    } = O(20, 20), l = THEME_PALETTES[c];
     for (let [m, p, q] of [
             [6, 3, 7],
             [3, 7, 10],
@@ -3781,12 +3781,12 @@ function Km(c, d) {
     return QT(g, [l.leaf]), B(g, l.edge), g;
 }
 
-function zm(c, d) {
+function drawPalm(c, d) {
     const oA = cX;
     let {
         c: g,
         g: j
-    } = O(20, 18), l = lT[c];
+    } = O(20, 18), l = THEME_PALETTES[c];
     for (let m = -2; m <= 2; m++)
         for (let p = 0; p < 6; p++) {
             let q = 9 + Math.round(m * p * 0.7),
@@ -3796,12 +3796,12 @@ function zm(c, d) {
     return k(j, 9 + d, 14, l.wood[1]), B(g, l.edge), g;
 }
 
-function Ym(c, d) {
+function drawSupplyStack(c, d) {
     const oC = cX;
     let {
         c: g,
         g: i
-    } = O(18, 16), j = lT[c], l = (m, p, q, u) => {
+    } = O(18, 16), j = THEME_PALETTES[c], l = (m, p, q, u) => {
         const oB = b;
         let v = m + Math.floor(q / 2) - 1;
         h(i, v, p + u - 1, 3, 4, j.bag[0]), h(i, v, p + u, 2, 2, j.bag[2]);
@@ -3814,12 +3814,12 @@ function Ym(c, d) {
     return d === 0 ? (l(2, 2, 9, 5), l(10, 7, 6, 4)) : d === 1 ? (l(7, 3, 9, 5), l(1, 8, 6, 3)) : (l(5, 2, 8, 5), l(1, 8, 6, 3), l(11, 9, 5, 3)), k(i, 7, 12, j.leaf[0]), k(i, 8, 12, j.leaf[1]), B(g, j.edge), g;
 }
 
-function Xm(c, d) {
+function drawFence(c, d) {
     const oD = cX;
     let {
         c: g,
         g: j
-    } = O(20, 14), l = lT[c];
+    } = O(20, 14), l = THEME_PALETTES[c];
     for (let m = 0; m < 12; m++) {
         let p = 9 - Math.floor(m / 3);
         h(j, 3 + m, p, 2, 2, l.wood[0]), k(j, 3 + m, p, c === "arctic" ? l.snow : l.wood[2]);
@@ -3828,21 +3828,21 @@ function Xm(c, d) {
     return d === 1 && h(j, 4, 11, 6, 1, l.wood[1]), g;
 }
 
-function Jm(c, d) {
+function drawBlockhouse(c, d) {
     const oE = cX;
     let {
         c: g,
         g: i
-    } = O(20, 20), j = lT[c];
+    } = O(20, 20), j = THEME_PALETTES[c];
     return h(i, 5, 7, 10, 9, j.wood[0]), h(i, 6, 8, 5, 8, j.wood[1]), h(i, 3, 16, 5, 2, j.wood[0]), h(i, 13, 15, 4, 2, j.wood[0]), h(i, 5, 5, 10, 3, j.wood[2]), h(i, 7, 4, 6, 5, j.wood[2]), h(i, 8, 6, 4, 1, j.wood[0]), k(i, 11, 7, j.wood[0]), h(i, 7, 10, 1, 5, j.wood[2]), h(i, 12, 9, 1, 6, j.wood[1]), c === "arctic" && h(i, 6, 4, 7, 2, j.snow), d === 2 && h(i, 14, 8, 2, 3, j.leaf[1]), QT(g, [j.wood]), B(g, j.edge), g;
 }
 
-function Zm(c, d) {
+function drawBagRow(c, d) {
     const oF = cX;
     let {
         c: g,
         g: j
-    } = O(18, 16), l = lT[c];
+    } = O(18, 16), l = THEME_PALETTES[c];
     for (let [m, p, q] of [
             [1, 10, 7],
             [9, 10, 7],
@@ -3853,24 +3853,24 @@ function Zm(c, d) {
     return d === 1 && k(j, 10, 7, l.bag[0]), d === 2 && (h(j, 14, 7, 2, 4, l.bag[0]), k(j, 15, 13, l.bag[2])), QT(g, [l.bag]), B(g, l.edge), g;
 }
 
-function dn(c, d, g, i, j, l) {
+function stampBag(c, d, g, i, j, l) {
     const oG = cX;
     h(c, d, g, 4, i, j.bag[0]), h(c, d, g, 2, i, j.bag[1]), h(c, d, g, 4, 1, l === "arctic" ? j.snow : j.bag[2]);
 }
 
-function Qm(c, d) {
+function drawBagCluster(c, d) {
     const oH = cX;
     let {
         c: g,
         g: j
-    } = O(18, 18), l = lT[c];
+    } = O(18, 18), l = THEME_PALETTES[c];
     for (let [m, p, q] of [
             [5, 1, 7],
             [5, 9, 8],
             [10, 1, 4],
             [10, 6, 7],
             [10, 14, 3]
-        ]) dn(j, m, p, q, l, c);
+        ]) stampBag(j, m, p, q, l, c);
     return d === 1 && k(j, 11, 8, l.bag[0]), d === 2 && (h(j, 6, 5, 2, 1, l.bag[0]), k(j, 12, 16, l.bag[2])), QT(g, [l.bag]), B(g, l.edge), g;
 }
 
@@ -3884,8 +3884,8 @@ function Tp(g, j, m) {
     let {
         c: p,
         g: q
-    } = O(18, 18), v = lT[g];
-    m.n && (dn(q, 5, 1, 8, v, g), dn(q, 10, 1, 7, v, g)), m.s && (dn(q, 5, 13, 5, v, g), dn(q, 10, 14, 4, v, g)), at(q, 4, 8, 10, v, g), at(q, 4, 12, 10, v, g), m.w && (at(q, 1, 8, 4, v, g), at(q, 1, 12, 4, v, g)), m.e && (at(q, 13, 8, 4, v, g), at(q, 13, 12, 4, v, g));
+    } = O(18, 18), v = THEME_PALETTES[g];
+    m.n && (stampBag(q, 5, 1, 8, v, g), stampBag(q, 10, 1, 7, v, g)), m.s && (stampBag(q, 5, 13, 5, v, g), stampBag(q, 10, 14, 4, v, g)), at(q, 4, 8, 10, v, g), at(q, 4, 12, 10, v, g), m.w && (at(q, 1, 8, 4, v, g), at(q, 1, 12, 4, v, g)), m.e && (at(q, 13, 8, 4, v, g), at(q, 13, 12, 4, v, g));
     let y = m.n !== m.s,
         A = m.e !== m.w;
     if (y && A && !(m.n && m.s) && !(m.e && m.w)) {
@@ -3901,21 +3901,21 @@ function Tp(g, j, m) {
     return j === 1 && k(q, 8, 10, v.bag[0]), j === 2 && k(q, 11, 14, v.bag[2]), QT(p, [v.bag]), B(p, v.edge), p;
 }
 
-function Wp(c, d) {
+function drawMetalUnit(c, d) {
     const oK = cX;
     let {
         c: g,
         g: i
-    } = O(24, 18), j = lT[c];
+    } = O(24, 18), j = THEME_PALETTES[c];
     return h(i, 7, 7, 9, 7, j.metal[0]), h(i, 7, 7, 5, 5, j.metal[1]), h(i, 8, 6, 7, 2, j.metal[2]), h(i, 10, 6, 3, 4, j.metal[0]), h(i, 3, 13, 7, 2, j.wood[0]), h(i, 2, 12, 5, 1, j.wood[2]), h(i, 15, 14, 5, 1, j.wood[1]), k(i, 20, 11, j.stone[1]), k(i, 4, 8, j.metal[2]), d === 1 && h(i, 15, 10, 3, 2, j.wood[2]), c === "arctic" && h(i, 8, 6, 3, 1, j.snow), B(g, j.edge), g;
 }
 
-function ep(c, d) {
+function drawWoodPlatforms(c, d) {
     const oL = cX;
     let {
         c: g,
         g: j
-    } = O(20, 16), l = lT[c];
+    } = O(20, 16), l = THEME_PALETTES[c];
     h(j, 5, 7, 10, 5, l.wood[0]);
     for (let [m, p] of [
             [5, 5],
@@ -3929,21 +3929,21 @@ function ep(c, d) {
     return h(j, 7, 6, 2, 6, l.edge), h(j, 10, 7, 3, 3, l.edge), k(j, 9 + d, 9, l.stone[1]), g;
 }
 
-function tp(c, d) {
+function drawWatchtower(c, d) {
     const oM = cX;
     let {
         c: g,
         g: i
-    } = O(18, 24), j = lT[c];
+    } = O(18, 24), j = THEME_PALETTES[c];
     return h(i, 8, 3, 3, 18, j.wood[0]), h(i, 8, 4, 1, 16, j.wood[2]), h(i, 3, 6, 11, 4, j.wood[1]), h(i, 3, 6, 9, 1, j.wood[2]), h(i, 14, 7, 2, 2, j.wood[1]), h(i, 5, 12, 9, 3, j.wood[0]), h(i, 4, 12, 8, 1, j.wood[2]), k(i, 9, 8, j.metal[0]), k(i, 9, 13, j.metal[0]), c === "arctic" && h(i, 3, 5, 9, 1, j.snow), d === 2 && k(i, 5, 7, j.wood[0]), B(g, j.edge), g;
 }
 
-function np(c, d) {
+function drawFort(c, d) {
     const oN = cX;
     let {
         c: g,
         g: j
-    } = O(40, 36), l = lT[c];
+    } = O(40, 36), l = THEME_PALETTES[c];
     for (let m of [5, 27])
         for (let p of [13, 25]) h(j, m, p, 7, 6, l.edge), h(j, m + 1, p + 1, 2, 4, l.metal[0]);
     h(j, 7, 11, 26, 19, l.metal[0]), h(j, 8, 8, 15, 17, l.metal[1]), h(j, 9, 9, 12, 13, l.edge);
@@ -3956,7 +3956,7 @@ function op(c, d) {
     let {
         c: g,
         g: i
-    } = O(36, 32), j = lT[c];
+    } = O(36, 32), j = THEME_PALETTES[c];
     [
         [12, 10],
         [8, 17],
@@ -3997,12 +3997,12 @@ function op(c, d) {
     return d === 1 && h(i, 24, 7, 4, 3, j.edge), d === 2 && h(i, 7, 20, 4, 3, j.wood[0]), c === "arctic" && (h(i, 12, 5, 6, 1, j.snow), h(i, 4, 11, 2, 3, j.snow)), QT(g, [j.wood]), g;
 }
 
-function ip(c, d) {
+function drawRowHuts(c, d) {
     const oQ = cX;
     let {
         c: g,
         g: j
-    } = O(18, 26), m = lT[c];
+    } = O(18, 26), m = THEME_PALETTES[c];
     for (let p = 0; p < 5; p++) {
         let q = 19 - p * 3,
             u = p < 2 ? 3 : p < 4 ? 2 : 1,
@@ -4015,12 +4015,12 @@ function ip(c, d) {
     return h(j, 12, 22, 3, 1, m.wood[2]), d === 2 && h(j, 3, 13, 2, 3, m.edge), B(g, m.edge), g;
 }
 
-function rp(c, d) {
+function drawCrossBraces(c, d) {
     const oR = cX;
     let {
         c: g,
         g: i
-    } = O(24, 24), j = lT[c];
+    } = O(24, 24), j = THEME_PALETTES[c];
     h(i, 3, 15, 18, 3, j.metal[0]), h(i, 3, 15, 17, 1, j.metal[2]);
     for (let l = 0; l < 14; l++) h(i, 5 + l, 4 + l, 3, 2, j.metal[0]), k(i, 5 + l, 4 + l, j.metal[2]), h(i, 18 - l, 4 + l, 3, 2, j.metal[1]), k(i, 18 - l, 4 + l, j.metal[2]);
     return h(i, 10, 10, 5, 5, j.metal[0]), k(i, 11, 11, j.metal[2]), k(i, 13, 13, j.metal[2]), d === 1 && h(i, 17, 5, 2, 3, j.wood[1]), d === 2 && h(i, 6, 15, 2, 2, j.wood[1]), c === "arctic" && h(i, 3, 14, 5, 1, j.snow), B(g, j.edge), g;
@@ -4031,7 +4031,7 @@ function sp(c, d) {
     let {
         c: g,
         g: i
-    } = O(22, 24), j = lT[c];
+    } = O(22, 24), j = THEME_PALETTES[c];
     for (let l of [4, 16]) h(i, l, 5, 3, 16, j.wood[0]), h(i, l, 5, 1, 15, j.wood[2]);
     h(i, 2, 7, 17, 4, j.wood[1]), h(i, 2, 7, 16, 1, j.wood[2]), h(i, 2, 14, 7 + d, 3, j.wood[1]), h(i, 15, 14, 5, 3, j.wood[1]);
     for (let m = 0; m < 10; m++) h(i, 7 + m, 18 - m, 2, 2, j.wood[0]);
@@ -4043,7 +4043,7 @@ function ap(c, d) {
     let {
         c: g,
         g: j
-    } = O(44, 38), l = lT[c];
+    } = O(44, 38), l = THEME_PALETTES[c];
     for (let m of [13, 27]) {
         h(j, 7, m, 29, 7, l.edge), h(j, 5, m + 2, 33, 3, l.metal[0]);
         for (let p = 8; p < 35; p += 4) h(j, p, m, 2, 2, l.metal[2]), h(j, p, m + 4, 2, 2, l.metal[1]);
@@ -4066,7 +4066,7 @@ function lp(c, d) {
     let {
         c: g,
         g: i
-    } = O(40, 36), j = lT[c];
+    } = O(40, 36), j = THEME_PALETTES[c];
     for (let l = 0; l < 13; l++) h(i, 18 - Math.floor(l / 2), 18 + l, 3, 2, j.metal[0]), k(i, 18 - Math.floor(l / 2), 18 + l, j.metal[2]), h(i, 21 + Math.floor(l / 2), 18 + l, 3, 2, j.metal[1]);
     for (let m of [7, 28]) h(i, m, 15, 6, 11, j.edge), h(i, m + 1, 14, 4, 13, j.metal[0]), h(i, m + 2, 17, 2, 7, j.metal[2]), k(i, m + 2, 20, j.edge);
     return h(i, 11, 19, 18, 3, j.metal[0]), h(i, 12, 11, 17, 9, j.metal[0]), h(i, 12, 10, 16, 7, j.metal[1]), h(i, 13, 10, 14, 1, j.metal[2]), h(i, 18, 2, 4, 15, j.metal[0]), h(i, 18, 2, 1, 14, j.metal[2]), h(i, 17, 2, 6, 3, j.metal[1]), h(i, 18, 2, 3, 1, j.edge), h(i, 18, 16, 5, 5, j.metal[0]), h(i, 26, 13, 3, 4, j.edge), i.clearRect(26, 10, 4, 3), h(i, 25, 12, 2, 2, j.wood[0]), i.clearRect(29, 23, 6, 5), h(i, 28, 24, 3, 1, j.metal[2]), h(i, 33, 28, 3, 2, j.metal[0]), k(i, 33, 28, j.metal[2]), h(i, 10, 29, 3, 2, j.wood[0]), k(i, 10, 29, j.wood[2]), h(i, 5 + d * 2, 29, 3, 1, j.bag[2]), c === "arctic" && h(i, 13, 10, 4, 1, j.snow), QT(g, [j.metal]), B(g, j.edge), g;
@@ -4077,7 +4077,7 @@ function cp(c, d) {
     let {
         c: g,
         g: j
-    } = O(20, 22), l = lT[c];
+    } = O(20, 22), l = THEME_PALETTES[c];
     for (let [m, p] of [
             [3, 7],
             [11, 10 + d]
@@ -4088,12 +4088,12 @@ function cp(c, d) {
     return B(g, l.edge), g;
 }
 
-function dp(c, d) {
+function drawCabin(c, d) {
     const oX = cX;
     let {
         c: g,
         g: j
-    } = O(22, 20), l = lT[c];
+    } = O(22, 20), l = THEME_PALETTES[c];
     h(j, 3, 10, 14, 6, l.wood[0]), h(j, 3, 9, 14, 3, l.wood[2]), h(j, 5, 10, 10, 3, l.edge), h(j, 3, 14, 14, 2, l.wood[1]), h(j, 4, 4, 12, 4, l.wood[1]), h(j, 4, 4, 11, 1, l.wood[2]);
     for (let m of [6, 13]) h(j, m, 4, 1, 4, l.metal[0]), h(j, m, 14, 1, 2, l.metal[0]);
     for (let [p, q] of [
@@ -4109,11 +4109,11 @@ function up(c, d) {
     let {
         c: g,
         g: i
-    } = O(20, 30), j = lT[c];
+    } = O(20, 30), j = THEME_PALETTES[c];
     return h(i, 13, 2, 1, 16, j.metal[2]), k(i, 12, 2, j.metal[0]), h(i, 4, 17, 12, 9, j.metal[0]), h(i, 4, 16, 11, 7, j.metal[1]), h(i, 5, 16, 9, 1, c === "arctic" ? j.snow : j.metal[2]), h(i, 6, 19, 4, 3, j.edge), k(i, 12, 19, j.bag[2]), k(i, 12, 22, j.metal[2]), h(i, 2, 15, 2, 8, j.edge), h(i, 2, 15, 5, 2, j.metal[0]), h(i, 2, 24, 1, 3, j.edge), h(i, 3, 27, 6 + d, 1, j.edge), B(g, j.edge), g;
 }
 
-function fe(c) {
+function makeEdgeMask(c) {
     const oZ = cX;
     let d = {
         n: c.includes('N'),
@@ -4124,36 +4124,36 @@ function fe(c) {
     return (g, i) => Tp(g, i, d);
 }
 var mp = {
-        boulder: Um,
+        boulder: drawLeafyTree,
         log: $m,
-        sandbags: Zm,
-        sandbagsVertical: Qm,
-        sandbagsNE: fe('NE'),
-        sandbagsNW: fe('NW'),
-        sandbagsSE: fe('SE'),
-        sandbagsSW: fe('SW'),
-        sandbagsNSE: fe("NSE"),
-        sandbagsNSW: fe("NSW"),
-        sandbagsNEW: fe("NEW"),
-        sandbagsSEW: fe("SEW"),
-        sandbagsNSEW: fe("NSEW"),
-        bush: Km,
-        fern: zm,
-        mushrooms: Ym,
-        branches: Xm,
-        stump: Jm,
-        debris: Wp,
-        campfire: ep,
-        signpost: tp,
-        truckWreck: np,
+        sandbags: drawBagRow,
+        sandbagsVertical: drawBagCluster,
+        sandbagsNE: makeEdgeMask('NE'),
+        sandbagsNW: makeEdgeMask('NW'),
+        sandbagsSE: makeEdgeMask('SE'),
+        sandbagsSW: makeEdgeMask('SW'),
+        sandbagsNSE: makeEdgeMask("NSE"),
+        sandbagsNSW: makeEdgeMask("NSW"),
+        sandbagsNEW: makeEdgeMask("NEW"),
+        sandbagsSEW: makeEdgeMask("SEW"),
+        sandbagsNSEW: makeEdgeMask("NSEW"),
+        bush: drawBush,
+        fern: drawPalm,
+        mushrooms: drawSupplyStack,
+        branches: drawFence,
+        stump: drawBlockhouse,
+        debris: drawMetalUnit,
+        campfire: drawWoodPlatforms,
+        signpost: drawWatchtower,
+        truckWreck: drawFort,
         crater: op,
-        ruinedWall: ip,
-        hedgehog: rp,
+        ruinedWall: drawRowHuts,
+        hedgehog: drawCrossBraces,
         barricade: sp,
         tankWreck: ap,
         artilleryWreck: lp,
         jerryCans: cp,
-        ammoStack: dp,
+        ammoStack: drawCabin,
         radio: up
     },
     GC = Object.keys(mp),
@@ -4190,9 +4190,9 @@ function hp() {
     const p8 = cX;
     return Object.fromEntries(["jungle", "desert", "arctic"].map(c => [c, Object.fromEntries(Object.entries(mp).map(([d, g]) => [d, [0, 1, 2].map(i => g(c, i))]))]));
 }
-var aW = mo.thatch;
+var THATCH_PALETTE = mo.thatch;
 
-function gp(j) {
+function buildRockIsland(j) {
     const p9 = cX;
     let {
         c: q,
@@ -4244,11 +4244,11 @@ function gp(j) {
                 aG = Math.sin(aF * 17 + aA * 9) * 0.5 + 0.5,
                 aH = aE + (aG - 0.5) * 0.22 + (A() - 0.5) * 0.1,
                 aI;
-            aH > 0.62 ? aI = aW[0] : aH > 0.42 ? aI = aW[1] : aH > 0.24 ? aI = aW[2] : aH > 0.06 ? aI = aW[3] : aH > -0.12 ? aI = aW[4] : aI = aW[5], k(y, C + az, E + ax, aI);
+            aH > 0.62 ? aI = THATCH_PALETTE[0] : aH > 0.42 ? aI = THATCH_PALETTE[1] : aH > 0.24 ? aI = THATCH_PALETTE[2] : aH > 0.06 ? aI = THATCH_PALETTE[3] : aH > -0.12 ? aI = THATCH_PALETTE[4] : aI = THATCH_PALETTE[5], k(y, C + az, E + ax, aI);
         }
     for (let aJ = -2; aJ <= 1; aJ++)
         for (let aK = -2; aK <= 2; aK++) aK * aK / 4 + aJ * aJ / 2.2 > 1 || k(y, C + aK - 2, E + aJ - 4, "#1a0d03");
-    k(y, C - 4, E - 6, aW[0]), k(y, C - 3, E - 6, aW[0]);
+    k(y, C - 4, E - 6, THATCH_PALETTE[0]), k(y, C - 3, E - 6, THATCH_PALETTE[0]);
     for (let aL = -F; aL <= F; aL++) {
         let aM = aL / F,
             aN = Math.round(Math.sqrt(Math.max(0, 1 - aM * aM)) * H);
@@ -4256,7 +4256,7 @@ function gp(j) {
         let aO = 1 + (A() * 3 | 0);
         for (let aP = 0; aP < aO; aP++) {
             let aQ = E + aN + aP;
-            k(y, C + aL, aQ, aP === aO - 1 ? aW[6] : A() < 0.4 ? aW[4] : aW[5]);
+            k(y, C + aL, aQ, aP === aO - 1 ? THATCH_PALETTE[6] : A() < 0.4 ? THATCH_PALETTE[4] : THATCH_PALETTE[5]);
         }
         A() < 0.14 && k(y, C + aL, E + aN + aO, "#404000");
     }
@@ -4270,9 +4270,9 @@ function gp(j) {
         let aY = aX < 3 ? 2 + aX : 4;
         for (let aZ = -aY; aZ <= aY; aZ++) k(y, C - 1 + aZ, 21 + aX, "#0b0803");
     }
-    for (let b4 = -3; b4 <= 3; b4++) k(y, C - 1 + b4, 20, aW[0]);
-    k(y, C - 5, 21, aW[1]), k(y, C + 3, 21, aW[3]);
-    for (let b7 of [-3, 0, 2]) k(y, C - 1 + b7, 21, aW[4]);
+    for (let b4 = -3; b4 <= 3; b4++) k(y, C - 1 + b4, 20, THATCH_PALETTE[0]);
+    k(y, C - 5, 21, THATCH_PALETTE[1]), k(y, C + 3, 21, THATCH_PALETTE[3]);
+    for (let b7 of [-3, 0, 2]) k(y, C - 1 + b7, 21, THATCH_PALETTE[4]);
     if (j >= 1) {
         for (let b8 = 0; b8 < 26; b8++) {
             let b9 = A() * Math.PI * 2,
@@ -4293,7 +4293,7 @@ function gp(j) {
     return q;
 }
 
-function bp(c) {
+function buildMetalRidge(c) {
     const pj = cX;
     let {
         c: d,
@@ -4353,7 +4353,7 @@ function bp(c) {
     return B(d, "#0a0d10"), d;
 }
 
-function yp(d) {
+function buildBrassRidge(d) {
     const pk = cX;
     let {
         c: g,
@@ -4409,7 +4409,7 @@ function yp(d) {
     return B(g, "#0f120c"), g;
 }
 
-function vp(g) {
+function buildDarkBasin(g) {
     const pq = cX;
     let {
         c: j,
@@ -4489,7 +4489,7 @@ function vp(g) {
     return B(j, "#17181b"), j;
 }
 
-function _p() {
+function buildCanvasDome() {
     const pw = cX;
     let {
         c: c,
@@ -4514,7 +4514,7 @@ function _p() {
     return h(d, 12, 17, 6, 7, j.interior), h(d, 11, 17, 1, 7, j.canvasLit), h(d, 18, 17, 1, 7, j.canvasShade), h(d, 12, 9, 6, 6, j.patch), h(d, 13, 11, 4, 2, j.cross), h(d, 14, 10, 2, 4, j.cross), B(c, j.outline), c;
 }
 
-function xp() {
+function buildSteppedZiggurat() {
     const px = cX;
     let {
         c: c,
@@ -4561,7 +4561,7 @@ var un = 4,
     },
     Uo = ["..................................", "..................................", "..................................", "..................................", "..........................#####...", "........................#######...", "....#######............########...", "....#########........#########....", "....############....#########.....", "....#########################.....", ".....#######################......", "......#####################.......", ".......###################........", ".........#################........", "..........################........", "...........################.......", "............#################.....", "...........###################....", ".....##...#####################...", "....####.#######################..", "....###########....#############..", "##############........##########..", "############............########..", ".#########.................###....", "...########.......................", "...#########......................", "....########......................", "........####......................"];
 
-function ya(c, d, g, j, l, m) {
+function lineDistanceSide(c, d, g, j, l, m) {
     const pA = cX;
     let p = l - g,
         q = m - j,
@@ -4586,15 +4586,15 @@ function Ko(g = 0) {
     for (let P = 0; P < q; P++)
         for (let Q = 0; Q < j; Q++) {
             if (Uo[P][Q] !== '#') continue;
-            let R = ya(Q, P, ...C),
-                S = ya(Q, P, ...E);
+            let R = lineDistanceSide(Q, P, ...C),
+                S = lineDistanceSide(Q, P, ...E);
             R.d <= 3.2 ? k(A, Q, P, R.d < 1.2 ? he.lit : R.side > 0 ? he.body : he.dark) : k(A, Q, P, S.side < 0 ? S.d > 3 ? he.lit : he.body : he.dark);
         }
     let F = U => {
         const pC = pB;
         for (let V = 0; V < q; V++)
             for (let X = 0; X < j; X++) {
-                if (Uo[V][X] !== '#' || ya(X, V, ...C).d <= 4.2) continue;
+                if (Uo[V][X] !== '#' || lineDistanceSide(X, V, ...C).d <= 4.2) continue;
                 let Y = ((X - E[0]) * (E[2] - E[0]) + (V - E[1]) * (E[3] - E[1])) / ((E[2] - E[0]) ** 2 + (E[3] - E[1]) ** 2);
                 Math.abs(Y - U) > 0.028 || k(A, X, V, "#d8d2b4");
             }
@@ -4623,7 +4623,7 @@ function Ko(g = 0) {
     return h(A, I - 1, K - 1, 2, 2, he.deep), B(y, "#181a09"), y;
 }
 
-function kp() {
+function buildPaperNote() {
     const pE = cX;
     let {
         c: c,
@@ -4632,7 +4632,7 @@ function kp() {
     return h(d, 2, 2, 9, 3, "#d8d2b4"), h(d, 4, 1, 5, 1, "#e6e0c2"), h(d, 3, 5, 7, 1, "#b8b294"), k(d, 3, 6, "#6a5a34"), k(d, 9, 6, "#6a5a34"), k(d, 4, 7, "#6a5a34"), k(d, 8, 7, "#6a5a34"), B(c, "#2a2210"), c;
 }
 
-function wp() {
+function buildWoodCrate() {
     const pF = cX;
     let {
         c: c,
@@ -4641,7 +4641,7 @@ function wp() {
     return h(d, 1, 1, 7, 6, "#c9b382"), h(d, 1, 1, 7, 1, "#dbc796"), h(d, 1, 6, 7, 1, "#a68f5e"), h(d, 4, 1, 1, 6, "#6a5a34"), h(d, 1, 3, 7, 1, "#6a5a34"), k(d, 4, 3, "#4a3d20"), B(c, "#2a2210"), c;
 }
 
-function Sp() {
+function buildGreenMat() {
     const pG = cX;
     let {
         c: c,
@@ -4650,7 +4650,7 @@ function Sp() {
     return h(d, 1, 3, 12, 7, "#4d5a34"), h(d, 1, 3, 12, 2, "#63723f"), h(d, 1, 8, 12, 2, "#3a4527"), h(d, 1, 5, 12, 1, "#2e3720"), h(d, 4, 6, 6, 2, "#d8d2b4"), k(d, 6, 6, "#4d5a34"), k(d, 7, 7, "#4d5a34"), h(d, 0, 5, 1, 2, "#2e3720"), h(d, 13, 5, 1, 2, "#2e3720"), B(c, "#161a0e"), c;
 }
 
-function Ep() {
+function buildBrickWall() {
     const pH = cX;
     let {
         c: c,
@@ -4660,7 +4660,7 @@ function Ep() {
 }
 var va = "#5a6152";
 
-function Mp() {
+function buildDarkShed() {
     const pI = cX;
     let {
         c: c,
@@ -4669,7 +4669,7 @@ function Mp() {
     return h(d, 2, 2, 4, 2, "#33372e"), h(d, 1, 3, 6, 1, "#33372e"), h(d, 3, 1, 2, 1, va), k(d, 4, 2, "#1d2019"), B(c, "#191c15"), c;
 }
 
-function Cp() {
+function buildAmmoBox() {
     const pJ = cX;
     let {
         c: c,
@@ -4678,7 +4678,7 @@ function Cp() {
     return h(d, 3, 1, 2, 1, "#8a9370"), k(d, 5, 2, "#8a9370"), h(d, 2, 3, 4, 4, "#3f4a35"), h(d, 2, 3, 4, 1, "#57633f"), k(d, 3, 4, "#c9d4b8"), B(c, "#161c10"), c;
 }
 
-function Ap() {
+function buildHostageIcon() {
     const pK = cX;
     let {
         c: c,
@@ -4687,7 +4687,7 @@ function Ap() {
     return h(d, 3, 1, 2, 2, rT.hostage.face), h(d, 2, 3, 4, 3, rT.hostage.kit), k(d, 1, 2, rT.hostage.kit), k(d, 6, 3, rT.hostage.kit), h(d, 2, 6, 1, 2, rT.hostage.body), h(d, 5, 6, 1, 2, rT.hostage.body), B(c, rT.hostage.outline), c;
 }
 
-function Rp() {
+function buildStarSparkle() {
     const pL = cX;
     let {
         c: c,
@@ -4731,7 +4731,7 @@ function jp(g, j) {
         }
     return B(q, "#141005"), q;
 }
-var Ab = 13,
+var FIGURE_W = 13,
     Rb = 15,
     d1 = {
         x: 6,
@@ -4741,12 +4741,12 @@ var Ab = 13,
     _a = 4,
     u1 = 4;
 
-function mn(j, q, A, C, E = 0) {
+function drawFigure(j, q, A, C, E = 0) {
     const pN = cX;
     let {
         c: F,
         g: H
-    } = O(Ab, Rb), I = q / Ge * Math.PI * 2 + Math.PI / 2, K = Math.cos(I), L = Math.sin(I), M = 6, N = GT(9173 + E * 2749), P = E % 2 === 0 ? 1 : -1, Q = Array.from({
+    } = O(FIGURE_W, Rb), I = q / Ge * Math.PI * 2 + Math.PI / 2, K = Math.cos(I), L = Math.sin(I), M = 6, N = GT(9173 + E * 2749), P = E % 2 === 0 ? 1 : -1, Q = Array.from({
         length: 3
     }, () => ({
         x: M - 2 + (N() * 5 | 0),
@@ -4777,7 +4777,7 @@ function pn(c) {
     return (Math.round(d / (Math.PI * 2) * Ge) % Ge + Ge) % Ge;
 }
 
-function xa(c) {
+function buildFigurePortrait(c) {
     const pP = cX;
     let {
         c: d,
@@ -4787,7 +4787,7 @@ function xa(c) {
 }
 var Ip = 4;
 
-function Pp(c, d = 0) {
+function buildFigurePose(c, d = 0) {
     const pQ = cX;
     let {
         c: g,
@@ -4795,7 +4795,7 @@ function Pp(c, d = 0) {
     } = O(15, 12);
     return d === 1 ? (h(i, 5, 5, 5, 3, c.body), k(i, 4, 6, c.body), h(i, 9, 7, 2, 2, c.body), k(i, 11, 8, c.boots), k(i, 10, 9, c.boots), h(i, 6, 8, 3, 1, c.body), h(i, 2, 4, 3, 1, c.body), k(i, 7, 6, c.kit), h(i, 3, 5, 2, 2, c.helmetDark), k(i, 3, 4, c.helmet), B(g, c.outline), g) : d === 2 ? (h(i, 5, 4, 4, 5, c.body), h(i, 1, 5, 4, 1, c.body), h(i, 9, 6, 4, 1, c.body), k(i, 0, 6, c.body), h(i, 5, 9, 1, 2, c.body), h(i, 8, 9, 1, 2, c.body), k(i, 5, 11, c.boots), k(i, 8, 11, c.boots), k(i, 6, 5, c.kitAlt), k(i, 7, 7, c.kit), h(i, 5, 2, 3, 1, c.helmetDark), k(i, 2, 9, c.helmet), k(i, 3, 9, c.helmetDark), B(g, c.outline), g) : d === 3 ? (h(i, 5, 5, 6, 4, c.body), k(i, 4, 5, c.body), k(i, 11, 8, c.body), h(i, 11, 6, 3, 1, c.body), h(i, 3, 7, 2, 1, c.body), k(i, 2, 8, c.body), h(i, 6, 9, 1, 2, c.body), h(i, 9, 9, 1, 1, c.body), k(i, 6, 11, c.boots), k(i, 10, 10, c.boots), k(i, 8, 6, c.kit), k(i, 6, 7, c.kitAlt), h(i, 7, 3, 3, 2, c.helmetDark), k(i, 5, 2, c.helmet), k(i, 4, 2, c.helmetDark), B(g, c.outline), g) : (h(i, 4, 5, 6, 4, c.body), k(i, 10, 5, c.body), k(i, 3, 8, c.body), h(i, 1, 6, 3, 1, c.body), h(i, 10, 7, 2, 1, c.body), k(i, 12, 8, c.body), h(i, 5, 9, 1, 2, c.body), h(i, 8, 9, 1, 1, c.body), k(i, 5, 11, c.boots), k(i, 9, 10, c.boots), k(i, 6, 6, c.kit), k(i, 8, 7, c.kitAlt), h(i, 5, 3, 3, 2, c.helmetDark), k(i, 9, 2, c.helmet), k(i, 10, 2, c.helmetDark), B(g, c.outline), g);
 }
-var Lp = ["#0a0b05", "#1d1e17", "#392d29", "#444234", "#5a2512", "#6c3017", "#5e4b1c", "#893e1d", "#574e49", "#655d5d", "#9a5027", "#ad5728", "#7d7a2b", "#a96f2e", "#756b63", "#796d6a", "#a46237", "#7e716e", "#c06d37", "#948a86"],
+var PORTRAIT_PALETTE = ["#0a0b05", "#1d1e17", "#392d29", "#444234", "#5a2512", "#6c3017", "#5e4b1c", "#893e1d", "#574e49", "#655d5d", "#9a5027", "#ad5728", "#7d7a2b", "#a96f2e", "#756b63", "#796d6a", "#a46237", "#7e716e", "#c06d37", "#948a86"],
     Op = [0, 4611, 1, 2, 0, 20, 1, 4, 0, 56, 2, 1, 1, 2, 0, 11, 1, 5, 0, 19, 2, 1, 1, 1, 0, 25, 1, 3, 0, 26, 2, 1, 0, 33, 1, 3, 0, 7, 1, 6, 0, 29, 1, 1, 3, 1, 1, 2, 0, 15, 1, 1, 2, 1, 1, 2, 15, 1, 9, 2, 4, 1, 1, 1, 0, 54, 1, 1, 4, 3, 1, 8, 2, 1, 1, 2, 9, 1, 4, 1, 2, 1, 9, 1, 3, 1, 2, 9, 1, 1, 0, 8, 1, 1, 18, 1, 4, 1, 1, 1, 0, 23, 2, 1, 3, 4, 2, 1, 0, 2, 1, 5, 0, 16, 1, 1, 9, 1, 1, 1, 0, 25, 1, 4, 0, 1, 1, 2, 2, 1, 9, 1, 2, 1, 1, 1, 0, 2, 1, 2, 2, 2, 9, 1, 15, 1, 10, 2, 9, 1, 1, 1, 0, 29, 2, 1, 20, 1, 2, 1, 1, 1, 0, 13, 1, 2, 2, 1, 10, 1, 3, 1, 1, 1, 3, 1, 2, 3, 1, 3, 0, 51, 2, 1, 10, 1, 9, 1, 3, 2, 2, 4, 10, 7, 2, 1, 9, 1, 4, 2, 3, 1, 8, 1, 19, 1, 12, 1, 19, 3, 12, 2, 19, 1, 3, 1, 2, 4, 0, 4, 1, 1, 9, 1, 2, 1, 1, 1, 0, 20, 1, 2, 9, 6, 4, 1, 1, 1, 4, 4, 3, 3, 4, 12, 3, 3, 4, 2, 3, 1, 1, 1, 0, 23, 1, 1, 9, 1, 20, 1, 18, 1, 10, 1, 2, 2, 1, 1, 2, 1, 3, 1, 2, 4, 3, 1, 9, 1, 20, 2, 18, 1, 20, 3, 10, 1, 1, 1, 0, 27, 1, 2, 4, 1, 2, 1, 3, 1, 1, 14, 9, 2, 4, 1, 9, 1, 4, 8, 2, 1, 1, 6, 0, 44, 2, 1, 10, 1, 9, 8, 3, 6, 9, 1, 1, 1, 3, 1, 2, 2, 1, 1, 5, 1, 6, 7, 11, 1, 3, 1, 10, 3, 4, 1, 1, 1, 2, 1, 1, 3, 3, 1, 2, 1, 1, 1, 0, 19, 1, 1, 3, 1, 15, 1, 18, 1, 4, 1, 3, 4, 18, 1, 2, 1, 20, 23, 16, 1, 18, 1, 2, 1, 0, 23, 1, 1, 4, 1, 9, 1, 4, 2, 9, 1, 18, 1, 3, 1, 9, 1, 10, 1, 3, 1, 9, 1, 18, 1, 3, 1, 10, 2, 9, 3, 4, 2, 9, 1, 4, 1, 1, 1, 0, 27, 1, 1, 10, 5, 16, 1, 18, 1, 16, 3, 18, 2, 15, 1, 10, 3, 15, 1, 16, 1, 15, 1, 10, 1, 9, 1, 10, 1, 18, 1, 10, 2, 9, 4, 18, 1, 3, 1, 4, 1, 3, 1, 4, 1, 9, 2, 10, 1, 1, 1, 0, 40, 1, 3, 9, 1, 4, 1, 3, 7, 2, 2, 4, 7, 3, 1, 2, 2, 5, 9, 6, 1, 2, 4, 4, 1, 2, 4, 18, 1, 3, 3, 1, 1, 0, 9, 1, 4, 0, 2, 1, 1, 2, 1, 3, 1, 10, 2, 9, 1, 4, 2, 3, 1, 2, 3, 4, 1, 2, 1, 4, 25, 1, 1, 0, 23, 1, 1, 2, 6, 1, 1, 2, 2, 1, 1, 2, 2, 1, 1, 2, 7, 3, 1, 2, 1, 1, 1, 0, 27, 1, 1, 9, 1, 4, 4, 9, 6, 4, 6, 3, 1, 4, 3, 9, 1, 15, 1, 3, 1, 10, 1, 9, 1, 3, 1, 10, 1, 4, 1, 15, 1, 3, 1, 9, 1, 4, 2, 10, 3, 1, 1, 0, 38, 1, 2, 5, 1, 11, 1, 5, 1, 3, 1, 4, 3, 3, 3, 9, 9, 4, 1, 3, 3, 5, 1, 11, 5, 12, 2, 11, 3, 2, 1, 4, 1, 9, 2, 10, 1, 9, 1, 10, 2, 4, 1, 16, 1, 10, 3, 1, 1, 0, 2, 1, 6, 2, 1, 8, 4, 2, 1, 1, 1, 6, 1, 8, 1, 9, 1, 10, 1, 9, 1, 4, 3, 9, 1, 10, 1, 9, 3, 2, 1, 1, 4, 2, 2, 1, 5, 2, 10, 1, 1, 2, 1, 3, 1, 2, 1, 1, 1, 0, 24, 1, 5, 2, 1, 1, 5, 3, 1, 2, 1, 1, 10, 0, 27, 1, 1, 4, 2, 3, 1, 4, 1, 3, 2, 4, 5, 2, 1, 4, 4, 3, 1, 2, 1, 3, 1, 4, 2, 3, 1, 9, 1, 2, 1, 9, 1, 3, 1, 2, 1, 4, 1, 3, 1, 4, 1, 2, 7, 1, 1, 0, 26, 1, 3, 2, 1, 6, 1, 5, 3, 6, 2, 2, 1, 1, 1, 6, 1, 19, 2, 8, 1, 5, 1, 2, 1, 4, 2, 3, 1, 2, 2, 3, 2, 4, 2, 3, 1, 4, 1, 3, 2, 4, 1, 2, 2, 3, 2, 2, 1, 5, 1, 8, 6, 6, 3, 5, 1, 1, 4, 2, 1, 1, 1, 2, 7, 1, 1, 0, 1, 1, 4, 11, 1, 19, 3, 12, 3, 11, 1, 8, 1, 5, 1, 12, 1, 8, 1, 3, 1, 4, 7, 3, 2, 9, 1, 1, 3, 8, 3, 6, 4, 11, 9, 5, 1, 1, 1, 2, 1, 1, 5, 0, 25, 2, 1, 1, 1, 2, 1, 9, 1, 3, 1, 2, 1, 3, 3, 2, 1, 9, 2, 2, 1, 0, 2, 1, 7, 0, 21, 1, 7, 4, 2, 3, 1, 4, 1, 2, 1, 3, 1, 4, 1, 9, 3, 4, 2, 3, 5, 9, 2, 4, 2, 3, 2, 1, 1, 3, 1, 2, 2, 3, 1, 2, 2, 1, 7, 0, 26, 2, 1, 10, 1, 7, 1, 8, 1, 11, 1, 12, 6, 11, 2, 12, 1, 8, 2, 6, 1, 2, 1, 3, 1, 4, 2, 3, 1, 4, 2, 3, 3, 4, 1, 3, 3, 2, 1, 3, 2, 4, 2, 3, 1, 2, 2, 5, 8, 2, 1, 1, 3, 2, 3, 1, 8, 0, 2, 2, 1, 16, 1, 10, 1, 19, 1, 12, 4, 11, 1, 8, 3, 11, 2, 8, 1, 6, 1, 2, 1, 4, 9, 9, 1, 1, 1, 2, 1, 5, 1, 11, 2, 8, 4, 5, 1, 19, 1, 11, 1, 12, 1, 11, 1, 12, 2, 8, 1, 12, 1, 11, 1, 6, 1, 4, 1, 18, 1, 10, 1, 1, 3, 0, 14, 2, 7, 0, 5, 2, 1, 3, 1, 15, 1, 4, 1, 3, 1, 2, 1, 4, 3, 2, 1, 3, 2, 1, 1, 2, 31, 10, 1, 16, 1, 10, 2, 2, 1, 1, 1, 4, 2, 3, 4, 2, 14, 3, 1, 2, 2, 1, 1, 2, 5, 1, 3, 0, 31, 1, 1, 16, 1, 17, 1, 12, 2, 11, 2, 8, 8, 6, 1, 5, 1, 2, 12, 1, 5, 2, 1, 1, 4, 2, 1, 1, 14, 0, 10, 1, 1, 9, 2, 12, 1, 11, 1, 8, 4, 6, 2, 8, 3, 6, 1, 5, 1, 2, 1, 3, 9, 4, 1, 1, 2, 2, 1, 5, 6, 2, 1, 6, 1, 5, 6, 6, 1, 5, 1, 2, 2, 3, 1, 2, 1, 1, 1, 0, 15, 1, 1, 4, 1, 9, 5, 3, 1, 1, 1, 0, 3, 1, 1, 3, 3, 2, 9, 3, 1, 9, 4, 10, 2, 15, 4, 10, 12, 15, 2, 16, 3, 15, 3, 9, 1, 10, 1, 18, 1, 9, 2, 2, 1, 1, 1, 3, 4, 4, 4, 3, 3, 4, 1, 3, 1, 2, 3, 3, 2, 2, 2, 1, 11, 0, 32, 1, 1, 4, 1, 8, 12, 6, 1, 5, 1, 1, 11, 2, 1, 1, 1, 2, 5, 1, 6, 0, 24, 1, 1, 3, 1, 4, 1, 8, 10, 6, 1, 5, 2, 1, 1, 2, 2, 1, 4, 2, 2, 1, 1, 2, 1, 1, 4, 2, 5, 1, 1, 5, 3, 2, 1, 5, 1, 2, 2, 5, 1, 2, 1, 1, 5, 0, 14, 1, 2, 2, 8, 1, 1, 0, 1, 1, 2, 13, 24, 1, 1, 2, 20, 3, 3, 1, 1, 0, 1, 1, 1, 2, 1, 3, 1, 4, 1, 9, 1, 10, 1, 9, 1, 4, 1, 2, 1, 4, 2, 3, 2, 2, 1, 3, 1, 4, 4, 3, 1, 1, 9, 0, 34, 1, 1, 4, 1, 6, 1, 8, 8, 6, 2, 5, 1, 2, 1, 1, 4, 5, 3, 2, 2, 1, 3, 3, 1, 1, 1, 3, 1, 2, 1, 3, 3, 1, 1, 0, 29, 1, 1, 3, 2, 8, 9, 6, 1, 5, 1, 2, 1, 1, 2, 2, 1, 1, 10, 0, 1, 1, 21, 0, 14, 2, 1, 20, 1, 9, 1, 13, 7, 2, 1, 1, 3, 7, 3, 3, 1, 4, 1, 7, 19, 3, 1, 1, 21, 2, 3, 1, 1, 0, 2, 1, 2, 2, 3, 1, 1, 2, 1, 3, 5, 2, 1, 3, 1, 4, 1, 3, 2, 4, 2, 1, 1, 0, 42, 1, 1, 3, 1, 6, 1, 8, 6, 6, 1, 5, 2, 2, 1, 1, 3, 0, 1, 1, 1, 5, 1, 8, 2, 5, 1, 1, 1, 2, 1, 1, 2, 2, 1, 3, 1, 1, 1, 4, 1, 3, 1, 4, 2, 3, 1, 1, 1, 0, 29, 1, 1, 3, 2, 8, 7, 6, 1, 5, 2, 2, 1, 1, 3, 2, 1, 1, 1, 0, 1, 1, 1, 3, 1, 1, 1, 0, 14, 1, 9, 0, 18, 2, 1, 4, 1, 2, 1, 3, 5, 7, 3, 3, 2, 7, 3, 3, 3, 7, 2, 4, 1, 7, 13, 4, 1, 3, 3, 2, 1, 4, 2, 1, 1, 0, 16, 1, 4, 0, 4, 1, 1, 5, 2, 2, 2, 1, 7, 3, 1, 4, 1, 3, 2, 9, 1, 4, 1, 1, 1, 0, 42, 1, 1, 3, 1, 6, 1, 8, 5, 6, 1, 5, 1, 2, 1, 1, 3, 0, 2, 1, 2, 8, 2, 6, 1, 2, 1, 1, 2, 3, 1, 2, 2, 1, 1, 2, 1, 4, 1, 3, 1, 4, 1, 3, 2, 1, 2, 0, 28, 1, 1, 3, 2, 8, 5, 6, 2, 5, 1, 2, 2, 1, 2, 0, 1, 1, 1, 2, 5, 1, 1, 0, 41, 2, 1, 3, 1, 2, 1, 3, 1, 2, 1, 1, 2, 2, 1, 7, 7, 3, 1, 2, 1, 3, 2, 7, 8, 4, 1, 3, 1, 2, 5, 1, 5, 2, 1, 3, 1, 2, 1, 1, 1, 0, 24, 1, 1, 8, 1, 5, 3, 2, 2, 1, 3, 3, 3, 4, 1, 3, 2, 9, 2, 1, 1, 0, 42, 1, 1, 4, 1, 6, 1, 8, 3, 6, 1, 5, 1, 2, 1, 1, 3, 0, 4, 1, 1, 5, 1, 12, 1, 6, 1, 5, 1, 1, 1, 0, 2, 1, 4, 2, 1, 4, 1, 3, 3, 4, 1, 2, 1, 1, 1, 0, 28, 1, 1, 3, 2, 8, 4, 6, 1, 5, 2, 2, 1, 1, 2, 0, 4, 1, 1, 2, 3, 1, 1, 0, 42, 2, 1, 4, 1, 2, 1, 3, 2, 2, 2, 3, 1, 7, 4, 3, 5, 2, 1, 4, 1, 3, 7, 2, 1, 1, 5, 2, 1, 1, 4, 2, 1, 1, 4, 0, 24, 1, 1, 2, 1, 8, 1, 6, 1, 5, 1, 6, 1, 2, 3, 1, 1, 2, 1, 3, 1, 2, 1, 3, 1, 4, 1, 9, 2, 3, 2, 1, 1, 0, 42, 1, 1, 3, 1, 5, 1, 6, 2, 5, 1, 2, 1, 1, 3, 0, 5, 1, 2, 8, 2, 5, 1, 2, 1, 1, 1, 0, 6, 1, 1, 2, 1, 4, 1, 3, 2, 4, 1, 3, 1, 1, 1, 0, 28, 1, 1, 3, 2, 8, 3, 6, 1, 5, 2, 2, 1, 1, 2, 0, 6, 1, 1, 0, 1, 1, 1, 0, 43, 1, 1, 4, 1, 2, 2, 3, 1, 4, 1, 7, 4, 3, 1, 2, 2, 1, 1, 2, 3, 1, 24, 0, 25, 2, 1, 12, 1, 6, 3, 5, 1, 1, 2, 3, 1, 2, 1, 3, 2, 1, 2, 2, 4, 3, 1, 2, 1, 0, 42, 1, 1, 3, 2, 5, 1, 2, 1, 1, 3, 0, 7, 1, 1, 5, 1, 6, 2, 5, 1, 1, 2, 0, 6, 1, 1, 2, 1, 4, 1, 3, 1, 4, 2, 9, 1, 1, 1, 0, 28, 1, 1, 3, 2, 6, 2, 5, 2, 2, 1, 1, 2, 0, 54, 1, 1, 3, 1, 2, 2, 3, 1, 7, 4, 3, 1, 2, 1, 1, 3, 2, 3, 1, 1, 2, 1, 1, 3, 2, 1, 1, 1, 0, 41, 1, 1, 11, 1, 12, 1, 5, 1, 6, 2, 2, 1, 1, 1, 0, 1, 1, 6, 2, 1, 3, 1, 2, 2, 4, 1, 2, 1, 0, 42, 1, 1, 2, 2, 1, 3, 0, 9, 1, 1, 5, 1, 6, 1, 5, 1, 2, 1, 1, 2, 0, 7, 1, 1, 3, 2, 4, 1, 3, 1, 9, 1, 3, 1, 1, 2, 0, 26, 1, 1, 3, 2, 6, 1, 5, 2, 2, 1, 1, 2, 0, 55, 1, 1, 3, 1, 2, 1, 3, 1, 7, 4, 3, 1, 2, 1, 1, 2, 0, 1, 1, 1, 7, 2, 2, 1, 1, 1, 3, 1, 1, 2, 2, 2, 1, 1, 0, 41, 2, 1, 12, 1, 6, 1, 5, 1, 6, 2, 2, 1, 1, 1, 0, 6, 1, 1, 2, 1, 9, 1, 3, 1, 4, 1, 9, 1, 3, 1, 0, 43, 1, 3, 0, 12, 1, 1, 5, 1, 2, 1, 1, 2, 0, 8, 1, 1, 3, 1, 4, 1, 3, 1, 4, 1, 3, 1, 4, 1, 3, 1, 1, 2, 0, 25, 1, 1, 2, 2, 5, 1, 2, 1, 1, 2, 0, 57, 1, 1, 3, 1, 2, 1, 3, 1, 7, 2, 3, 1, 2, 3, 4, 1, 2, 1, 1, 1, 2, 1, 7, 2, 2, 1, 1, 1, 2, 4, 1, 1, 0, 41, 1, 1, 5, 1, 8, 1, 5, 4, 2, 1, 1, 1, 0, 6, 1, 1, 2, 1, 9, 1, 3, 1, 4, 1, 9, 1, 4, 1, 1, 1, 0, 58, 1, 3, 0, 9, 2, 2, 4, 1, 3, 5, 4, 1, 2, 1, 0, 25, 1, 6, 0, 58, 1, 1, 3, 1, 2, 1, 3, 1, 7, 1, 3, 1, 2, 1, 1, 3, 3, 2, 2, 1, 7, 2, 3, 1, 1, 6, 0, 42, 1, 1, 8, 1, 6, 1, 5, 2, 6, 1, 2, 1, 1, 1, 0, 8, 2, 1, 4, 4, 9, 1, 2, 1, 0, 71, 1, 1, 2, 1, 3, 3, 4, 1, 3, 1, 4, 1, 2, 1, 1, 1, 0, 25, 1, 4, 0, 59, 1, 1, 3, 1, 2, 1, 3, 2, 2, 1, 1, 2, 0, 1, 1, 3, 2, 1, 7, 2, 2, 1, 1, 1, 0, 47, 1, 1, 6, 1, 8, 1, 5, 1, 6, 1, 8, 1, 2, 1, 1, 1, 0, 8, 1, 1, 3, 1, 9, 1, 3, 2, 9, 1, 2, 1, 0, 72, 1, 1, 3, 1, 4, 1, 3, 2, 4, 1, 2, 1, 1, 1, 0, 89, 1, 1, 3, 1, 2, 3, 1, 2, 0, 4, 1, 1, 4, 1, 7, 1, 4, 1, 2, 1, 1, 1, 0, 47, 1, 1, 6, 1, 8, 3, 6, 1, 2, 1, 1, 1, 0, 8, 1, 1, 2, 1, 4, 1, 3, 2, 4, 1, 2, 1, 0, 72, 1, 1, 2, 1, 3, 3, 2, 1, 1, 1, 0, 90, 1, 1, 2, 1, 1, 1, 2, 2, 1, 1, 0, 5, 1, 1, 2, 3, 1, 2, 0, 47, 1, 2, 2, 4, 1, 2, 0, 9, 1, 1, 3, 1, 4, 2, 9, 1, 4, 1, 1, 1, 0, 72, 1, 1, 2, 1, 3, 1, 2, 1, 1, 1, 0, 92, 1, 4, 0, 7, 1, 4, 0, 49, 1, 6, 0, 10, 1, 1, 3, 1, 4, 3, 9, 1, 2, 1, 1, 1, 0, 72, 1, 3, 0, 173, 1, 1, 2, 1, 4, 4, 2, 1, 1, 1, 0, 73, 1, 2, 0, 174, 1, 1, 3, 2, 4, 1, 3, 1, 2, 1, 1, 1, 0, 249, 2, 1, 3, 1, 2, 2, 1, 2, 0, 250, 1, 3, 0, 235],
     Np = ["#070b05", "#140f0b", "#1f1f19", "#392720", "#3e3e21", "#3f3b3a", "#582411", "#603d19", "#833c1c", "#534d42", "#5b5454", "#696925", "#8f4b24", "#a75427", "#675d58", "#6e6459", "#766d52", "#b76330", "#756d6a", "#827874"],
     Dp = [0, 2690, 1, 2, 0, 14, 2, 1, 4, 1, 3, 2, 0, 42, 3, 2, 1, 1, 0, 7, 3, 1, 2, 2, 3, 1, 1, 1, 0, 13, 6, 1, 3, 1, 0, 18, 2, 3, 0, 19, 4, 1, 3, 1, 0, 23, 1, 1, 3, 2, 0, 4, 1, 1, 3, 4, 1, 1, 0, 22, 16, 1, 3, 1, 0, 10, 1, 2, 10, 1, 6, 1, 3, 1, 11, 1, 6, 1, 3, 1, 1, 1, 0, 39, 2, 1, 3, 1, 6, 2, 2, 1, 1, 1, 2, 1, 4, 3, 6, 1, 3, 1, 4, 1, 10, 1, 6, 1, 10, 1, 8, 1, 9, 2, 13, 2, 9, 2, 2, 3, 0, 4, 15, 1, 3, 1, 0, 16, 2, 1, 3, 1, 11, 3, 6, 1, 2, 1, 3, 4, 2, 1, 3, 12, 4, 1, 2, 1, 1, 1, 0, 17, 2, 1, 3, 2, 2, 2, 1, 1, 6, 1, 4, 1, 1, 2, 2, 1, 4, 1, 10, 1, 19, 1, 20, 2, 16, 1, 1, 1, 0, 20, 1, 1, 3, 1, 6, 1, 4, 1, 2, 10, 4, 1, 6, 1, 10, 2, 6, 5, 3, 1, 1, 4, 0, 33, 2, 1, 10, 5, 6, 7, 2, 1, 6, 1, 3, 2, 8, 1, 9, 6, 6, 1, 11, 1, 10, 1, 3, 1, 0, 2, 1, 1, 4, 1, 2, 1, 0, 15, 3, 1, 10, 1, 16, 1, 6, 3, 4, 2, 19, 2, 20, 1, 19, 3, 20, 6, 19, 1, 20, 1, 19, 3, 16, 1, 11, 1, 1, 1, 0, 17, 3, 1, 11, 1, 10, 1, 6, 1, 15, 1, 3, 1, 10, 1, 6, 1, 10, 3, 11, 2, 10, 1, 11, 1, 10, 2, 1, 1, 0, 20, 3, 1, 19, 1, 10, 2, 11, 1, 16, 1, 15, 4, 11, 1, 10, 1, 11, 2, 15, 1, 11, 2, 19, 1, 11, 2, 10, 1, 11, 1, 15, 1, 6, 1, 10, 1, 4, 1, 15, 2, 6, 1, 0, 30, 2, 2, 3, 1, 10, 1, 6, 5, 4, 1, 6, 2, 10, 1, 6, 4, 4, 1, 8, 1, 9, 7, 4, 1, 6, 6, 10, 1, 6, 1, 4, 1, 0, 7, 3, 3, 0, 1, 2, 1, 4, 1, 6, 1, 11, 2, 6, 4, 4, 1, 3, 1, 6, 19, 1, 1, 0, 17, 2, 1, 3, 2, 2, 1, 3, 1, 1, 1, 3, 1, 2, 2, 3, 1, 2, 1, 3, 6, 1, 1, 0, 20, 2, 1, 10, 1, 6, 7, 3, 1, 6, 3, 3, 1, 4, 1, 6, 1, 4, 1, 10, 1, 6, 1, 4, 1, 6, 1, 10, 2, 4, 2, 3, 1, 6, 2, 3, 1, 0, 22, 3, 4, 4, 1, 3, 1, 2, 1, 7, 1, 9, 1, 13, 1, 4, 1, 6, 3, 4, 1, 6, 1, 10, 4, 6, 3, 4, 3, 9, 4, 13, 1, 9, 2, 8, 1, 3, 1, 4, 1, 6, 5, 10, 1, 6, 1, 4, 1, 0, 1, 1, 3, 4, 1, 7, 2, 18, 2, 14, 1, 7, 1, 8, 1, 14, 1, 6, 1, 10, 1, 6, 5, 10, 1, 3, 1, 1, 1, 2, 1, 3, 5, 4, 7, 2, 3, 3, 1, 2, 1, 1, 1, 0, 18, 1, 2, 3, 1, 4, 1, 2, 4, 6, 1, 2, 1, 1, 7, 0, 17, 2, 2, 0, 1, 2, 1, 10, 1, 6, 2, 3, 1, 6, 1, 10, 3, 6, 2, 4, 2, 6, 1, 10, 1, 6, 1, 4, 2, 3, 5, 2, 2, 1, 4, 0, 19, 5, 1, 6, 1, 8, 1, 13, 1, 14, 4, 9, 1, 13, 1, 14, 1, 9, 1, 7, 1, 3, 1, 6, 2, 4, 1, 6, 1, 4, 1, 6, 3, 4, 1, 3, 1, 4, 1, 6, 2, 4, 1, 3, 1, 7, 6, 4, 1, 2, 3, 3, 1, 2, 1, 1, 6, 0, 1, 3, 1, 19, 1, 13, 1, 18, 2, 14, 1, 13, 1, 9, 2, 13, 2, 8, 1, 3, 1, 6, 7, 3, 1, 2, 1, 9, 1, 13, 2, 9, 1, 13, 1, 7, 1, 18, 1, 14, 5, 18, 1, 4, 1, 15, 1, 4, 1, 1, 2, 0, 11, 2, 4, 0, 5, 6, 1, 11, 1, 6, 1, 3, 1, 6, 1, 10, 1, 3, 1, 6, 1, 2, 2, 1, 1, 2, 21, 6, 1, 11, 1, 10, 1, 4, 1, 2, 1, 10, 1, 6, 2, 4, 2, 3, 5, 2, 2, 3, 4, 2, 3, 3, 2, 2, 1, 1, 2, 0, 23, 6, 1, 11, 1, 14, 2, 13, 2, 9, 3, 13, 1, 9, 1, 7, 2, 2, 13, 1, 3, 2, 1, 1, 2, 2, 2, 1, 3, 0, 11, 3, 1, 15, 1, 13, 2, 9, 7, 7, 1, 3, 1, 4, 7, 2, 2, 7, 5, 2, 1, 7, 7, 2, 1, 3, 1, 2, 1, 0, 12, 6, 1, 10, 4, 2, 1, 0, 2, 1, 1, 4, 1, 5, 2, 4, 2, 5, 1, 4, 3, 5, 1, 10, 3, 15, 1, 17, 4, 10, 1, 11, 8, 15, 5, 11, 1, 10, 1, 15, 1, 6, 1, 3, 1, 2, 1, 3, 1, 4, 1, 6, 1, 10, 2, 6, 1, 4, 1, 6, 2, 4, 1, 3, 1, 6, 2, 4, 1, 3, 1, 1, 7, 0, 25, 3, 1, 6, 1, 9, 8, 7, 1, 2, 1, 1, 2, 3, 1, 4, 2, 2, 1, 1, 2, 3, 1, 2, 1, 3, 1, 4, 2, 2, 1, 1, 1, 0, 21, 2, 1, 6, 1, 9, 7, 8, 1, 7, 1, 3, 1, 1, 4, 2, 1, 1, 7, 2, 3, 1, 1, 2, 7, 1, 3, 0, 10, 6, 1, 10, 1, 5, 1, 8, 3, 5, 2, 1, 2, 2, 1, 12, 18, 2, 1, 1, 1, 2, 3, 1, 1, 2, 5, 1, 2, 2, 3, 3, 2, 2, 1, 0, 1, 1, 1, 2, 1, 3, 4, 4, 1, 6, 1, 4, 1, 3, 2, 6, 3, 4, 1, 1, 1, 0, 31, 3, 1, 6, 1, 9, 5, 8, 1, 7, 1, 3, 1, 2, 1, 1, 1, 0, 1, 2, 1, 9, 2, 7, 1, 3, 1, 1, 2, 3, 2, 6, 3, 3, 1, 0, 22, 2, 1, 6, 1, 9, 6, 8, 1, 7, 1, 2, 1, 1, 1, 2, 2, 1, 1, 2, 1, 3, 1, 1, 1, 0, 9, 1, 8, 0, 13, 3, 1, 6, 1, 5, 6, 4, 2, 8, 2, 5, 17, 3, 1, 6, 1, 3, 1, 1, 1, 0, 11, 1, 4, 0, 2, 2, 1, 7, 2, 3, 1, 2, 2, 1, 2, 3, 2, 6, 4, 1, 1, 0, 31, 3, 1, 5, 1, 9, 4, 7, 1, 2, 2, 1, 1, 0, 2, 1, 1, 7, 1, 9, 1, 7, 1, 2, 1, 1, 1, 3, 2, 1, 1, 3, 1, 6, 3, 3, 1, 1, 1, 0, 21, 2, 1, 6, 1, 8, 1, 9, 4, 7, 1, 4, 1, 2, 1, 1, 1, 0, 1, 1, 1, 3, 3, 1, 1, 0, 31, 3, 1, 4, 2, 3, 1, 2, 2, 5, 6, 3, 1, 4, 1, 5, 7, 3, 2, 2, 4, 1, 2, 3, 2, 1, 1, 0, 18, 2, 1, 8, 1, 7, 2, 2, 1, 3, 1, 1, 1, 2, 1, 4, 1, 3, 1, 6, 4, 1, 1, 0, 31, 3, 1, 4, 1, 9, 2, 7, 1, 3, 1, 2, 1, 1, 1, 0, 4, 1, 1, 9, 1, 8, 1, 3, 1, 1, 1, 0, 4, 2, 1, 6, 4, 1, 1, 0, 21, 2, 1, 6, 1, 9, 3, 8, 1, 7, 1, 3, 1, 2, 1, 0, 4, 1, 1, 2, 1, 1, 1, 0, 32, 3, 1, 4, 2, 5, 6, 3, 11, 1, 4, 2, 5, 1, 2, 0, 18, 2, 1, 13, 1, 9, 1, 8, 1, 7, 1, 2, 1, 3, 2, 4, 1, 3, 1, 2, 1, 4, 1, 3, 3, 1, 1, 0, 31, 3, 1, 4, 1, 7, 1, 4, 1, 2, 1, 1, 1, 0, 5, 1, 1, 7, 1, 9, 1, 7, 1, 2, 1, 0, 5, 1, 1, 6, 1, 4, 1, 6, 2, 2, 1, 0, 21, 2, 1, 4, 1, 8, 1, 9, 1, 7, 1, 4, 1, 2, 1, 1, 1, 0, 40, 3, 1, 4, 1, 3, 1, 5, 2, 8, 1, 5, 1, 4, 1, 2, 3, 3, 1, 2, 2, 1, 2, 2, 1, 1, 3, 0, 4, 1, 5, 0, 20, 7, 1, 13, 1, 7, 1, 8, 1, 7, 1, 1, 1, 0, 1, 1, 2, 0, 1, 1, 1, 3, 1, 4, 2, 6, 1, 2, 1, 0, 31, 2, 1, 3, 1, 2, 1, 1, 1, 0, 7, 1, 1, 7, 2, 4, 1, 2, 1, 0, 6, 2, 1, 6, 4, 2, 1, 0, 20, 2, 1, 4, 1, 7, 2, 3, 1, 1, 2, 0, 41, 3, 1, 4, 2, 5, 4, 3, 1, 1, 2, 4, 1, 5, 1, 3, 2, 2, 2, 3, 1, 1, 1, 0, 30, 1, 1, 8, 2, 7, 1, 8, 1, 3, 1, 0, 6, 3, 1, 6, 2, 11, 1, 3, 1, 0, 31, 1, 2, 0, 10, 1, 1, 2, 2, 1, 1, 0, 6, 2, 1, 6, 3, 4, 1, 6, 1, 2, 1, 0, 19, 1, 1, 3, 2, 2, 1, 1, 1, 0, 43, 3, 1, 4, 1, 5, 3, 2, 2, 3, 1, 6, 1, 2, 1, 5, 2, 2, 1, 1, 1, 2, 2, 1, 1, 0, 31, 2, 1, 14, 1, 7, 3, 2, 1, 0, 6, 3, 1, 6, 2, 10, 1, 6, 1, 1, 1, 0, 52, 1, 1, 3, 1, 6, 1, 4, 1, 6, 3, 1, 1, 0, 19, 1, 3, 0, 44, 3, 1, 4, 2, 5, 1, 3, 1, 1, 3, 2, 1, 5, 2, 4, 1, 1, 1, 0, 35, 2, 1, 14, 1, 9, 2, 7, 1, 1, 1, 0, 6, 1, 1, 6, 4, 1, 1, 0, 53, 1, 1, 4, 1, 6, 1, 4, 2, 2, 1, 0, 67, 2, 1, 3, 3, 1, 1, 0, 3, 1, 1, 5, 2, 3, 1, 1, 1, 0, 35, 2, 1, 7, 3, 3, 1, 1, 1, 0, 6, 1, 1, 4, 1, 6, 3, 2, 1, 0, 54, 2, 1, 4, 1, 6, 1, 1, 1, 0, 68, 2, 1, 1, 3, 0, 4, 1, 1, 2, 2, 1, 2, 0, 36, 1, 4, 0, 7, 1, 1, 3, 1, 6, 2, 10, 1, 3, 1, 0, 55, 2, 2, 0, 130, 2, 1, 6, 3, 4, 1, 0, 187, 1, 1, 4, 3, 2, 1, 0, 188, 3, 1, 2, 1, 0, 176],
@@ -4828,7 +4828,7 @@ var Lp = ["#0a0b05", "#1d1e17", "#392d29", "#444234", "#5a2512", "#6c3017", "#5e
         cellW: 64,
         cellH: 46,
         frames: 4,
-        palette: Lp,
+        palette: PORTRAIT_PALETTE,
         runs: Op
     },
     ka = {
@@ -4839,14 +4839,14 @@ var Lp = ["#0a0b05", "#1d1e17", "#392d29", "#444234", "#5a2512", "#6c3017", "#5e
         sniperRifle: 3
     };
 
-function fn(c) {
+function renderPortrait(c) {
     let {
         c: d,
         g: g
     } = O(64, 46);
     return UW(g, Lb, ka[c]), xs(d);
 }
-var Ob = {
+var PORTRAIT_STYLE_A = {
     cellW: 48,
     cellH: 35,
     frames: 4,
@@ -4859,16 +4859,16 @@ function zp(c) {
         c: d,
         g: g
     } = O(48, 35);
-    return UW(g, Ob, ka[c]), xs(d);
+    return UW(g, PORTRAIT_STYLE_A, ka[c]), xs(d);
 }
 var Yp = c => c in ka;
 
-function wa(c, d, g, i) {
+function stampKeyEdge(c, d, g, i) {
     const pR = cX;
     h(c, d - 6, g + 2, 8, 4, cT.body), h(c, d - 6, g + 2, 8, 1, cT.lit), h(c, d - 6, g + 5, 8, 1, cT.dark), h(c, d + 1, g, 5, 2, cT.lit), h(c, d + 1, g + 2, 2, 4, cT.body), h(c, d + 4, g + 2, 2, 4, cT.body), h(c, d + 1, g + 6, 5, 1, cT.dark), h(c, d + 2, g + 7, 2, i, cT.body), h(c, d + 3, g + 7, 1, i, cT.dark), h(c, d + 2, g + 7 + i, 3, 2, cT.dark);
 }
 
-function Nb() {
+function buildTerraceSteps() {
     const pS = cX;
     let {
         c: c,
@@ -4900,19 +4900,19 @@ function Nb() {
     });
     for (let g = 12; g < 25; g += 4) h(d, 3, g, 13, 1, YW.dark);
     for (let i = 5; i < 16; i += 4) h(d, i, 10, 1, 16, YW.dark);
-    return h(d, 6, 4, 7, 5, cT.body), h(d, 6, 4, 7, 1, cT.lit), h(d, 6, 8, 7, 1, cT.dark), wa(d, 15, 0, 10), B(c, "#191a0c"), c;
+    return h(d, 6, 4, 7, 5, cT.body), h(d, 6, 4, 7, 1, cT.lit), h(d, 6, 8, 7, 1, cT.dark), stampKeyEdge(d, 15, 0, 10), B(c, "#191a0c"), c;
 }
 
-function Db() {
+function buildTallSlab() {
     const pU = cX;
     let {
         c: c,
         g: d
     } = O(19, 33);
-    return h(d, 2, 8, 13, 23, YW.body), h(d, 2, 8, 4, 23, YW.lit), h(d, 13, 9, 2, 22, YW.dark), h(d, 3, 6, 11, 2, YW.body), h(d, 3, 6, 11, 1, YW.lit), h(d, 3, 31, 11, 1, YW.dark), h(d, 2, 16, 13, 6, Hp.lit), h(d, 2, 20, 13, 2, Hp.body), h(d, 2, 16, 13, 1, "#ece7cc"), h(d, 5, 2, 6, 4, cT.body), h(d, 5, 2, 6, 1, cT.lit), wa(d, 13, 0, 12), B(c, "#191a0c"), c;
+    return h(d, 2, 8, 13, 23, YW.body), h(d, 2, 8, 4, 23, YW.lit), h(d, 13, 9, 2, 22, YW.dark), h(d, 3, 6, 11, 2, YW.body), h(d, 3, 6, 11, 1, YW.lit), h(d, 3, 31, 11, 1, YW.dark), h(d, 2, 16, 13, 6, Hp.lit), h(d, 2, 20, 13, 2, Hp.body), h(d, 2, 16, 13, 1, "#ece7cc"), h(d, 5, 2, 6, 4, cT.body), h(d, 5, 2, 6, 1, cT.lit), stampKeyEdge(d, 13, 0, 12), B(c, "#191a0c"), c;
 }
 
-function Fb() {
+function buildKeypadTower() {
     const pV = cX;
     let {
         c: c,
@@ -4920,10 +4920,10 @@ function Fb() {
     } = O(18, 34);
     h(d, 3, 8, 10, 24, cT.body), h(d, 3, 8, 3, 24, cT.lit), h(d, 11, 9, 2, 23, cT.dark), h(d, 4, 6, 8, 2, cT.body), h(d, 4, 6, 8, 1, cT.lit), h(d, 4, 32, 8, 1, cT.dark), h(d, 3, 13, 10, 2, cT.dark), h(d, 3, 25, 10, 2, cT.dark), h(d, 3, 13, 10, 1, cT.mid), h(d, 3, 25, 10, 1, cT.mid);
     for (let g = 0; g < 3; g++) h(d, 5, 17 + g * 3, 2, 2, "#c8a832"), h(d, 9, 17 + g * 3, 2, 2, "#8a7320");
-    return h(d, 5, 2, 6, 4, cT.body), h(d, 5, 2, 6, 1, cT.lit), wa(d, 12, 0, 12), B(c, cT.key), c;
+    return h(d, 5, 2, 6, 4, cT.body), h(d, 5, 2, 6, 1, cT.lit), stampKeyEdge(d, 12, 0, 12), B(c, cT.key), c;
 }
 
-function Xp(c, d, g, j, m) {
+function drawPerspectiveFloor(c, d, g, j, m) {
     const pX = cX;
     let p = Math.floor(d / 2),
         q = 15;
@@ -4962,27 +4962,27 @@ function Xp(c, d, g, j, m) {
     r(p - 16, p - u, j), r(p + 16, p + u, j), r(p - 8, p - u + 2, j), r(p + 8, p + u - 2, j);
 }
 
-function Bb() {
+function buildBannerPlaque() {
     const q2 = cX;
     let {
         c: c,
         g: d
     } = O(34, 38), g = $o();
-    return Xp(d, 34, "#2a2210", 25, g.width), B(c, "#2a2210"), d.drawImage(g, Math.round((34 - g.width) / 2), 25), c;
+    return drawPerspectiveFloor(d, 34, "#2a2210", 25, g.width), B(c, "#2a2210"), d.drawImage(g, Math.round((34 - g.width) / 2), 25), c;
 }
 
-function Hb() {
+function buildFigurePlaque() {
     const q4 = cX;
     let {
         c: c,
         g: d
-    } = O(34, 41), g = mn(rT.player, 0, 0, "rifle", 0);
-    return Xp(d, 34, "#2a2210", 25, g.width), B(c, "#2a2210"), d.drawImage(g, Math.round((34 - g.width) / 2), 25), c;
+    } = O(34, 41), g = drawFigure(rT.player, 0, 0, "rifle", 0);
+    return drawPerspectiveFloor(d, 34, "#2a2210", 25, g.width), B(c, "#2a2210"), d.drawImage(g, Math.round((34 - g.width) / 2), 25), c;
 }
 
 function m1(c = "icon") {
     const q7 = cX;
-    if (c === "note") return Gb();
+    if (c === "note") return buildNoticeBoard();
     let {
         c: d,
         g: g
@@ -4990,7 +4990,7 @@ function m1(c = "icon") {
     return h(g, 1, 1, 14, 9, "#44431c"), h(g, 2, 2, 12, 7, "#6c6b29"), h(g, 2, 2, 12, 1, "#8a8836"), h(g, 2, 8, 12, 1, "#4f4e20"), h(g, 7, 3, 3, 1, "#a49b44"), h(g, 6, 4, 5, 3, "#a49b44"), h(g, 7, 7, 3, 1, "#a49b44"), h(g, 7, 4, 2, 3, "#44431c"), k(g, 8, 5, "#a49b44"), k(g, 3, 3, "#a49b44"), k(g, 12, 3, "#a49b44"), k(g, 3, 7, "#a49b44"), k(g, 12, 7, "#a49b44"), h(g, 4, 5, 2, 1, "#8a8836"), h(g, 11, 5, 2, 1, "#8a8836"), B(d, "#1e1e0c"), d;
 }
 
-function Gb() {
+function buildNoticeBoard() {
     const q8 = cX;
     let {
         c: c,
@@ -5017,7 +5017,7 @@ function Gb() {
         for (let l of [9, 10, 21, 22])(l + j & 1) === 0 && k(d, l, j, "#7d7529");
     return B(c, "#1e1e0c"), c;
 }
-var Vb = {
+var PORTRAIT_STYLE_B = {
     cellW: 44,
     cellH: 57,
     frames: 2,
@@ -5030,23 +5030,23 @@ function Ve(c) {
         c: d,
         g: g
     } = O(44, 57);
-    return UW(g, Vb, c ? 0 : 1), d;
+    return UW(g, PORTRAIT_STYLE_B, c ? 0 : 1), d;
 }
 
 function zo(c) {
     const q9 = cX;
     return {
-        smg: fn("smg"),
-        assaultRifle: fn("assaultRifle"),
-        basicRifle: fn("basicRifle"),
-        shotgun: fn("shotgun"),
-        sniperRifle: fn("sniperRifle"),
-        frag: Nb(),
-        smoke: Db(),
-        flashbang: Fb(),
-        supplyDrop: Bb(),
+        smg: renderPortrait("smg"),
+        assaultRifle: renderPortrait("assaultRifle"),
+        basicRifle: renderPortrait("basicRifle"),
+        shotgun: renderPortrait("shotgun"),
+        sniperRifle: renderPortrait("sniperRifle"),
+        frag: buildTerraceSteps(),
+        smoke: buildTallSlab(),
+        flashbang: buildKeypadTower(),
+        supplyDrop: buildBannerPlaque(),
         airstrike: c,
-        reinforcements: Hb()
+        reinforcements: buildFigurePlaque()
     };
 }
 var Jp = ["#3d2925", "#b72403", "#997d03", "#cc8704", "#e25702", "#e28603", "#ec5c01", "#ed8302", "#f46801", "#f5a203", "#fb9203", "#fccf08", "#6c6a68", "#e0b940", "#fce94f", "#f7f3d8"],
@@ -5059,7 +5059,7 @@ var Jp = ["#3d2925", "#b72403", "#997d03", "#cc8704", "#e25702", "#e28603", "#ec
         runs: Zp
     };
 
-function zb(c) {
+function decodeFrames(c) {
     const qb = cX;
     return Array.from({
         length: c.frames
@@ -5072,7 +5072,7 @@ function zb(c) {
         return UW(j, c, g), i;
     });
 }
-var Qp = () => zb(Kb);
+var animPortraitFrames = () => decodeFrames(Kb);
 
 function Tf(c, d, g) {
     const qk = cX;
@@ -5087,18 +5087,18 @@ function Tf(c, d, g) {
     }
     return Math.max(0, Math.min(d - 1, Math.floor(j)));
 }
-var MT = 96,
+var SMOKE_PX = 96,
     qe = 8,
     hn = 16,
     Wf = 8,
     ef = qe + hn + Wf,
-    Yo = MT / 2,
+    Yo = SMOKE_PX / 2,
     Yb = Yo - 2,
     Xb = ['', Ht.rim, Ht.shade, Ht.body, Ht.lit],
     Jb = -0.6,
     Zb = -0.8;
 
-function Qb() {
+function buildSmokeParticles() {
     let c = 1597643207,
         d = () => (c = c * 1664525 + 1013904223 >>> 0) / 4294967296,
         g = [],
@@ -5118,9 +5118,9 @@ function Qb() {
         };
     return i(1, 0, 0.28, 0), i(6, 0.26, 0.26, 0.5), i(10, 0.48, 0.24, 0.35), i(12, 0.64, 0.2, 0.3), g;
 }
-var Ty = Qb();
+var SMOKE_PARTICLES = buildSmokeParticles();
 
-function Wy(c) {
+function smokePhaseFor(c) {
     let d = c / hn;
     if (c < qe) return {
         radius: 0.08 + 0.92 * ((c + 1) / qe) ** 0.7,
@@ -5142,21 +5142,21 @@ function Wy(c) {
         rise: 4 * g
     };
 }
-var ey = [0, 8, 2, 10, 12, 4, 14, 6, 3, 11, 1, 9, 15, 7, 13, 5];
+var BAYER_MATRIX = [0, 8, 2, 10, 12, 4, 14, 6, 3, 11, 1, 9, 15, 7, 13, 5];
 
-function ty(j) {
+function buildSmokeMask(j) {
     const qq = cX;
-    let q = new Uint8Array(MT * MT),
+    let q = new Uint8Array(SMOKE_PX * SMOKE_PX),
         {
             radius: A,
             phase: C,
             keep: E,
             rise: F
-        } = Wy(j),
+        } = smokePhaseFor(j),
         H = Yb * A,
         I = Yo - F,
         K = (M, N) => Math.sin(Math.PI * 2 * (M * C + N)),
-        L = Ty.map(M => {
+        L = SMOKE_PARTICLES.map(M => {
             const qv = qq;
             let N = H * M.d * (1 + 0.11 * K(M.nD, M.pD)),
                 P = M.a + 0.22 * K(M.nA, M.pA);
@@ -5173,64 +5173,64 @@ function ty(j) {
         }
         of L) {
         let Q = Math.max(0, Math.ceil(N - P)),
-            R = Math.min(MT - 1, Math.floor(N + P));
+            R = Math.min(SMOKE_PX - 1, Math.floor(N + P));
         for (let S = Q; S <= R; S++) {
             let U = Math.sqrt(Math.max(0, P * P - (S - N) ** 2)),
                 V = Math.max(0, Math.ceil(M - U)),
-                X = Math.min(MT - 1, Math.floor(M + U));
+                X = Math.min(SMOKE_PX - 1, Math.floor(M + U));
             for (let Y = V; Y <= X; Y++) {
                 let a7 = ((Y - M) * Jb + (S - N) * Zb) / (P || 1);
-                q[S * MT + Y] = a7 > 0.34 ? 4 : a7 > -0.2 ? 3 : a7 > -0.72 ? 2 : 1;
+                q[S * SMOKE_PX + Y] = a7 > 0.34 ? 4 : a7 > -0.2 ? 3 : a7 > -0.72 ? 2 : 1;
             }
         }
     }
-    return ny(q), oy(q, H, I, E), q;
+    return ny(q), erodeSmokeMask(q, H, I, E), q;
 }
 
 function ny(c) {
     const qw = cX;
     let d = [];
-    for (let g = 0; g < MT; g++)
-        for (let i = 0; i < MT; i++) {
-            let j = g * MT + i;
+    for (let g = 0; g < SMOKE_PX; g++)
+        for (let i = 0; i < SMOKE_PX; i++) {
+            let j = g * SMOKE_PX + i;
             if (!c[j]) continue;
-            (i === 0 || g === 0 || i === MT - 1 || g === MT - 1 || !c[j - 1] || !c[j + 1] || !c[j - MT] || !c[j + MT]) && d.push(j);
+            (i === 0 || g === 0 || i === SMOKE_PX - 1 || g === SMOKE_PX - 1 || !c[j - 1] || !c[j + 1] || !c[j - SMOKE_PX] || !c[j + SMOKE_PX]) && d.push(j);
         }
     for (let l of d) c[l] = 1;
 }
 
-function oy(c, d, g, j) {
+function erodeSmokeMask(c, d, g, j) {
     const qx = cX;
-    for (let l = 0; l < MT; l++)
-        for (let m = 0; m < MT; m++) {
-            let p = l * MT + m;
+    for (let l = 0; l < SMOKE_PX; l++)
+        for (let m = 0; m < SMOKE_PX; m++) {
+            let p = l * SMOKE_PX + m;
             if (!c[p]) continue;
             let q = Math.hypot(m - Yo, l - g) / (d || 1),
                 u = q < 0.82 ? 1 : Math.max(0.5, 1 - (q - 0.82) / 0.24 * 0.5);
-            ey[(l & 3) * 4 + (m & 3)] >= u * j * 16 && (c[p] = 0);
+            BAYER_MATRIX[(l & 3) * 4 + (m & 3)] >= u * j * 16 && (c[p] = 0);
         }
 }
 
-function iy(c) {
+function maskToCanvas(c) {
     let {
         c: d,
         g: g
-    } = O(MT, MT);
-    for (let j = 0; j < MT; j++) {
+    } = O(SMOKE_PX, SMOKE_PX);
+    for (let j = 0; j < SMOKE_PX; j++) {
         let l = 0,
             m = 0;
-        for (let p = 0; p <= MT; p++) {
-            let q = p < MT ? c[j * MT + p] : 0;
+        for (let p = 0; p <= SMOKE_PX; p++) {
+            let q = p < SMOKE_PX ? c[j * SMOKE_PX + p] : 0;
             q !== l && (l && h(g, m, j, p - m, 1, Xb[l]), l = q, m = p);
         }
     }
     return d;
 }
-var tf = () => Array.from({
+var buildSmokeFrames = () => Array.from({
     length: ef
-}, (c, d) => iy(ty(d)));
+}, (c, d) => maskToCanvas(buildSmokeMask(d)));
 
-function ry() {
+function smokeTimeline() {
     const qz = cX;
     let c = f.smoke.shape.growUntil,
         d = f.smoke.shape.disperseFrom,
@@ -5246,7 +5246,7 @@ function ry() {
     }
     return l.push([1, ef]), l;
 }
-var nf = ry(),
+var nf = smokeTimeline(),
     AW = 96,
     of = AW / 2,
     Xo = 44,
@@ -5257,7 +5257,7 @@ var nf = ry(),
     ly = c => c < gn ? 1 : Math.max(0, 1 - (c - gn) / (Sa - 1 - gn)) ** 1.1,
     cy = c => Xo * (1 + 0.025 * Math.sin(c * 5 + 1.7) + 0.015 * Math.sin(c * 9 - 0.6));
 
-function dy(c) {
+function buildBlastMask(c) {
     const qA = cX;
     let d = new Uint8Array(AW * AW),
         g = ly(c);
@@ -5281,7 +5281,7 @@ function dy(c) {
     return d;
 }
 
-function uy(c) {
+function blastMaskToCanvas(c) {
     let {
         c: d,
         g: g
@@ -5296,9 +5296,9 @@ function uy(c) {
     }
     return d;
 }
-var rf = () => Array.from({
+var buildBlastFrames = () => Array.from({
         length: Sa
-    }, (c, d) => uy(dy(d))),
+    }, (c, d) => blastMaskToCanvas(buildBlastMask(d))),
     sf = [
         [0, 0],
         [0.06, gn],
@@ -5306,7 +5306,7 @@ var rf = () => Array.from({
         [1, Sa]
     ];
 
-function Jo(c, d, g) {
+function drawGrassTuft(c, d, g) {
     const qB = cX;
     let {
         c: j,
@@ -5319,7 +5319,7 @@ function Jo(c, d, g) {
     }
     return j;
 }
-var Zo = 8,
+var CHICK_W = 8,
     af = 8,
     Ea = {
         x: 4,
@@ -5345,12 +5345,12 @@ var Zo = 8,
         legs: "#d8c060"
     }];
 
-function fy(j, q, A) {
+function drawChicken(j, q, A) {
     const qC = cX;
     let {
         c: C,
         g: E
-    } = O(Zo, af), F = q / lf * Math.PI * 2 + Math.PI / 2, H = Math.cos(F), I = Math.sin(F), K = A === Ma, L = K ? 0 : [0, 1, 0, -1][A], M = !K && (A === 1 || A === 3) ? 1 : 0, N;
+    } = O(CHICK_W, af), F = q / lf * Math.PI * 2 + Math.PI / 2, H = Math.cos(F), I = Math.sin(F), K = A === Ma, L = K ? 0 : [0, 1, 0, -1][A], M = !K && (A === 1 || A === 3) ? 1 : 0, N;
     if (Math.abs(I) > 0.7) {
         let P = I < 0;
         h(E, 2, 3 + M, 4, 1, j.body), h(E, 1, 4 + M, 6, 1, j.body), h(E, 2, 5 + M, 4, 1, j.wing), k(E, 1, 4 + M, j.wing), k(E, 6, 4 + M, j.wing), k(E, 3, 3 + M, j.light);
@@ -5362,7 +5362,7 @@ function fy(j, q, A) {
     } else {
         let R = H > 0 ? 1 : -1,
             S = Math.abs(I) <= 0.3 ? 6 : 5,
-            U = R > 0 ? 1 : Zo - 1 - S,
+            U = R > 0 ? 1 : CHICK_W - 1 - S,
             V = R > 0 ? U + S - 1 : U,
             X = R > 0 ? U : U + S - 1;
         h(E, U, 3 + M, S, 3, j.body), h(E, U + (R > 0 ? 1 : 2), 4 + M, S - 3, 1, j.wing), h(E, U, 5 + M, S, 1, j.wing), k(E, R > 0 ? U + 1 : U + S - 2, 3 + M, j.light), k(E, X, 2 + M, j.wing), k(E, X - R, 1 + M, j.wing);
@@ -5379,29 +5379,29 @@ function fy(j, q, A) {
     return B(C, j.outline), N(), C;
 }
 
-function hy(c, d = 0) {
+function drawChickenFlap(c, d = 0) {
     const qF = cX;
     let {
         c: g,
         g: j
-    } = O(Zo, af), l = d % 2 === 1, m = d >= 2, p = (q, u, v, y, A) => h(j, l ? Zo - q - v : q, u, v, y, A);
+    } = O(CHICK_W, af), l = d % 2 === 1, m = d >= 2, p = (q, u, v, y, A) => h(j, l ? CHICK_W - q - v : q, u, v, y, A);
     return p(2, 4, 4, 2, c.body), p(3, 4, 2, 1, c.wing), p(2, 5, 4, 1, c.wing), p(0, 5, 2, 1, c.body), p(0, 4, 1, 1, c.comb), p(3, 3, 1, 1, c.light), B(g, c.outline), m ? (p(6, 3, 1, 1, c.legs), p(7, 2, 1, 1, c.legs), p(6, 4, 2, 1, c.legs)) : (p(6, 4, 2, 1, c.legs), p(6, 6, 2, 1, c.legs)), g;
 }
 
-function df() {
+function buildChickenFrames() {
     const qG = cX;
     return cf.map(c => Array.from({
         length: lf
     }, (d, g) => Array.from({
         length: my
-    }, (i, j) => fy(c, g, j))));
+    }, (i, j) => drawChicken(c, g, j))));
 }
 
-function uf() {
+function buildChickenFlapFrames() {
     const qH = cX;
     return cf.map(c => Array.from({
         length: py
-    }, (d, g) => hy(c, g)));
+    }, (d, g) => drawChickenFlap(c, g)));
 }
 var Ca = {
         move: ["#d8f0b0", "#8c9c72", "#4c543e"],
@@ -5536,7 +5536,7 @@ var Ca = {
         small: true
     }];
 
-function vy(c, d) {
+function drawWingedMote(c, d) {
     const qL = cX;
     let {
         wing: g,
@@ -5556,9 +5556,9 @@ function vy(c, d) {
     } = O(gy, by), v = p ? 1 : 0;
     return k(u, 1, v, g), k(u, 3, v, g), k(u, 2, v, j), k(u, 0, p ? 0 : 1, g), k(u, 4, p ? 0 : 1, g), k(u, 2, 2, gT.bark), q;
 }
-var xf = () => _f.map((c, d) => Array.from({
+var buildWingedMoteFrames = () => _f.map((c, d) => Array.from({
         length: yy
-    }, (g, i) => vy(d, i))),
+    }, (g, i) => drawWingedMote(d, i))),
     Ti = "seat:";
 
 function ct(c, d) {
@@ -5569,16 +5569,16 @@ function ct(c, d) {
     let i = c;
     return i.kind === 1 ? "sniper" : i.kind === 2 ? "bazooka" : i.kind === 3 ? "officer" : i.traits?.look ?? "enemy";
 }
-var Pa = (c, d) => Array.from({
+var buildCharacterSheet = (c, d) => Array.from({
         length: _a
     }, (g, i) => Array.from({
         length: Ge
     }, (j, l) => Array.from({
         length: u1
-    }, (m, p) => mn(c, l, p, d, i)))),
+    }, (m, p) => drawFigure(c, l, p, d, i)))),
     kf = c => Array.from({
         length: Ip
-    }, (d, g) => Pp(c, g)),
+    }, (d, g) => buildFigurePose(c, g)),
     wf = {
         green: rT.player,
         blue: rT.blue
@@ -5597,7 +5597,7 @@ var Pa = (c, d) => Array.from({
         officer: rT.officer
     };
 
-function La(c) {
+function paletteFor(c) {
     const qN = cX;
     return c.startsWith(Ti) ? wf[c.slice(Ti.length)] ?? null : Sf[c]?.palette ?? _y[c] ?? null;
 }
@@ -5619,36 +5619,36 @@ function Ef(c, d) {
             return c.officer;
     }
     let g = Sf[d];
-    if (g) return c.looks[d] ??= Pa(g.palette, g.weapon);
-    let i = La(d);
-    return i ? c.looks[d] ??= Pa(i, "rifle") : c.enemy;
+    if (g) return c.looks[d] ??= buildCharacterSheet(g.palette, g.weapon);
+    let i = paletteFor(d);
+    return i ? c.looks[d] ??= buildCharacterSheet(i, "rifle") : c.enemy;
 }
 
 function Wi(c, d) {
     const qP = cX;
     if (d === "player") return c.corpsePlayer;
     if (d === "hostage") return c.corpseHostage;
-    let g = La(d);
+    let g = paletteFor(d);
     return g ? c.lookCorpses[d] ??= kf(g) : c.corpseEnemy;
 }
 
 function Mf(c, d) {
     const qQ = cX;
-    let g = La(d);
-    return g ? c.lookWounded[d] ??= xa(g) : c.woundedEnemy;
+    let g = paletteFor(d);
+    return g ? c.lookWounded[d] ??= buildFigurePortrait(g) : c.woundedEnemy;
 }
-var bn = null;
+var atlasCache = null;
 
-function Cf() {
+function buildSpriteAtlas() {
     const qR = cX;
-    if (bn) return bn;
+    if (atlasCache) return atlasCache;
     let c = kf,
-        d = Pa,
-        g = [0, 1, 2, 3].map(gp),
+        d = buildCharacterSheet,
+        g = [0, 1, 2, 3].map(buildRockIsland),
         i = Array.from({
             length: un
         }, (j, l) => Ko(l));
-    return bn = {
+    return atlasCache = {
         mapObjects: hp(),
         player: d(rT.player, "rifle"),
         enemy: d(rT.enemy, "rifle"),
@@ -5659,7 +5659,7 @@ function Cf() {
         hostage: d(rT.hostage, "none"),
         corpsePlayer: c(rT.player),
         corpseEnemy: c(rT.enemy),
-        woundedEnemy: xa(rT.enemy),
+        woundedEnemy: buildFigurePortrait(rT.enemy),
         corpseHostage: c(rT.hostage),
         looks: {},
         lookCorpses: {},
@@ -5667,40 +5667,40 @@ function Cf() {
         grassTufts: {
             jungle: Array.from({
                 length: 4
-            }, (j, l) => Jo(l + 1, "#3d6a22", "#5c9436")),
+            }, (j, l) => drawGrassTuft(l + 1, "#3d6a22", "#5c9436")),
             desert: Array.from({
                 length: 4
-            }, (j, l) => Jo(l + 5, "#8a7a3e", "#a89a58")),
+            }, (j, l) => drawGrassTuft(l + 5, "#8a7a3e", "#a89a58")),
             arctic: Array.from({
                 length: 4
-            }, (j, l) => Jo(l + 9, "#5c6b62", "#8fa096"))
+            }, (j, l) => drawGrassTuft(l + 9, "#5c6b62", "#8fa096"))
         },
         hut: g,
         hutAllied: g.map(j => kd(j, {
             thatch: "moss"
         })),
-        cabin: [0, 1, 2, 3].map(bp),
-        factory: [0, 1, 2, 3].map(vp),
-        outpost: [0, 1, 2, 3].map(yp),
-        chicken: df(),
-        chickenCorpse: uf(),
-        birds: xf(),
-        bunker: xp(),
-        tent: _p(),
+        cabin: [0, 1, 2, 3].map(buildMetalRidge),
+        factory: [0, 1, 2, 3].map(buildDarkBasin),
+        outpost: [0, 1, 2, 3].map(buildBrassRidge),
+        chicken: buildChickenFrames(),
+        chickenCorpse: buildChickenFlapFrames(),
+        birds: buildWingedMoteFrames(),
+        bunker: buildSteppedZiggurat(),
+        tent: buildCanvasDome(),
         crate: $o(),
-        package: wp(),
-        smokeAnim: tf(),
-        blastAnim: Qp(),
-        flashAnim: rf(),
+        package: buildWoodCrate(),
+        smokeAnim: buildSmokeFrames(),
+        blastAnim: animPortraitFrames(),
+        flashAnim: buildBlastFrames(),
         plane: i,
-        parachute: kp(),
-        supply: Sp(),
-        barrel: Ep(),
-        mine: Mp(),
-        muzzle: Rp(),
+        parachute: buildPaperNote(),
+        supply: buildGreenMat(),
+        barrel: buildBrickWall(),
+        mine: buildDarkShed(),
+        muzzle: buildStarSparkle(),
         icons: {
-            grenade: Cp(),
-            hostage: Ap(),
+            grenade: buildAmmoBox(),
+            hostage: buildHostageIcon(),
             bond: m1("icon")
         },
         kit: zo(i[0]),
@@ -5709,24 +5709,24 @@ function Cf() {
             note: m1("note")
         },
         trooper: [Ve(true), Ve(false)],
-        logo: bo(),
-        logoParts: fu()
-    }, bn;
+        logo: getTitleArt(),
+        logoParts: buildTitleSprites()
+    }, atlasCache;
 }
-var yn = ["....#####....", "..##..#..##..", ".#....#....#.", ".#....#....#.", "#.....#.....#", "#.....#.....#", "#############", "#.....#.....#", "#.....#.....#", ".#....#....#.", ".#....#....#.", "..##..#..##..", "....#####...."];
+var EMBLEM_ART = ["....#####....", "..##..#..##..", ".#....#....#.", ".#....#....#.", "#.....#.....#", "#.....#.....#", "#############", "#.....#.....#", "#.....#.....#", ".#....#....#.", ".#....#....#.", "..##..#..##..", "....#####...."];
 
 function Na() {
     const qS = cX;
     let {
         c: c,
         g: d
-    } = O(yn[0].length + 2, yn.length + 2);
+    } = O(EMBLEM_ART[0].length + 2, EMBLEM_ART.length + 2);
     d.fillStyle = "#f6efd8";
-    for (let g = 0; g < yn.length; g++)
-        for (let i = 0; i < yn[g].length; i++) yn[g][i] === '#' && d.fillRect(i + 1, g + 1, 1, 1);
+    for (let g = 0; g < EMBLEM_ART.length; g++)
+        for (let i = 0; i < EMBLEM_ART[g].length; i++) EMBLEM_ART[g][i] === '#' && d.fillRect(i + 1, g + 1, 1, 1);
     return B(c, "#141005"), c;
 }
-var xy = {
+var ICON_ART = {
         flag: ["..#..........", "..##########.", "..#########..", "..########...", "..#######....", "..######.....", "..#####......", "..#..........", "..#..........", "..#..........", "..#..........", ".####........", "............."],
         map: ["#############", "#...........#", "#.###.......#", "#.###...##..#", "#.......##..#", "#...........#", "#..##.......#", "#..##..###..#", "#......###..#", "#...........#", "#.......##..#", "#...........#", "#############"],
         clock: ["....#####....", "..##.....##..", ".#.........#.", ".#....#....#.", "#.....#.....#", "#.....#.....#", "#.....###...#", "#...........#", "#...........#", ".#.........#.", ".#.........#.", "..##.....##..", "....#####...."],
@@ -5739,7 +5739,7 @@ function Ue(c) {
     const qU = cX;
     let d = Af.get(c);
     if (d) return d;
-    let g = xy[c],
+    let g = ICON_ART[c],
         {
             c: j,
             g: l
@@ -5749,17 +5749,17 @@ function Ue(c) {
         for (let p = 0; p < g[m].length; p++) g[m][p] === '#' && l.fillRect(p + 1, m + 1, 1, 1);
     return B(j, "#141005"), Af.set(c, j), j;
 }
-var Oa = null;
+var tintCache = null;
 
-function Rf() {
+function buildTintedBackdrop() {
     const qV = cX;
-    if (Oa) return Oa;
+    if (tintCache) return tintCache;
     let c = Ve(false),
         {
             c: d,
             g: g
         } = O(c.width, c.height);
-    return g.drawImage(c, 0, 0), g.globalCompositeOperation = "source-in", g.fillStyle = "#3a4726", g.fillRect(0, 0, d.width, d.height), g.globalCompositeOperation = "source-over", Oa = d, d;
+    return g.drawImage(c, 0, 0), g.globalCompositeOperation = "source-in", g.fillStyle = "#3a4726", g.fillRect(0, 0, d.width, d.height), g.globalCompositeOperation = "source-over", tintCache = d, d;
 }
 var jf = [60, 180, 300],
     If = 180,

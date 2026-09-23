@@ -34,7 +34,7 @@
         let aP = document.getElementById("front-version"),
             aQ = document.getElementById("front-version-sep");
         aP && (aP.textContent = "v0.3.0", aP.hidden = false, aQ && (aQ.hidden = false), Gm() && (aP.disabled = false, aP.title = "What has changed", aP.onclick = () => {
-            Vm();
+            renderChangelog();
         }));
         let aR = co(q),
             aS = A && aR.some(bU => bU.id === A && aE.open.has(bU.id)) ? A : null,
@@ -188,7 +188,7 @@
                     let cz = w("button", "lb-pencil");
                     cz.type = "button", cz.title = "Change your name", cz.appendChild(eT(Zt("pencil"), 2)), cx.appendChild(cz), cz.onclick = () => {
                         const tQ = tO;
-                        Ru({
+                        buildConfirmField({
                             title: "YOUR NAME",
                             label: "What the other lot will call you",
                             value: vn(),
@@ -226,7 +226,7 @@
                 for (let cF = 0; cF < 2; cF++) {
                     let cG = bU.seats[cF],
                         cH = w("div", "lb-slot");
-                    cG?.ready && cH.classList.add("ready"), cG && !cG.connected && cH.classList.add("away"), cH.appendChild(w("span", "lb-box-label lb-slot-label", cF === bU.you ? "YOUR SQUAD" : "SLOT " + (cF + 1))), cH.appendChild(eT(cG ? Ve(true) : Rf(), 1, "lb-avatar"));
+                    cG?.ready && cH.classList.add("ready"), cG && !cG.connected && cH.classList.add("away"), cH.appendChild(w("span", "lb-box-label lb-slot-label", cF === bU.you ? "YOUR SQUAD" : "SLOT " + (cF + 1))), cH.appendChild(eT(cG ? Ve(true) : buildTintedBackdrop(), 1, "lb-avatar"));
                     let cI = w("div", "lb-slot-body");
                     if (cG) {
                         let cJ = w("div", "lb-slot-name");
@@ -330,7 +330,7 @@
                     X = bU;
                 }
             }),
-            bD = Lm(aA),
+            bD = renderMusicCta(aA),
             bE = bU => {
                 aI({
                     id: bU.id,
@@ -431,12 +431,12 @@
             bP = w("button", "corner-tool front-gear");
         bP.type = "button", bP.title = "Settings", bP.setAttribute("aria-label", "Settings"), bP.addEventListener("click", () => Vo()), N.appendChild(bP);
         let bQ = Pm(N, K, q);
-        L && aN(L), N.hidden = false, requestAnimationFrame(() => N.classList.add('in')), window.setTimeout(() => MW(0), 340), aN(L ?? ($.room || bB ? "lobby" : "intro"));
+        L && aN(L), N.hidden = false, requestAnimationFrame(() => N.classList.add('in')), window.setTimeout(() => setBlackout(0), 340), aN(L ?? ($.room || bB ? "lobby" : "intro"));
         let bR = cj => {
             const uB = tC;
             if (!aH && !xu()) {
                 if (cj.key === 'm' || cj.key === 'M') {
-                    ea();
+                    toggleMusic();
                     return;
                 }
                 cj.key === "Escape" && N.classList.contains("on-select") && aN("intro");
@@ -592,7 +592,7 @@ var DISPATCH_PANELS = {
         actions: i,
         source: j,
         lead: l
-    }) => ga({
+    }) => renderOfferPanel({
         campaign: c,
         levels: d,
         actions: i,
@@ -613,7 +613,7 @@ function startDispatch(c, d) {
         lead: q,
         raised: u
     } = d, v = "continue";
-    return Po({
+    return playTypewriterLine({
         line: Io(c, m),
         raised: u,
         build: (y, A) => DISPATCH_PANELS[c]({

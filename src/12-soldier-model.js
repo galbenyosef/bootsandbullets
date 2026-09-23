@@ -2047,7 +2047,7 @@ var tr = class {
         constructor(c) {
             const DZ = cX;
             this.ctx = c, (this.figures = new Xi(c, this.atlas), this.effects = new ShadowRenderer(c, this.atlas), this.markers = new AimRenderer(c, this.atlas), this.props = new Tr(c, this.atlas), this.water = new Wr(c));
-        } ["atlas"] = Cf();
+        } ["atlas"] = buildSpriteAtlas();
         ["terrain"];
         ["info"];
         ["canopy"] = null;
