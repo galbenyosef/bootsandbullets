@@ -24,7 +24,7 @@ function no(q) {
         for (let aF = 0; aF < H; aF++) {
             let aG = z(q, aF, aE),
                 aH = aE * H + aF;
-            P[aH] = ys(aG), Q[aH] = o4(aG) ? 1 : 0;
+            P[aH] = getTileMaterial(aG), Q[aH] = isWaterOrFoliageTile(aG) ? 1 : 0;
         }
     let U = new Uint8Array(L),
         V = new Uint8Array(L),
@@ -33,12 +33,12 @@ function no(q) {
     for (let aI of a7) {
         V.fill(0), Y.fill(0);
         for (let aJ = 0; aJ < L; aJ++) V[aJ] = P[aJ] === aI ? 1 : 0;
-        bs(H, K, V, Y);
+        computeInnerDistances(H, K, V, Y);
         for (let aK = 0; aK < L; aK++) V[aK] && (U[aK] = Y[aK]);
     }
     let a8 = new Uint8Array(L);
-    bs(H, K, Q, a8);
-    let a9 = jl(H, K, Q, 6),
+    computeInnerDistances(H, K, Q, a8);
+    let a9 = computeOuterDistances(H, K, Q, 6),
         aj = new Uint8Array(L);
     for (let aL = 0; aL < L; aL++) aj[aL] = P[aL] === 2 ? 1 : 0;
     let ak = new Uint8Array(L);
@@ -92,15 +92,15 @@ function no(q) {
         depth: U,
         canopyDepth: a8,
         canopyNear: a9,
-        wetSdf: N1(H, K, aj, 6),
-        foliageSdf: N1(H, K, Q, 6),
+        wetSdf: buildSdf(H, K, aj, 6),
+        foliageSdf: buildSdf(H, K, Q, 6),
         tree: aq,
-        treeSdf: N1(H, K, aq, 6),
+        treeSdf: buildSdf(H, K, aq, 6),
         tallGrass: aw,
-        grassSdf: N1(H, K, aw, 5),
+        grassSdf: buildSdf(H, K, aw, 5),
         longGrass: ax,
-        longSdf: N1(H, K, ax, 5),
-        stoneSdf: N1(H, K, ak, 4),
+        longSdf: buildSdf(H, K, ax, 5),
+        stoneSdf: buildSdf(H, K, ak, 4),
         mass: az,
         massSize: Int32Array.from(aA),
         bits: aC,
@@ -108,13 +108,13 @@ function no(q) {
         noise: new hs([...q.id].reduce((bA, bB) => bA * 31 + bB.charCodeAt(0) | 0, 7))
     };
 }
-var LW = c => {
+var hexToRgb = c => {
         const fw = cX;
         let d = parseInt(c.replace('#', ''), 16);
         return [d >> 16 & 255, d >> 8 & 255, d & 255];
     },
     VW = c => {
-        let [d, g, i] = LW(c);
+        let [d, g, i] = hexToRgb(c);
         return (4278190080 | i << 16 | g << 8 | d) >>> 0;
     },
     SW = c => {
@@ -128,12 +128,12 @@ var LW = c => {
     Ol = (c, d) => Dl(r4(c), Nl(c), _s(c) * d),
     r4 = c => {
         const fz = cX;
-        let [d, g, j] = LW(c).map(q => q / 255), l = Math.max(d, g, j), m = Math.min(d, g, j), p = l - m;
+        let [d, g, j] = hexToRgb(c).map(q => q / 255), l = Math.max(d, g, j), m = Math.min(d, g, j), p = l - m;
         return p === 0 ? 0 : (l === d ? (g - j) / p + (g < j ? 6 : 0) : l === g ? (j - d) / p + 2 : (d - g) / p + 4) * 60;
     },
     Nl = c => {
         const fA = cX;
-        let [d, g, j] = LW(c).map(u => u / 255), l = Math.max(d, g, j), m = Math.min(d, g, j), p = (l + m) / 2, q = l - m;
+        let [d, g, j] = hexToRgb(c).map(u => u / 255), l = Math.max(d, g, j), m = Math.min(d, g, j), p = (l + m) / 2, q = l - m;
         return q === 0 ? 0 : p > 0.5 ? q / (2 - l - m) : q / (l + m);
     },
     Dl = (c, d, g) => {
@@ -147,7 +147,7 @@ var LW = c => {
     },
     _s = c => {
         const fB = cX;
-        let [d, g, i] = LW(c).map(j => j / 255).map(j => j <= 0.03928 ? j / 12.92 : ((j + 0.055) / 1.055) ** 2.4);
+        let [d, g, i] = hexToRgb(c).map(j => j / 255).map(j => j <= 0.03928 ? j / 12.92 : ((j + 0.055) / 1.055) ** 2.4);
         return 0.2126 * d + 0.7152 * g + 0.0722 * i;
     },
     Il = (c, d, g) => {
@@ -349,7 +349,7 @@ var LW = c => {
         let c = new Float32Array(4096);
         for (let d = 0; d < 64; d++)
             for (let g = 0; g < 64; g++) {
-                let i = kT(g, d),
+                let i = hash01(g, d),
                     j = p4[(d & 7) * 8 + (g & 7)];
                 c[d * 64 + g] = Math.min(0.999, Math.max(0.001, j + (i - 0.5) * f4));
             }
@@ -357,7 +357,7 @@ var LW = c => {
     })()),
     qW = (c, d) => h4[(d & 63) * 64 + (c & 63)];
 
-function iW(c, d, g, j) {
+function sampleRamp(c, d, g, j) {
     const fF = cX;
     let l = c.length - 1,
         m = d <= 0 ? 0 : d >= l ? l : d,
@@ -365,14 +365,14 @@ function iW(c, d, g, j) {
     return p >= l ? c[l] : qW(g, j) < m - p ? c[p + 1] : c[p];
 }
 
-function io(c, d) {
+function darkenColor(c, d) {
     let g = 1 - d,
         i = (c & 255) * g,
         j = (c >> 8 & 255) * g;
     return (4278190080 | (c >> 16 & 255) * g << 16 | j << 8 | i) >>> 0;
 }
 
-function Bt(c, d, g) {
+function blendColor(c, d, g) {
     let j = c & 255,
         m = c >> 8 & 255,
         p = c >> 16 & 255,
@@ -383,7 +383,7 @@ function Bt(c, d, g) {
         A = m + (u - m) * g | 0;
     return (4278190080 | (p + (v - p) * g | 0) << 16 | A << 8 | y) >>> 0;
 }
-var rT = {
+var FIGURE_PALETTES = {
         player: {
             outline: "#0a1204",
             helmetLight: "#c4d472",
@@ -559,7 +559,7 @@ function B(d, g) {
         p = m.data,
         q = new Uint8Array(d.width * d.height);
     for (let C = 0; C < q.length; C++) q[C] = p[C * 4 + 3] > 8 ? 1 : 0;
-    let [v, y, A] = LW(g);
+    let [v, y, A] = hexToRgb(g);
     for (let E = 0; E < d.height; E++)
         for (let F = 0; F < d.width; F++) {
             let H = E * d.width + F;
@@ -570,7 +570,7 @@ function B(d, g) {
     j.putImageData(m, 0, 0);
 }
 
-function UW(g, j, q = 0, v) {
+function drawSpriteDefFrame(g, j, q = 0, v) {
     const fK = cX;
     let y = j.cellW * j.frames,
         A = q * j.cellW,
@@ -594,7 +594,7 @@ function UW(g, j, q = 0, v) {
     }
 }
 
-function xs(c) {
+function trimCanvas(c) {
     const fL = cX;
     let d = c.getContext('2d').getImageData(0, 0, c.width, c.height).data,
         g = c.width,
@@ -614,7 +614,7 @@ var SPRITE_DEFS = {
         trumper: {
             cell: 64,
             frames: 6,
-            palette: Cl,
+            palette: TRUMPER_PALETTE,
             runs: Al,
             loops: {
                 idle: {
@@ -630,7 +630,7 @@ var SPRITE_DEFS = {
     },
     F1 = Object.keys(SPRITE_DEFS);
 
-function ue(c) {
+function getSheetMeta(c) {
     const fM = cX;
     let d = SPRITE_DEFS[c] ?? SPRITE_DEFS[F1[0]];
     return {
@@ -699,12 +699,12 @@ function drawSpriteFrame(g, j = 0) {
     return B(E, "#0a0d05"), E;
 }
 
-function Gl(c) {
+function getFaceColor(c) {
     const fQ = cX;
     let {
         count: d,
         cell: g
-    } = ue(c), {
+    } = getSheetMeta(c), {
         c: i,
         g: j
     } = O(g * d, g);
@@ -756,11 +756,11 @@ var removeTimer = c => {
     c && (We = We.filter(d => d !== c));
 };
 
-function B1() {
+function pauseComms() {
     so = true;
 }
 
-function H1() {
+function resumeComms() {
     so = false;
 }
 var commsCharDelay = 0.035,
@@ -779,7 +779,7 @@ var ws = () => {
 
 function typeCommsLine(c, d, g, j) {
     const fY = cX;
-    if (e1() || !g) {
+    if (prefersReducedMotion() || !g) {
         c.textContent = d;
         return;
     }
@@ -807,8 +807,8 @@ function setupCommsFace(c, d) {
         {
             idle: j,
             talk: l
-        } = ue(d);
-    if (g(j.frames[0]), e1()) return {
+        } = getSheetMeta(d);
+    if (g(j.frames[0]), prefersReducedMotion()) return {
         talk: () => {},
         rest: () => {}
     };
@@ -834,7 +834,7 @@ function setupCommsFace(c, d) {
     };
 }
 
-function je(c, d, g = {}) {
+function speakLine(c, d, g = {}) {
     const gj = cX;
     let j = M4();
     if (!j) return;
@@ -866,7 +866,7 @@ function je(c, d, g = {}) {
         const gk = gj;
         j.hidden = false, requestAnimationFrame(() => {
             const gq = gk;
-            j.classList.add('in'), e1() && j.classList.add("still"), addTimer(e1() ? 0 : 0.26, () => typeCommsLine(p, d, c.voice, l));
+            j.classList.add('in'), prefersReducedMotion() && j.classList.add("still"), addTimer(prefersReducedMotion() ? 0 : 0.26, () => typeCommsLine(p, d, c.voice, l));
         }), g.sticky || (addTimer(g.seconds ?? w4, $l), startIdleWatch());
     });
 }
@@ -881,7 +881,7 @@ function startIdleWatch() {
         }, 0.1);
     });
 }
-var Ul = () => We.length > 0 || rW !== null && !rW.hidden;
+var isCommsBusy = () => We.length > 0 || rW !== null && !rW.hidden;
 
 function $l() {
     const gx = cX;
@@ -891,18 +891,18 @@ function $l() {
     }, f.timing.commsExit));
 }
 
-function G1() {
+function destroyComms() {
     const gA = cX;
     ws(), rW?.remove(), rW = null;
 }
 
-function Kl(c) {
+function buildAdviceLine(c) {
     const gB = cX;
     let d = c.advice;
     if (!d || !d.text.trim()) return null;
-    let g = new Map(R1().map(m => [m.action, m.keys])),
+    let g = new Map(getControlBindings().map(m => [m.action, m.keys])),
         i = d.text.replace(/\{FIRE\}/g, g.get("fire") ?? '').replace(/\{GRENADE\}/g, g.get("grenade") ?? '').replace(/\{MOVE\}/g, g.get("move") ?? '').replace(/\s+/g, ' ').trim(),
-        j = EW[d.speaker] ?? EW[Xr] ?? narratorDef,
+        j = EW[d.speaker] ?? EW[DEFAULT_SPEAKER] ?? narratorDef,
         l = d.seconds < 0 ? {
             sticky: true
         } : {

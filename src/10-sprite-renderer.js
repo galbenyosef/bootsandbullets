@@ -47,7 +47,7 @@ var yi = class {
         stamp(g, j) {
             const wx = cX;
             let q = this.g,
-                v = n1(g.seed);
+                v = createRngFromSeed(g.seed);
             if (this.blood === "none" && (g.kind === "blood" || g.kind === "slick")) return;
             let y = this.blood === "carnage" ? 4 : 1,
                 A = 1 - j / dt,
@@ -113,7 +113,7 @@ var yi = class {
             return this.wornCorpses.set(p, u), u;
         }
     },
-    p1 = (c, d, g, i) => Pt(c, d, g) ? !(i && TT[z(c, d, g)].swim) : false,
+    p1 = (c, d, g, i) => isTileSolid(c, d, g) ? !(i && TT[z(c, d, g)].swim) : false,
     f0 = (c, d, g, i = 1) => {
         const wA = cX;
         let j = TT[z(c, d, g)];
@@ -431,7 +431,7 @@ function sightDistance(c, d, g, i) {
 
 function y0(c, d, g, i) {
     const wY = cX;
-    return Math.min(TT[oW(c, d, g)].concealment, smokeConcealment(i, d, g));
+    return Math.min(TT[getTileDefAt(c, d, g)].concealment, smokeConcealment(i, d, g));
 }
 
 function v0(c, d, g, j, l) {
@@ -452,7 +452,7 @@ function hasLineOfSight(c, d, g, j, l, m) {
 
 function n2(d, g, i, j, m, p) {
     const x7 = cX;
-    if (TT[oW(d, i.x, i.y)].swim || y0(d, i.x, i.y, p) >= 1) return false;
+    if (TT[getTileDefAt(d, i.x, i.y)].swim || y0(d, i.x, i.y, p) >= 1) return false;
     let q = v0(j, d, i, m, p),
         u = q * q;
     for (let v of g) {
@@ -645,7 +645,7 @@ function g1(c, d) {
                 return;
             }
         }
-    let g = uT(d, c.pos);
+    let g = findOpenPosition(d, c.pos);
     (g.x !== c.pos.x || g.y !== c.pos.y) && (c.pos.x = g.x, c.pos.y = g.y, c.vel.x = 0, c.vel.y = 0);
 }
 
@@ -665,7 +665,7 @@ function ut(c, d) {
             };
         }
     }
-    return uT(c, d.pos);
+    return findOpenPosition(c, d.pos);
 }
 
 function Ci(c, d, g) {
@@ -744,7 +744,7 @@ function tickCampingPressure(c) {
     c.stillFor < f.camping.settle || (c.pressure = Math.min(f.camping.cap, c.pressure + 1));
 }
 var shouldHunt = (c, d) => d.traits.hunter || c.pressure >= f.camping.huntFrom,
-    mT = (c, d) => kT(c + 1, d);
+    mT = (c, d) => hash01(c + 1, d);
 
 function FW(c, d, g, j) {
     const xI = cX;
@@ -755,7 +755,7 @@ function FW(c, d, g, j) {
     let l = Math.imul(g + 1, 2654435761) >>> 0,
         m = (l & 65535) / 65536 * Math.PI * 2,
         p = j * Math.sqrt((l >>> 16 & 65535) / 65536);
-    return uT(c.map, {
+    return findOpenPosition(c.map, {
         x: d.x + Math.cos(m) * p,
         y: d.y + Math.sin(m) * p
     });
@@ -848,7 +848,7 @@ function computeFlankMove(q, F, H, K, L = 0) {
                     x: H.x + Math.cos(aw) * P.ring,
                     y: H.y + Math.sin(aw) * P.ring
                 },
-                az = uT(Q, ax);
+                az = findOpenPosition(Q, ax);
             if (Math.hypot(az.x - ax.x, az.y - ax.y) > Q.tile || Math.abs(av(Math.atan2(az.y - H.y, az.x - H.x), Y)) < P.minTurn * P0) continue;
             let aA = i2(q, az);
             if (aA < 0) continue;
@@ -1364,7 +1364,7 @@ function protectBuilding(c, d) {
         m = Math.hypot(j, l) || 1;
     if (m <= d.stats.fireRange && PW(c.map, d.pos, g.centre) && !d.wading) return d.angle = Math.atan2(l, j), d.fireCooldown <= 0 && (d.fireCooldown = d.stats.fireInterval * (0.8 + c.jitter(d.faction) * 0.4), y1(c, d, g.centre, d.stats.spread)), null;
     let p = d.stats.fireRange * (0.62 + mT(d.id, 3) * 0.26);
-    return uT(c.map, {
+    return findOpenPosition(c.map, {
         x: g.centre.x - j / m * p,
         y: g.centre.y - l / m * p
     });
@@ -1390,12 +1390,12 @@ function ji(g, j) {
         y = (Math.round(v / (Math.PI / 4)) % 8 + 8) % 8,
         A = q & 1,
         C = v + Math.PI / 2,
-        E = kT(j.id, q) * 2 - 1,
+        E = hash01(j.id, q) * 2 - 1,
         F = {
             x: j.pos.x + Math.cos(C) * (A ? 1.5 : -1.5) + Math.cos(v) * E,
             y: j.pos.y + Math.sin(C) * (A ? 1.5 : -1.5) + Math.sin(v) * E
         },
-        H = xT(Math.round(F.x), Math.round(F.y)) & 67108863;
+        H = hashInt(Math.round(F.x), Math.round(F.y)) & 67108863;
     g.fx.print(F, u, H * 16 + (A << 3) + y);
 }
 
@@ -1463,7 +1463,7 @@ function th(c, d) {
 
 function isSwimAt(c, d) {
     const yP = cX;
-    return TT[oW(c.map, d.pos.x, d.pos.y)].swim;
+    return TT[getTileDefAt(c.map, d.pos.x, d.pos.y)].swim;
 }
 
 function tickCorpseFade(c, d) {
@@ -1606,7 +1606,7 @@ function scanBirdsInRadius(j, m, q) {
                 P = M.y - m.y;
             if (N * N + P * P > E * E || j.fx.birds.some(X => Math.abs(X.pos.x - M.x) < A.quiet && X.pos.y < M.y + A.quiet)) continue;
             let Q = A.copse,
-                R = kT(Math.floor(L / Q), Math.floor(K / Q), 528765) * A.settle,
+                R = hash01(Math.floor(L / Q), Math.floor(K / Q), 528765) * A.settle,
                 S = j.time % A.settle,
                 U = Math.abs(S - R);
             if (Math.min(U, A.settle - U) > A.openFor / 2) continue;
@@ -1665,7 +1665,7 @@ function critterTraits(c) {
         flocking: 0.5 + mT(c, TRAIT_SEEDS.flocking) * 0.5
     };
 }
-var Mn = (c, d) => !TT[oW(c, d.x, d.y)].swim,
+var Mn = (c, d) => !TT[getTileDefAt(c, d.x, d.y)].swim,
     ch = (c, d) => {
         const z8 = cX;
         let g = f.critter.mineClearance ** 2;
@@ -1690,7 +1690,7 @@ function dh(g, j, p) {
         for (let I = 0; I < 8; I++) {
             let K = p() * Math.PI * 2,
                 L = f.critter.scatter * Math.sqrt(p()),
-                M = uT(g, {
+                M = findOpenPosition(g, {
                     x: E.x + Math.cos(K) * L,
                     y: E.y + Math.sin(K) * L
                 });
@@ -1772,13 +1772,13 @@ function spawnFlock(d, g, j) {
 function pickCritterSpawn(c, d) {
     const zj = cX;
     for (let g = 0; g < 32; g++) {
-        let i = uT(c, {
+        let i = findOpenPosition(c, {
             x: (0.1 + d() * 0.8) * c.pixelWidth,
             y: (0.1 + d() * 0.8) * c.pixelHeight
         });
         if (Mn(c, i) && ch(c, i)) return i;
     }
-    return uT(c, {
+    return findOpenPosition(c, {
         x: c.pixelWidth / 2,
         y: c.pixelHeight / 2
     });

@@ -60,7 +60,7 @@ function pickWanderGoal(c, d, g) {
             u = m >= 3 ? 0 : j ? 1 : f.critter.cohesion * d.traits.flocking,
             v = d.pos.x + Math.cos(p) * q,
             y = d.pos.y + Math.sin(p) * q,
-            A = uT(c.map, {
+            A = findOpenPosition(c.map, {
                 x: v + (g.x - v) * u,
                 y: y + (g.y - y) * u
             });
@@ -115,7 +115,7 @@ function moveToward(g, j, m, p, q) {
 function spawnBirds(c, d) {
     const zF = cX;
     let g = f.birds,
-        j = GT(xT(Math.round(c.x), Math.round(c.y))),
+        j = createRng(hashInt(Math.round(c.x), Math.round(c.y))),
         m = g.count[0] + Math.floor(j() * (g.count[1] - g.count[0] + 1)),
         p = j() < 0.5 ? 0 : 2,
         q = [];

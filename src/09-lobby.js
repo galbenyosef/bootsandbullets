@@ -865,7 +865,7 @@ function $y(j, q, y, A) {
         K = 0;
     for (let M = -1; M <= 1; M++)
         for (let N = -1; N <= 1; N++) {
-            let P = xT(C + N, E + M),
+            let P = hashInt(C + N, E + M),
                 Q = (C + N + (P & 255) / 255 * 0.86 + 0.07) * y,
                 R = (E + M + (P >> 8 & 255) / 255 * 0.86 + 0.07) * y,
                 S = j - Q,
@@ -937,7 +937,7 @@ function a0(K, L) {
         aV = (aZ, b4) => {
             let b7 = aZ + (aK.at(aZ, b4) - 0.5) * 11 + (aM.at(aZ, b4) - 0.5) * 5,
                 b8 = b4 + (aL.at(aZ, b4) - 0.5) * 11 + (aM.at(aZ + 53, b4 + 17) - 0.5) * 5;
-            return wW(U, a7, a8, aw, b7, b8);
+            return sampleSdf(U, a7, a8, aw, b7, b8);
         };
     for (let aZ = 0; aZ < az; aZ++)
         for (let b4 = 0; b4 < ax; b4++) {
@@ -950,7 +950,7 @@ function a0(K, L) {
             let bj = aZ * ax + b4,
                 bk = -(aR.nx * 0.62 + aR.ny * 0.78),
                 bq = aS * (0.3 + (aN.at(b4, aZ) - 0.5) * 0.72) + bk * 2.6 + b9 * 2.4 + aR.tint * 0.5;
-            b9 > 0.72 && bk > 0.35 && (bq += 1.4), b8 < 1 && (bq -= (1 - b8) * 1.35), aE[bj] = iW(aA.canopy, bq, b4, aZ), aR.dist > canopyScatterRadius * 0.8 && (aE[bj] = Bt(aE[bj], aA.canopy[1], 0.7));
+            b9 > 0.72 && bk > 0.35 && (bq += 1.4), b8 < 1 && (bq -= (1 - b8) * 1.35), aE[bj] = sampleRamp(aA.canopy, bq, b4, aZ), aR.dist > canopyScatterRadius * 0.8 && (aE[bj] = blendColor(aE[bj], aA.canopy[1], 0.7));
         }
     fillTerrainPixels(aE, ax, az, aw, L, Y, GRASS_PARAMS, aA, aU, aR, aK, aL, aM, aN);
     let aX = renderTerrainCanvas(ax, az, aw, L, aA, aU, aR, aK, aL, aM, aN);
@@ -1000,7 +1000,7 @@ function fillTerrainPixels(K, L, U, Y, a7, a8, a9, aj, ak, aq, aw, ax, az, aA) {
         for (let aI = 0; aI < L; aI++) {
             let aJ = aI + (aw.at(aI, aH) - 0.5) * 9 + (az.at(aI, aH) - 0.5) * 6,
                 aK = aH + (ax.at(aI, aH) - 0.5) * 9 + (az.at(aI + 11, aH + 67) - 0.5) * 6,
-                aL = wW(a8, aB, aC, Y, aJ, aK);
+                aL = sampleSdf(a8, aB, aC, Y, aJ, aK);
             if (aL > 0.2) continue;
             let aM = -aL;
             if (a9.strands) {
@@ -1010,7 +1010,7 @@ function fillTerrainPixels(K, L, U, Y, a7, a8, a9, aj, ak, aq, aw, ax, az, aA) {
                     aS = 3 + (aR & 3) * 0.5;
                 if (aQ > aS) continue;
                 if (aQ < 0.75) {
-                    K[aH * L + aI] = iW(aj.canopy, aE * a9.base - 1.6, aI, aH);
+                    K[aH * L + aI] = sampleRamp(aj.canopy, aE * a9.base - 1.6, aI, aH);
                     continue;
                 }
                 let aU = 4 + (aR >> 2 & 1),
@@ -1026,7 +1026,7 @@ function fillTerrainPixels(K, L, U, Y, a7, a8, a9, aj, ak, aq, aw, ax, az, aA) {
                 if (!b4) continue;
                 let b7 = (aA.at(aI, aH) - 0.5) * 1.2,
                     b8 = aE * a9.base + aQ / aS * a9.blade + b7;
-                aM < 0.8 && (b8 -= (0.8 - aM) * 0.9), K[aH * L + aI] = iW(aj.canopy, b8, aI, aH);
+                aM < 0.8 && (b8 -= (0.8 - aM) * 0.9), K[aH * L + aI] = sampleRamp(aj.canopy, b8, aI, aH);
                 continue;
             }
             ak(aI, aH, aF);
@@ -1034,7 +1034,7 @@ function fillTerrainPixels(K, L, U, Y, a7, a8, a9, aj, ak, aq, aw, ax, az, aA) {
             if (aN < a9.open + (aM < 0.4 ? a9.hemOpen : 0)) continue;
             let aO = -(aq.nx * 0.5 + aq.ny * 0.86),
                 aP = aE * (a9.base + (aA.at(aI, aH) - 0.5) * 0.8) + aO * 1.5 + aN * a9.blade + aq.tint * 0.45;
-            aM < 0.8 && (aP -= (0.8 - aM) * 0.9), K[aH * L + aI] = iW(aj.canopy, aP, aI, aH);
+            aM < 0.8 && (aP -= (0.8 - aM) * 0.9), K[aH * L + aI] = sampleRamp(aj.canopy, aP, aI, aH);
         }
     return true;
 }
@@ -1067,7 +1067,7 @@ function fillStonePixels(q, H, K, L, P, Q, U, V, Y, a7, a8, a9, aj) {
         aC = (aE, aF) => {
             let aG = aE + (a7.at(aE, aF) - 0.5) * 10 + (a9.at(aE, aF) - 0.5) * 6,
                 aH = aF + (a8.at(aE, aF) - 0.5) * 10 + (a9.at(aE + 97, aF + 41) - 0.5) * 6;
-            return wW(ak, aq, aw, P, aG, aH);
+            return sampleSdf(ak, aq, aw, P, aG, aH);
         };
     for (let aE = 0; aE < L; aE++)
         for (let aF = 0; aF < K; aF++) {
@@ -1081,7 +1081,7 @@ function fillStonePixels(q, H, K, L, P, Q, U, V, Y, a7, a8, a9, aj) {
                 aK = -(Y.nx * 0.55 + Y.ny * 0.78),
                 aL = aK > 0.42 ? 1.9 : aK > -0.1 ? 0.5 : -1.4,
                 aM = az * (0.42 + (aj.at(aF, aE) - 0.5) * 0.5) + aL + aI * 1.1 + Y.tint * 0.7;
-            aH < 0.9 && (aM -= (0.9 - aH) * 1.6), q[aJ] = iW(U.face, aM, aF, aE), Y.ny > 0.72 && Y.dist > aA * 0.5 ? q[aJ] = U.shadow : Y.ny < -0.5 && Y.nx < 0.3 && aI > 0.35 && (aF + aE & 1) === 0 && (q[aJ] = U.cap);
+            aH < 0.9 && (aM -= (0.9 - aH) * 1.6), q[aJ] = sampleRamp(U.face, aM, aF, aE), Y.ny > 0.72 && Y.dist > aA * 0.5 ? q[aJ] = U.shadow : Y.ny < -0.5 && Y.nx < 0.3 && aI > 0.35 && (aF + aE & 1) === 0 && (q[aJ] = U.cap);
             let aN = aF + blitOffsetX,
                 aO = aE + s0;
             aH > 0.1 && aN < K && aO < L && (H[aO * K + aN] = aB);
@@ -1090,7 +1090,7 @@ function fillStonePixels(q, H, K, L, P, Q, U, V, Y, a7, a8, a9, aj) {
 
 function drawMudClod(c, d, g, j, l) {
     const vG = cX;
-    let m = xT(d, g);
+    let m = hashInt(d, g);
     if (m % 7 > 1) return;
     let p = zT(l, 7).ramp,
         q = Math.min(j - 8, 3 + m % 5),
@@ -1176,10 +1176,10 @@ function m0(K, L, U) {
             let aV = zT(a9, aU),
                 aX = aV.ramp.length - 1,
                 aY = ax(aV.scale).at(aQ, aO),
-                aZ = kT(aQ >> 1, aO >> 1),
-                b4 = kT(aQ, aO),
+                aZ = hash01(aQ >> 1, aO >> 1),
+                b4 = hash01(aQ, aO),
                 b7 = (aV.bias + (aY - 0.5) * aV.contrast) * aX + (aZ - 0.5) * aV.grain * 1.6 + (b4 - 0.5) * aV.grain * 0.7;
-            aq[aO * a7 + aQ] = iW(aV.ramp, b7, aQ, aO);
+            aq[aO * a7 + aQ] = sampleRamp(aV.ramp, b7, aQ, aO);
         }
     }
     let {
@@ -1188,7 +1188,7 @@ function m0(K, L, U) {
         const vM = vK;
         let bw = bk + (az.at(bk, bq) - 0.5) * 2 * terrainJitterAmplitude + (aC.at(bk, bq) - 0.5) * 7,
             bx = bq + (aA.at(bk, bq) - 0.5) * 2 * terrainJitterAmplitude + (aC.at(bk + 43, bq + 91) - 0.5) * 7;
-        return wW(aJ, U.width, U.height, Y, bw, bx) < -0.02;
+        return sampleSdf(aJ, U.width, U.height, Y, bw, bx) < -0.02;
     };
     for (let bk = 0; bk < L.height; bk++)
         for (let bq = 0; bq < L.width; bq++) {
@@ -1221,7 +1221,7 @@ function scatterSnowDetail(q, A, E, F, H, K) {
         X = 5;
     for (let Y = 0; Y * X < E; Y++)
         for (let a7 = 0; a7 * X < A; a7++) {
-            let a8 = xT(a7, Y, 1542469173);
+            let a8 = hashInt(a7, Y, 1542469173);
             if ((a8 & 1) === 0) continue;
             let a9 = a7 * X + (a8 >> 2 & 3),
                 aj = Y * X + (a8 >> 4 & 3);
@@ -1279,7 +1279,7 @@ function scatterGroundRipples(j, q, A, F, H, K, L, N) {
             let aC = a7 * q + a8,
                 aD = (aB - 0.5) / 0.5,
                 aE = (P.bias + (ak - 0.5) * P.contrast) * X + (Math.sin(aA - 1.3) > 0.7 ? -1.7 : aD * 1.7);
-            qW(a8, a7) > 0.3 + aD * 0.5 || (j[aC] = iW(P.ramp, aE, a8, a7));
+            qW(a8, a7) > 0.3 + aD * 0.5 || (j[aC] = sampleRamp(P.ramp, aE, a8, a7));
         }
 }
 
@@ -1300,7 +1300,7 @@ function scatterFoliage(q, A, F, H, K, L, N, P, Q) {
                     aD = Math.round(aj + Math.sin(az) * aB * (0.35 + aC * 0.75)),
                     aE = ak - Math.round(aB * (0.94 - Math.abs(Math.sin(az)) * 0.3));
                 if (aE < 0 || aE >= F || aD < 0 || aD >= A || !a7(aD, aE) || aC < 0.45 && aD + 1 < A && !a7(aD + 1, aE)) break;
-                q[aE * A + aD] = iW(Q.scrub, aC * Y * 1.3, aD, aE), aC < 0.45 && aD + 1 < A && (q[aE * A + aD + 1] = iW(Q.scrub, aC * Y, aD + 1, aE));
+                q[aE * A + aD] = sampleRamp(Q.scrub, aC * Y * 1.3, aD, aE), aC < 0.45 && aD + 1 < A && (q[aE * A + aD + 1] = sampleRamp(Q.scrub, aC * Y, aD + 1, aE));
             }
         }
     }, a9 = 11;
@@ -1315,8 +1315,8 @@ function scatterFoliage(q, A, F, H, K, L, N, P, Q) {
             if (az >= V || aA >= X || K.material[aA * V + az] !== 0) continue;
             let aB = aw + (L.at(aw, ax) - 0.5) * 2 * terrainJitterAmplitude + (P.at(aw, ax) - 0.5) * 8,
                 aC = ax + (N.at(aw, ax) - 0.5) * 2 * terrainJitterAmplitude,
-                aD = wW(U, V, X, H, aB, aC),
-                aE = wW(U, V, X, H, aB, aC - H * 0.9) < aD - 0.15,
+                aD = sampleSdf(U, V, X, H, aB, aC),
+                aE = sampleSdf(U, V, X, H, aB, aC - H * 0.9) < aD - 0.15,
                 aF;
             aD < -0.5 ? aF = 0 : aD < 1.6 ? aF = aE ? 0.42 : 0.16 : aD < 3.2 ? aF = 0.09 : aF = 0.006, aF *= 0.35 + 1.9 * Math.max(0, P.at(aw * 0.35, ax * 0.35) - 0.34), !((aq >> 8 & 255) / 255 > aF) && a8(aw, ax, aq >> 12);
         }
@@ -1350,20 +1350,20 @@ function Tv(q, F, H, K, L, N, P, Q, U, V, X, Y) {
         for (let aA = 0; aA < F; aA++) {
             let aB = aA + (N.at(aA, az) - 0.5) * 2 * terrainJitterAmplitude + (Q.at(aA, az) - 0.5) * 7,
                 aC = az + (P.at(aA, az) - 0.5) * 2 * terrainJitterAmplitude + (Q.at(aA + 43, az + 91) - 0.5) * 7,
-                aD = wW(a7, a8, a9, K, aB, aC);
+                aD = sampleSdf(a7, a8, a9, K, aB, aC);
             if (aD > 0.3 || aD < -0.5) continue;
             let aE = az * F + aA,
-                aF = kT(aA, az),
+                aF = hash01(aA, az),
                 aG = aA / aq.cell | 0,
                 aH = az / aq.cell | 0;
             if (aD > -0.02) {
                 if (aD > 0.14 && aF > 0.45) continue;
-                let aI = iW(U.fringe, (1 - aD / 0.3) * ak, aA, az);
-                q[aE] = aI, !aw(aA, az) && kT(aG + 7, aH + 13) < aq.moving && X.add(aA, az, kT(aG + 31, aH + 77), kT(aG + 101, aH + 57), aI, U.fringe);
+                let aI = sampleRamp(U.fringe, (1 - aD / 0.3) * ak, aA, az);
+                q[aE] = aI, !aw(aA, az) && hash01(aG + 7, aH + 13) < aq.moving && X.add(aA, az, hash01(aG + 31, aH + 77), hash01(aG + 101, aH + 57), aI, U.fringe);
             } else {
                 if (aD > -0.34 && aF < 0.5) {
-                    let aJ = iW(U.shallow, aF * (U.shallow.length - 1), aA, az);
-                    q[aE] = aJ, !aw(aA, az) && kT(aG + 19, aH + 5) < aq.movingShallow && Y.add(aA, az, kT(aG + 31, aH + 77), kT(aG + 101, aH + 57), aJ, U.shallow);
+                    let aJ = sampleRamp(U.shallow, aF * (U.shallow.length - 1), aA, az);
+                    q[aE] = aJ, !aw(aA, az) && hash01(aG + 19, aH + 5) < aq.movingShallow && Y.add(aA, az, hash01(aG + 31, aH + 77), hash01(aG + 101, aH + 57), aJ, U.shallow);
                 }
             }
         }
@@ -1385,13 +1385,13 @@ function fillFoliagePixels(j, q, A, C, E, F, H, I, K, L) {
             for (let V = 0; V < q; V++) {
                 let X = V + (F.at(V, U) - 0.5) * 2 * terrainJitterAmplitude + (K.at(V, U) - 0.5) * 9,
                     Y = U + (H.at(V, U) - 0.5) * 2 * terrainJitterAmplitude + (K.at(V + 61, U + 29) - 0.5) * 9,
-                    a7 = wW(N, P, Q, C, X, Y);
+                    a7 = sampleSdf(N, P, Q, C, X, Y);
                 if (a7 > 1.6) continue;
                 let a8 = V / C | 0,
                     a9 = U / C | 0;
                 if (a8 >= P || a9 >= Q || E.material[a9 * P + a8] === 2) continue;
                 let aj = U * q + V;
-                a7 < -0.15 ? j[aj] = Bt(j[aj], L.shadow, 0.7) : a7 < 0.5 ? qW(V, U) < 0.55 * (1 - a7 / 0.5) && (j[aj] = Bt(j[aj], L.shadow, 0.55)) : qW(V, U) < 0.2 * (1 - (a7 - 0.5) / 1.1) && (j[aj] = L.litter[I.at(V, U) * L.litter.length | 0]);
+                a7 < -0.15 ? j[aj] = blendColor(j[aj], L.shadow, 0.7) : a7 < 0.5 ? qW(V, U) < 0.55 * (1 - a7 / 0.5) && (j[aj] = blendColor(j[aj], L.shadow, 0.55)) : qW(V, U) < 0.2 * (1 - (a7 - 0.5) / 1.1) && (j[aj] = L.litter[I.at(V, U) * L.litter.length | 0]);
             }
     }
 }
@@ -1512,7 +1512,7 @@ function drawRoadSurface(K, L, Q, U) {
                             let bD = ((ak + aq + bC) * 2654435761 >>> 27) % 4;
                             bD !== 0 && (K.fillStyle = a7(Re, 0), bq !== 0 ? K.fillRect(bA, aq + bC, Math.min(2, bD), 1) : K.fillRect(ak + bC, bB, 1, Math.min(2, bD)));
                         } else {
-                            K.fillStyle = a7(zT(L.theme, ys(bx)).ramp, 2);
+                            K.fillStyle = a7(zT(L.theme, getTileMaterial(bx)).ramp, 2);
                             for (let bE = 0; bE < Y; bE++) {
                                 let bF = ((ak + aq + bE * 3) * 2654435761 >>> 28) % 2;
                                 bq !== 0 ? K.fillRect(bA, aq + bE, 1 + bF, 1) : K.fillRect(ak + bE, bB, 1, 1 + bF);

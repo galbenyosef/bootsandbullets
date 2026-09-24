@@ -1703,7 +1703,7 @@ var mo = {
     },
     _d = (c, d, g) => c << 16 | d << 8 | g,
     G4 = c => {
-        let [d, g, i] = LW(c);
+        let [d, g, i] = hexToRgb(c);
         return _d(d, g, i);
     };
 

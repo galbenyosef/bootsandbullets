@@ -47,7 +47,7 @@ function sanitizeControls(c) {
     }
     return d;
 }
-var Gr = c => ({
+var formatKeyLabel = c => ({
     '\x20': "SPACE",
     escape: "ESC",
     arrowup: 'UP',
@@ -58,14 +58,14 @@ var Gr = c => ({
     tab: "TAB"
 } [c] ?? c.toUpperCase());
 
-function jt(c) {
+function buildKeybindMaps(c) {
     const cZ = cX;
     let d = new Map(),
         g = new Map();
     return W1[c.march].codes.forEach((i, j) => d.set(i, G5[j])), W1[c.pan].codes.forEach((i, j) => d.set(i, V5[j])), g.set(c.fire, "fire"), g.set(c.grenade, "grenade"), g.set(c.pause, "pause"), {
         byCode: d,
         byKey: g,
-        label: i => i === "march" || i === "pan" ? W1[c[i]].label : Gr(c[i])
+        label: i => i === "march" || i === "pan" ? W1[c[i]].label : formatKeyLabel(c[i])
     };
 }
 var SETTINGS_KEY = "cf.settings",
@@ -103,7 +103,7 @@ function sanitizeSettings(c) {
     return typeof g.zoomBias == "number" && (d.zoomBias = Math.max(-1, Math.min(1, Math.round(g.zoomBias)))), typeof g.edgeScroll == "boolean" && (d.edgeScroll = g.edgeScroll), typeof g.sound == "boolean" && (d.sound = g.sound), typeof g.music == "boolean" && (d.music = g.music), typeof g.volume == "number" && (d.volume = Math.max(0, Math.min(1, g.volume))), typeof g.musicVolume == "number" && (d.musicVolume = Math.max(0, Math.min(1, g.musicVolume))), typeof g.haptics == "boolean" && (d.haptics = g.haptics), (g.handedness === "left" || g.handedness === "right") && (d.handedness = g.handedness), (g.resolution === "half" || g.resolution === "full") && (d.resolution = g.resolution), typeof g.crisp == "boolean" && (d.crisp = g.crisp), (typeof g.reducedMotion == "boolean" || g.reducedMotion === null) && (d.reducedMotion = g.reducedMotion), (g.rules === "modern" || g.rules === "classic") && (d.rules = g.rules), typeof g.autoFire == "boolean" && (d.autoFire = g.autoFire), (g.blood === "none" || g.blood === "normal" || g.blood === "carnage") && (d.blood = g.blood), typeof g.arenaLockCamera == "boolean" && (d.arenaLockCamera = g.arenaLockCamera), typeof g.arenaShowScore == "boolean" && (d.arenaShowScore = g.arenaShowScore), d.keys = sanitizeControls(g.keys), d;
 }
 
-function ll() {
+function loadSettings() {
     const d8 = cX;
     try {
         let c = localStorage.getItem(SETTINGS_KEY);
@@ -117,7 +117,7 @@ function ll() {
 }
 var G = () => GW;
 
-function mW(c) {
+function updateSettings(c) {
     const d9 = cX;
     GW = {
         ...GW,
@@ -130,12 +130,12 @@ function mW(c) {
     return GW;
 }
 
-function A1(c) {
+function onSettingsChange(c) {
     const dj = cX;
     return Vr.add(c), () => Vr.delete(c);
 }
 
-function e1() {
+function prefersReducedMotion() {
     const dk = cX;
     if (GW.reducedMotion !== null) return GW.reducedMotion;
     try {
@@ -158,10 +158,10 @@ function detectAppleDevice() {
     return It;
 }
 
-function R1() {
+function getControlBindings() {
     const dw = cX;
     let c = detectAppleDevice(),
-        d = jt(G().keys);
+        d = buildKeybindMaps(G().keys);
     return [{
         action: Se.march.toLowerCase(),
         keys: "CLICK  or  " + d.label("march")
@@ -458,12 +458,12 @@ function z(c, d, g) {
     return d < 0 || g < 0 || d >= c.width || g >= c.height ? 2 : c.grid[g * c.width + d];
 }
 
-function oW(c, d, g) {
+function getTileDefAt(c, d, g) {
     const dA = cX;
     return z(c, Math.floor(d / c.tile), Math.floor(g / c.tile));
 }
-var Pt = (c, d, g) => TT[z(c, d, g)].solid,
-    Ee = (c, d, g) => TT[oW(c, d, g)],
+var isTileSolid = (c, d, g) => TT[z(c, d, g)].solid,
+    Ee = (c, d, g) => TT[getTileDefAt(c, d, g)],
     $r = (c, d, g, i) => {
         const dB = cX;
         d >= 0 && g >= 0 && d < c.width && g < c.height && (c.grid[g * c.width + d] = i);
@@ -511,11 +511,11 @@ var withinOverReach = (c, d, g, i) => Math.hypot((d + 0.5) * i - c.x, (g + 0.5) 
     kW = (c, d, g) => ul(c, d, g, "sight"),
     PW = (c, d, g) => ul(c, d, g, "shots");
 
-function uT(c, d, g = 24) {
+function findOpenPosition(c, d, g = 24) {
     const dE = cX;
     let j = Math.floor(d.x / c.tile),
         l = Math.floor(d.y / c.tile);
-    if (!Pt(c, j, l)) return {
+    if (!isTileSolid(c, j, l)) return {
         x: d.x,
         y: d.y
     };
@@ -525,7 +525,7 @@ function uT(c, d, g = 24) {
                 if (Math.max(Math.abs(q), Math.abs(p)) !== m) continue;
                 let u = j + q,
                     v = l + p;
-                if (!Pt(c, u, v)) return {
+                if (!isTileSolid(c, u, v)) return {
                     x: (u + 0.5) * c.tile,
                     y: (v + 0.5) * c.tile
                 };
@@ -581,10 +581,10 @@ var CARDINAL_OFFSETS = [
     [0, -1]
 ];
 
-function zr(c, d, g, j = 24) {
+function findMainlandPosition(c, d, g, j = 24) {
     const dH = cX;
     let m = getMainlandMask(c, g);
-    if (m.length === 0 || !m.some(v => v === 1)) return uT(c, d, j);
+    if (m.length === 0 || !m.some(v => v === 1)) return findOpenPosition(c, d, j);
     let p = Math.floor(d.x / c.tile),
         q = Math.floor(d.y / c.tile),
         u = (v, y) => v >= 0 && y >= 0 && v < c.width && y < c.height && m[y * c.width + v] === 1;
@@ -599,7 +599,7 @@ function zr(c, d, g, j = 24) {
                     x: (p + A + 0.5) * c.tile,
                     y: (q + y + 0.5) * c.tile
                 };
-    return uT(c, d, j);
+    return findOpenPosition(c, d, j);
 }
 
 function floodFillRegions(j) {
@@ -721,7 +721,7 @@ function repositionBunkers(c, d) {
         return v ? v.zone : j;
     });
 }
-var Yr = {
+var PROP_2X2_NAMES = {
     0x1f: "truck wreck (V)",
     0x24: "tank wreck (D)",
     0x25: "field gun (a)",
@@ -735,7 +735,7 @@ function validateBuildingBlocks(c, d, g) {
         for (let m = 0; m < d; m++) {
             let p = l * d + m,
                 q = c[p],
-                u = Yr[q];
+                u = PROP_2X2_NAMES[q];
             if (!u || j.has(p)) continue;
             let v = [p, p + 1, p + d, p + d + 1];
             if (m + 1 >= d || l + 1 >= g || v.some(y => c[y] !== q || j.has(y))) throw new Error(u + " at " + m + ',' + l + " must be a 2x2 block");
@@ -743,7 +743,7 @@ function validateBuildingBlocks(c, d, g) {
             v.forEach(y => j.add(y));
         }
 }
-var QW = {
+var DIFFICULTIES = {
         rookie: {
             id: "rookie",
             name: "Rookie",
@@ -968,9 +968,9 @@ var QW = {
         }
     };
 
-function Lt(c, d) {
+function buildDifficultyLevers(c, d) {
     const dN = cX;
-    let g = QW[c].levers,
+    let g = DIFFICULTIES[c].levers,
         j = X5[d].mod,
         l = {
             ...g
@@ -987,7 +987,7 @@ function Lt(c, d) {
     }
     return l.hunters = Math.min(1, l.hunters), l.rushers = Math.min(1, l.rushers), l.grenadiers = Math.min(1, l.grenadiers), l.camo = Math.min(1, l.camo), l.flank = Math.min(1, l.flank), l.maxSpawned = Math.max(1, Math.round(l.maxSpawned)), l;
 }
-var Xr = "trumper",
+var DEFAULT_SPEAKER = "trumper",
     J5 = 9,
     Z5 = [{
         when: c => c.nokill && c.objective === "eliminate",
@@ -1045,7 +1045,7 @@ function validateCountdown(c) {
         beat: d
     };
 }
-var yl = c => c.countdown ? c.countdown.steps.length * c.countdown.beat : 0;
+var countdownTotalDuration = c => c.countdown ? c.countdown.steps.length * c.countdown.beat : 0;
 
 function countdownStepAt(c, d) {
     const dS = cX;
@@ -1069,7 +1069,7 @@ var ROUND_LABELS = {
     _l = "GO!",
     t4 = 0.35;
 
-function xl(c, d, g) {
+function roundLabelAt(c, d, g) {
     const dT = cX;
     if (d <= 0) return null;
     let i = c.countdown,
@@ -1081,13 +1081,13 @@ function xl(c, d, g) {
     return Un[Math.max(0, Math.min(Un.length - 1, l))];
 }
 
-function kl(c, d) {
+function roundLabelList(c, d) {
     const dU = cX;
     let g = c.countdown ? [...c.countdown.steps] : [...Un, _l];
     return d > 0 ? [ROUND_LABELS[d] ?? "ROUND " + d, ...g] : g;
 }
 
-function Te(j, q = "level") {
+function parseMapDef(j, q = "level") {
     const dV = cX;
     let y = j.grid.replace(/\r\n?/g, '\x0a').split('\x0a').filter(N => N.length > 0);
     for (; y.length && y[y.length - 1].trim() === '';) y.pop();
@@ -1115,7 +1115,7 @@ function Te(j, q = "level") {
             startGrenades: j.grenades === void 0 ? -1 : Math.max(0, j.grenades),
             advice: j.advice ? {
                 text: j.advice,
-                speaker: j.advisor ?? Xr,
+                speaker: j.advisor ?? DEFAULT_SPEAKER,
                 seconds: j.adviceSeconds ?? J5
             } : null,
             gated: j.gated === true,
@@ -1240,7 +1240,7 @@ function scanTerrainRings(g, j, p) {
         A !== null && A !== 0 && (g.grid[y * g.width + v] = A);
     }
 }
-var PT = null,
+var audioContext = null,
     Me = null,
     $n = null,
     de = null,

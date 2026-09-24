@@ -430,7 +430,7 @@ function makeButtonSprite(c, d = "normal") {
             c: p,
             g: q
         } = O(m.cellW, m.cellH);
-    return UW(q, m, ag[d], l ? u => Ll(u, l.hue, l.sat) : d === "disabled" ? u => Ol(u, cg) : void 0), p;
+    return drawSpriteDefFrame(q, m, ag[d], l ? u => Ll(u, l.hue, l.sat) : d === "disabled" ? u => Ol(u, cg) : void 0), p;
 }
 var TINY_PLATE_STYLE = {
         cellW: 17,
@@ -441,7 +441,7 @@ var TINY_PLATE_STYLE = {
     },
     ug = c => {
         const hY = cX;
-        let [d, g, i] = LW(c);
+        let [d, g, i] = hexToRgb(c);
         return '#' + Ms(d, g, i).map(j => j.toString(16).padStart(2, '0')).join('');
     };
 
@@ -450,11 +450,11 @@ function Ie(c = true, d = false) {
         c: g,
         g: i
     } = O(17, 17);
-    return UW(i, TINY_PLATE_STYLE, c ? 1 : 3, d ? lightenHex : void 0), g;
+    return drawSpriteDefFrame(i, TINY_PLATE_STYLE, c ? 1 : 3, d ? lightenHex : void 0), g;
 }
 var lightenHex = c => {
         const hZ = cX;
-        let [d, g, i] = LW(c), j = [255, 251, 232];
+        let [d, g, i] = hexToRgb(c), j = [255, 251, 232];
         return '#' + [d, g, i].map((l, m) => Math.round(l + (j[m] - l) * 0.5).toString(16).padStart(2, '0')).join('');
     },
     po = {
@@ -473,8 +473,8 @@ function buildSparkleFrames() {
     } = O(j * g, j), q = j / 2, u = [Vd, Vd, qd, qd, pg];
     for (let v = 0; v < u.length; v++)
         for (let y = 0; y < 8; y++) {
-            let A = y * Math.PI / 4 + (kT(y, 1, 7) - 0.5) * 0.4,
-                C = 22 + v * 3 + Math.round(kT(y, 2, 7) * 3),
+            let A = y * Math.PI / 4 + (hash01(y, 1, 7) - 0.5) * 0.4,
+                C = 22 + v * 3 + Math.round(hash01(y, 2, 7) * 3),
                 E = v < 2 ? 3 : 2,
                 F = v * j + Math.round(q + Math.cos(A) * C) - (E >> 1),
                 H = Math.round(q + Math.sin(A) * C) - (E >> 1);
@@ -484,7 +484,7 @@ function buildSparkleFrames() {
 }
 var sortByLuminance = [...Cs].sort((c, d) => {
         let g = j => {
-            let [l, m, p] = LW(j);
+            let [l, m, p] = hexToRgb(j);
             return 0.299 * l + 0.587 * m + 0.114 * p;
         };
         return g(d) - g(c);
@@ -505,7 +505,7 @@ function Pe(c = false) {
         c: d,
         g: g
     } = O(17, 22);
-    return UW(g, fg, c ? 0 : 1), d;
+    return drawSpriteDefFrame(g, fg, c ? 0 : 1), d;
 }
 var BRASS_THEME = {
     keyline: "#000000",
@@ -643,7 +643,7 @@ function Zt(c, d = "normal") {
             c: p,
             g: q
         } = O(js.cellW, js.cellH);
-        return UW(q, js, Ls[c], bg[d]), p;
+        return drawSpriteDefFrame(q, js, Ls[c], bg[d]), p;
     }
     let g = eu[c],
         j = yg[d],
@@ -1380,8 +1380,8 @@ function Ne() {
         '--sk-slice-banner': String(Wn.banner),
         '--sk-slice-comms': Wn.comms.join(' ')
     };
-    for (let g of F1) c["--sk-face-" + g] = nT(Gl(g)), c["--sk-face-" + g + '-n'] = String(ue(g).count);
-    c["--sk-face-cell"] = ue(F1[0]).cell + 'px', c["--sk-bezel"] = nT(drawRoundBadge(ue(F1[0]).cell));
+    for (let g of F1) c["--sk-face-" + g] = nT(getFaceColor(g)), c["--sk-face-" + g + '-n'] = String(getSheetMeta(g).count);
+    c["--sk-face-cell"] = getSheetMeta(F1[0]).cell + 'px', c["--sk-bezel"] = nT(drawRoundBadge(getSheetMeta(F1[0]).cell));
     let d = document.documentElement;
     for (let [i, j] of Object.entries(c)) d.style.setProperty(i, j);
     zs();
@@ -1428,7 +1428,7 @@ function speakerSvg(c) {
 function renderBriefingControls(c) {
     const jw = cX;
     let d = w("div", c);
-    for (let g of R1()) {
+    for (let g of getControlBindings()) {
         let i = w("div", "briefing-ctl");
         i.appendChild(w("span", "briefing-ctl-a", g.action)), i.appendChild(w("span", "briefing-ctl-k", g.keys)), d.appendChild(i);
     }
@@ -2305,7 +2305,7 @@ async function updateMusic() {
         on();
         return;
     }
-    let d = Ot();
+    let d = getAudioContext();
     if (!d) {
         ko = "none", on();
         return;
@@ -2349,7 +2349,7 @@ var sn = () => G().music,
 function startMusicOnGesture() {
     updateMusic();
 }
-A1(c => {
+onSettingsChange(c => {
     const lG = cX;
     let d = Math.max(0, Math.min(1, c.musicVolume * xo));
     ET && (ET.volume = d), rn?.setLevel(d * 0.5), updateMusic();
@@ -2366,7 +2366,7 @@ function toggleMusic() {
         startMusicOnGesture();
         return;
     }
-    mW({
+    updateSettings({
         music: !sn()
     }), Tm();
 }
@@ -2751,13 +2751,13 @@ var Ao = {
 function hashToUnit(c, d) {
     const mq = cX;
     let g = 2654435769;
-    for (let i = 0; i < c.length; i++) g = xT(g, c.charCodeAt(i), d);
+    for (let i = 0; i < c.length; i++) g = hashInt(g, c.charCodeAt(i), d);
     return g / 4294967296;
 }
 var hash751 = c => {
     const mw = cX;
     let d = 0;
-    for (let g = 0; g < c.length; g++) d = xT(d, c.charCodeAt(g), 751);
+    for (let g = 0; g < c.length; g++) d = hashInt(d, c.charCodeAt(g), 751);
     return d;
 };
 
@@ -2882,7 +2882,7 @@ var jo = () => typeof Cm.cf_track?.feedback == "function";
 
 function Am() {
     const mE = cX;
-    return (new Map(R1().map(c => [c.action, c.keys])).get("move") ?? "CLICK") + " where you want it. They will hit that, or somewhere they can see from it.";
+    return (new Map(getControlBindings().map(c => [c.action, c.keys])).get("move") ?? "CLICK") + " where you want it. They will hit that, or somewhere they can see from it.";
 }
 var DISPATCH_QUIPS = ["Marked. They are on their way, and they have the correct map this time.", "Passed on. The pilot repeated it back to me, mostly.", "It is with the air corps now. I have washed my hands of it.", "Inbound. Do stand somewhere that is not there.", "Logged and airborne. The paperwork will follow in about a fortnight.", "They are coming. I would move, in your position, which I am not in.", "Confirmed. I gave them the grid twice and the second one was right.", "On its way. They are very good at this, or something near it.", "Away. That corner of the map is spoken for now.", "Understood and forwarded. Nothing to do now but stand clear and look busy.", "Received. I have told them it is urgent, which I say every time.", "Wheels up. He has done this before, he says, and I believe about half of it.", "Noted. The spot you picked is now a matter for the air corps.", "Called. Whatever is standing there has about a minute to reconsider.", "They have it. The wireless was clear for once, which unnerved me.", "Sent. I have circled it on my map in a pen that will not come off.", "On the way. I would not linger, though I am not there to check.", "Acknowledged. The squadron is between meals, so this may be brisk.", "Given. They are keen, and keen is most of what we have.", "Away and clear. That ground is no longer ours in any useful sense."],
     Rm = c => DISPATCH_QUIPS[Math.min(DISPATCH_QUIPS.length - 1, Math.floor(c * DISPATCH_QUIPS.length))],
@@ -2941,14 +2941,14 @@ function playTypewriterLine({
         R.classList.add("dsp-body"), H.append(R, P);
         let S = pushEscapeHandler("dispatch", () => Q("skipped")),
             U = Q1(F),
-            V = ue(A.portrait ?? '').talk.frames,
+            V = getSheetMeta(A.portrait ?? '').talk.frames,
             X = 0,
             Y = 0,
             a7 = () => {
                 const mJ = mH;
                 window.clearInterval(X), window.clearInterval(Y), K.style.setProperty("--dsp-face-f", '0');
             };
-        if (e1()) N.textContent = c;
+        if (prefersReducedMotion()) N.textContent = c;
         else {
             let a8 = 0,
                 a9 = 0;
@@ -3430,7 +3430,7 @@ function Vo() {
             id: "off",
             label: "Off"
         }], G().edgeScroll ? 'on' : "off", az => {
-            mW({
+            updateSettings({
                 edgeScroll: az === 'on'
             });
         }), H("Auto fire", "Idle troops shoot at what they can see, unordered.", [{
@@ -3440,7 +3440,7 @@ function Vo() {
             id: "off",
             label: "Off"
         }], G().autoFire ? 'on' : "off", az => {
-            mW({
+            updateSettings({
                 autoFire: az === 'on'
             });
         }), H("Blood", "How much of it a hit leaves behind.", [{
@@ -3453,7 +3453,7 @@ function Vo() {
             id: "carnage",
             label: "Carnage"
         }], G().blood, az => {
-            mW({
+            updateSettings({
                 blood: az
             });
         });
@@ -3490,13 +3490,13 @@ function Vo() {
             U = () => S.march === S.pan,
             V = Se.march + " and " + Se.pan + " use the same keys",
             X = () => {
-                U() || mW({
+                U() || updateSettings({
                     keys: {
                         ...S
                     }
                 });
             },
-            Y = az => az.kind === "cluster" ? W1[S[az.id]].label : Gr(S[az.id]),
+            Y = az => az.kind === "cluster" ? W1[S[az.id]].label : formatKeyLabel(S[az.id]),
             a7 = new Map(),
             a8 = () => {
                 const nS = nP;
@@ -3533,10 +3533,10 @@ function Vo() {
         }
         a8(), F = document.createElement("div"), F.className = "sheet-rows";
         let aj = F;
-        K("Effects", "Gunfire, explosions and ambience.", G().volume, aC => mW({
+        K("Effects", "Gunfire, explosions and ambience.", G().volume, aC => updateSettings({
             volume: aC,
             sound: aC > 0
-        })), K("Music", "On the front screen only.", G().musicVolume, aC => mW({
+        })), K("Music", "On the front screen only.", G().musicVolume, aC => updateSettings({
             musicVolume: aC,
             music: aC > 0
         }));
@@ -3660,7 +3660,7 @@ function QT(c, d) {
                 let v = (q * c.width + u) * 4,
                     y = j.data;
                 if (y[v + 3] !== 255 || (y[v] << 16 | y[v + 1] << 8 | y[v + 2]) !== p) continue;
-                let A = xT(u * 3, q * 5) % 17;
+                let A = hashInt(u * 3, q * 5) % 17;
                 A < 3 && k(g, u, q, m[A === 0 ? 2 : 0]);
             }
     }
@@ -4197,7 +4197,7 @@ function buildRockIsland(j) {
     let {
         c: q,
         g: y
-    } = O(36, 36), A = GT(97 + j * 31), C = 18, E = 15, F = 17, H = 14;
+    } = O(36, 36), A = createRng(97 + j * 31), C = 18, E = 15, F = 17, H = 14;
     if (j >= 3) {
         for (let I = 0; I < 110; I++) {
             let K = A() * Math.PI * 2,
@@ -4298,7 +4298,7 @@ function buildMetalRidge(c) {
     let {
         c: d,
         g: g
-    } = O(38, 34), j = GT(1471 + c * 53);
+    } = O(38, 34), j = createRng(1471 + c * 53);
     if (c >= 3) {
         for (let l = 16; l < 30; l++)
             for (let m = 5; m < 33; m++) {
@@ -4358,7 +4358,7 @@ function buildBrassRidge(d) {
     let {
         c: g,
         g: j
-    } = O(38, 34), m = GT(2207 + d * 37);
+    } = O(38, 34), m = createRng(2207 + d * 37);
     if (d >= 3) {
         for (let p = 20; p < 31; p++)
             for (let q = 4; q < 34; q++) {
@@ -4414,7 +4414,7 @@ function buildDarkBasin(g) {
     let {
         c: j,
         g: m
-    } = O(52, 54), p = GT(613 + g * 47);
+    } = O(52, 54), p = createRng(613 + g * 47);
     if (g >= 3) {
         for (let u = 0; u < 110; u++) {
             let v = p() * Math.PI * 2,
@@ -4494,7 +4494,7 @@ function buildCanvasDome() {
     let {
         c: c,
         g: d
-    } = O(30, 26), g = GT(53), j = Bl;
+    } = O(30, 26), g = createRng(53), j = Bl;
     h(d, 5, 23, 24, 2, "#26261f");
     for (let m = 0; m < 18; m++) {
         let p = m < 2 ? 1 : 0,
@@ -4519,7 +4519,7 @@ function buildSteppedZiggurat() {
     let {
         c: c,
         g: d
-    } = O(34, 30), g = GT(9137);
+    } = O(34, 30), g = createRng(9137);
     h(d, 5, 22, 26, 5, "#26261f");
     for (let j = 6; j < 24; j++) {
         let l = j < 10 ? 4 : j < 16 ? 2 : 1;
@@ -4684,7 +4684,7 @@ function buildHostageIcon() {
         c: c,
         g: d
     } = O(8, 9);
-    return h(d, 3, 1, 2, 2, rT.hostage.face), h(d, 2, 3, 4, 3, rT.hostage.kit), k(d, 1, 2, rT.hostage.kit), k(d, 6, 3, rT.hostage.kit), h(d, 2, 6, 1, 2, rT.hostage.body), h(d, 5, 6, 1, 2, rT.hostage.body), B(c, rT.hostage.outline), c;
+    return h(d, 3, 1, 2, 2, FIGURE_PALETTES.hostage.face), h(d, 2, 3, 4, 3, FIGURE_PALETTES.hostage.kit), k(d, 1, 2, FIGURE_PALETTES.hostage.kit), k(d, 6, 3, FIGURE_PALETTES.hostage.kit), h(d, 2, 6, 1, 2, FIGURE_PALETTES.hostage.body), h(d, 5, 6, 1, 2, FIGURE_PALETTES.hostage.body), B(c, FIGURE_PALETTES.hostage.outline), c;
 }
 
 function buildStarSparkle() {
@@ -4746,7 +4746,7 @@ function drawFigure(j, q, A, C, E = 0) {
     let {
         c: F,
         g: H
-    } = O(FIGURE_W, Rb), I = q / Ge * Math.PI * 2 + Math.PI / 2, K = Math.cos(I), L = Math.sin(I), M = 6, N = GT(9173 + E * 2749), P = E % 2 === 0 ? 1 : -1, Q = Array.from({
+    } = O(FIGURE_W, Rb), I = q / Ge * Math.PI * 2 + Math.PI / 2, K = Math.cos(I), L = Math.sin(I), M = 6, N = createRng(9173 + E * 2749), P = E % 2 === 0 ? 1 : -1, Q = Array.from({
         length: 3
     }, () => ({
         x: M - 2 + (N() * 5 | 0),
@@ -4844,7 +4844,7 @@ function renderPortrait(c) {
         c: d,
         g: g
     } = O(64, 46);
-    return UW(g, Lb, ka[c]), xs(d);
+    return drawSpriteDefFrame(g, Lb, ka[c]), trimCanvas(d);
 }
 var PORTRAIT_STYLE_A = {
     cellW: 48,
@@ -4859,7 +4859,7 @@ function zp(c) {
         c: d,
         g: g
     } = O(48, 35);
-    return UW(g, PORTRAIT_STYLE_A, ka[c]), xs(d);
+    return drawSpriteDefFrame(g, PORTRAIT_STYLE_A, ka[c]), trimCanvas(d);
 }
 var Yp = c => c in ka;
 
@@ -4976,7 +4976,7 @@ function buildFigurePlaque() {
     let {
         c: c,
         g: d
-    } = O(34, 41), g = drawFigure(rT.player, 0, 0, "rifle", 0);
+    } = O(34, 41), g = drawFigure(FIGURE_PALETTES.player, 0, 0, "rifle", 0);
     return drawPerspectiveFloor(d, 34, "#2a2210", 25, g.width), B(c, "#2a2210"), d.drawImage(g, Math.round((34 - g.width) / 2), 25), c;
 }
 
@@ -5030,7 +5030,7 @@ function Ve(c) {
         c: d,
         g: g
     } = O(44, 57);
-    return UW(g, PORTRAIT_STYLE_B, c ? 0 : 1), d;
+    return drawSpriteDefFrame(g, PORTRAIT_STYLE_B, c ? 0 : 1), d;
 }
 
 function zo(c) {
@@ -5069,7 +5069,7 @@ function decodeFrames(c) {
             c: i,
             g: j
         } = O(c.cellW, c.cellH);
-        return UW(j, c, g), i;
+        return drawSpriteDefFrame(j, c, g), i;
     });
 }
 var animPortraitFrames = () => decodeFrames(Kb);
@@ -5311,7 +5311,7 @@ function drawGrassTuft(c, d, g) {
     let {
         c: j,
         g: l
-    } = O(7, 5), m = GT(c * 7717 + 21);
+    } = O(7, 5), m = createRng(c * 7717 + 21);
     for (let p = 0; p < 5; p++) {
         let q = 1 + Math.floor(m() * 5),
             u = 1 + Math.floor(m() * 3);
@@ -5447,7 +5447,7 @@ var Ca = {
             ramp: g
         } = zT(c, d === "mud" ? 7 : 0);
         return {
-            hollow: SW(io(g[0], 0.3)),
+            hollow: SW(darkenColor(g[0], 0.3)),
             lip: SW(g[g.length - 1])
         };
     },
@@ -5580,21 +5580,21 @@ var buildCharacterSheet = (c, d) => Array.from({
         length: figurePoseCount
     }, (d, g) => buildFigurePose(c, g)),
     wf = {
-        green: rT.player,
-        blue: rT.blue
+        green: FIGURE_PALETTES.player,
+        blue: FIGURE_PALETTES.blue
     },
     Sf = {
         zombie: {
-            palette: rT.zombie,
+            palette: FIGURE_PALETTES.zombie,
             weapon: "none"
         }
     },
     _y = {
-        player: rT.player,
-        camo: rT.camo,
-        sniper: rT.sniper,
-        bazooka: rT.bazooka,
-        officer: rT.officer
+        player: FIGURE_PALETTES.player,
+        camo: FIGURE_PALETTES.camo,
+        sniper: FIGURE_PALETTES.sniper,
+        bazooka: FIGURE_PALETTES.bazooka,
+        officer: FIGURE_PALETTES.officer
     };
 
 function paletteFor(c) {
@@ -5650,17 +5650,17 @@ function buildSpriteAtlas() {
         }, (j, l) => Ko(l));
     return atlasCache = {
         mapObjects: hp(),
-        player: d(rT.player, "rifle"),
-        enemy: d(rT.enemy, "rifle"),
-        camo: d(rT.camo, "rifle"),
-        sniper: d(rT.sniper, "long"),
-        bazooka: d(rT.bazooka, "tube"),
-        officer: d(rT.officer, "rifle"),
-        hostage: d(rT.hostage, "none"),
-        corpsePlayer: c(rT.player),
-        corpseEnemy: c(rT.enemy),
-        woundedEnemy: buildFigurePortrait(rT.enemy),
-        corpseHostage: c(rT.hostage),
+        player: d(FIGURE_PALETTES.player, "rifle"),
+        enemy: d(FIGURE_PALETTES.enemy, "rifle"),
+        camo: d(FIGURE_PALETTES.camo, "rifle"),
+        sniper: d(FIGURE_PALETTES.sniper, "long"),
+        bazooka: d(FIGURE_PALETTES.bazooka, "tube"),
+        officer: d(FIGURE_PALETTES.officer, "rifle"),
+        hostage: d(FIGURE_PALETTES.hostage, "none"),
+        corpsePlayer: c(FIGURE_PALETTES.player),
+        corpseEnemy: c(FIGURE_PALETTES.enemy),
+        woundedEnemy: buildFigurePortrait(FIGURE_PALETTES.enemy),
+        corpseHostage: c(FIGURE_PALETTES.hostage),
         looks: {},
         lookCorpses: {},
         lookWounded: {},

@@ -39,7 +39,7 @@
                 textContent: c.map.name
             })), c.skirmish || this.mission.appendChild(Object.assign(document.createElement("span"), {
                 className: "hud-diff diff-" + c.difficulty,
-                textContent: QW[c.difficulty].name
+                textContent: DIFFICULTIES[c.difficulty].name
             })), this.goal.textContent = _t(c.map), this.plates = [], this.lastPhase = null), this.ensureRoster(c);
             let g = this.mine(c);
             for (let q = 0; q < this.plates.length; q++) {
@@ -433,19 +433,19 @@ function installOverlayObserver() {
 }
 async function q3() {
     const JG = cX;
-    Yl(), await embedFonts(), Xl(), ll(), zs(), Jl(), await V1("boot"), wo(), installClickRouter(), installOverlayObserver(), Zu();
+    Yl(), await embedFonts(), Xl(), loadSettings(), zs(), Jl(), await V1("boot"), wo(), installClickRouter(), installOverlayObserver(), Zu();
     let c = document.getElementById("screen"),
         d = c.getContext('2d', {
             alpha: false
         }),
         g = new fi(),
         j = new tr(d);
-    j.setBlood(G().blood), A1(u => j.setBlood(u.blood)), Ne(), await V1("sprites");
+    j.setBlood(G().blood), onSettingsChange(u => j.setBlood(u.blood)), Ne(), await V1("sprites");
     let l = new nr(c, d),
         m = new rr(c, l),
         p = new Ln(),
         q = new sr(m, l);
-    return m.onFirstPress(() => Zr()), l.onChange(u => {
+    return m.onFirstPress(() => unlockAudio()), l.onChange(u => {
         const JH = JG;
         g.zoom = u.deviceZoom, g.resize(c.width, c.height);
     }), l.apply(), window.addEventListener("resize", () => l.apply()), window.addEventListener("orientationchange", () => l.apply()), window.addEventListener("orientationchange", () => {
@@ -454,7 +454,7 @@ async function q3() {
     }), m.onZoom = u => {
         const JJ = JG;
         let v = Math.max(-1, Math.min(1, G().zoomBias + u));
-        v !== G().zoomBias && (mW({
+        v !== G().zoomBias && (updateSettings({
             zoomBias: v
         }), l.apply());
     }, {
@@ -676,7 +676,7 @@ var musterRadius = 34,
             };
             let g = mT(c, 11) * Math.PI * 2,
                 i = d * Math.sqrt(mT(c, 12));
-            return uT(this.world.map, {
+            return findOpenPosition(this.world.map, {
                 x: this.muster.x + Math.cos(g) * i,
                 y: this.muster.y + Math.sin(g) * i
             });
@@ -732,8 +732,8 @@ var musterRadius = 34,
         constructor(c) {
             const Kq = cX;
             this.world = c, (c.playerSides = [], this.losses = new Array(c.sides).fill(0), c.sideLevers = {
-                [D.Player]: Lt("veteran", "arena-green"),
-                [D.Enemy]: Lt("veteran", "arena-red")
+                [D.Player]: buildDifficultyLevers("veteran", "arena-green"),
+                [D.Enemy]: buildDifficultyLevers("veteran", "arena-red")
             }, this.influence = new I2(c));
             let d = g => c.buildings.filter(j => j.owner === g);
             this.commanders[D.Player] = new wr(c, D.Player, d(D.Player), this.influence, 0), this.commanders[D.Enemy] = new wr(c, D.Enemy, d(D.Enemy), this.influence, 1);
@@ -838,7 +838,7 @@ function spawnReinforcements(g, j) {
     for (let E = 0; C < j.count && E < j.count * 12; E++) {
         let F = g.rng() * Math.PI * 2,
             H = v * Math.sqrt(g.rng()),
-            I = uT(g.map, {
+            I = findOpenPosition(g.map, {
                 x: q.x + Math.cos(F) * H,
                 y: q.y + Math.sin(F) * H
             });
@@ -882,7 +882,7 @@ var soldiersOfSide = (c, d) => c.soldiers.filter(g => g.faction === d),
 function ae(c, d, g = c, j, l = {}) {
     const KH = cX;
     if (c.preroll > 0) return;
-    let m = uT(c.map, d);
+    let m = findOpenPosition(c.map, d);
     g.squadTarget = null, g.targetBuilding = null, g.field = yW(c.map, m, true, l.swimCost ?? 1), g.orderGoal = m, g.orderMarker = f.soldier.orderMarkerTime, assignFormation(c, m, j);
     for (let p of soldiersOfSide(c, j)) p.alive && (p.state = 1);
     l.quiet || P2(c, j);
@@ -913,7 +913,7 @@ function Ar(c, d, g = c, j, l = {}) {
     const KK = cX;
     if (c.preroll > 0) return;
     g.squadTarget = null, g.targetBuilding = d;
-    let m = uT(c.map, d.centre);
+    let m = findOpenPosition(c.map, d.centre);
     g.field = yW(c.map, m, true, l.swimCost ?? 1), g.orderGoal = {
         ...d.centre
     }, g.orderMarker = f.soldier.orderMarkerTime, assignFormation(c, m, j);
@@ -957,7 +957,7 @@ function findFreeSlot(g, j, m) {
             };
         if (fT(g.map, F.x, F.y, m.radius) || !DW(g.map, m.pos, F, m.radius)) continue;
         let H = Math.hypot(F.x - q.x, F.y - q.y),
-            I = TT[oW(g.map, F.x, F.y)].blocksSight,
+            I = TT[getTileDefAt(g.map, F.x, F.y)].blocksSight,
             K = -H + (I ? p * 1.5 : 0);
         K > y && (y = K, v = F);
     }
@@ -1231,7 +1231,7 @@ function Y3(c) {
             try {
                 if (q) g.prepare(u, q.world);
                 else {
-                    u = Te(aT[z3], z3), g.prepare(u, BW(u, "veteran"));
+                    u = parseMapDef(aT[z3], z3), g.prepare(u, BW(u, "veteran"));
                     let F = Math.floor(Math.random() * 2147483647);
                     q = new St(u, d, j, () => g.clearDecals(), true, F);
                 }
@@ -1249,12 +1249,12 @@ function Y3(c) {
                 },
                 draw: (H, I) => g.draw(C.world, d, H, I)
             });
-            let E = () => Xn(sn() ? "ducked" : "silent");
+            let E = () => setWorldDuck(sn() ? "ducked" : "silent");
             E(), y = tt(E);
         },
         stop: () => {
             const Lw = Lk;
-            v && (v = false, c.set(null), m.hideArena(), y?.(), y = null, Xn("full"), j.mode = "play", delete document.body.dataset.mode, p.apply());
+            v && (v = false, c.set(null), m.hideArena(), y?.(), y = null, setWorldDuck("full"), j.mode = "play", delete document.body.dataset.mode, p.apply());
         }
     };
 }

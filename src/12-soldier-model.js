@@ -135,7 +135,7 @@ function buildEnemyArmy(j, q, y, A) {
         for (let U = 0; U < 8; U++) {
             let V = A() * Math.PI * 2,
                 X = 12 + A() * 26,
-                Y = zr(j, {
+                Y = findMainlandPosition(j, {
                     x: R.x + Math.cos(V) * X,
                     y: R.y + Math.sin(V) * X
                 }, L[0] ?? R);
@@ -232,14 +232,14 @@ function hashString(c, d) {
 function BW(j, q, A, C, F = 0) {
     const AQ = cX;
     Kr(j);
-    let H = Lt(q, j.doctrine);
+    let H = buildDifficultyLevers(q, j.doctrine);
     H.speed *= j.enemySpeed;
     let I = j.rungMod[q];
     if (I) {
         for (let [a8, a9] of Object.entries(I)) H[a8] *= a9;
     }
     let K = hashString(j.id, F),
-        L = GT(K),
+        L = createRng(K),
         M = {
             nextId: 1
         },
@@ -348,7 +348,7 @@ function BW(j, q, A, C, F = 0) {
             reserves: C?.reserves ?? [],
             phase: 0,
             phaseTime: 0,
-            preroll: yl(j),
+            preroll: countdownTotalDuration(j),
             round: 0,
             time: 0,
             kills: 0,
@@ -720,7 +720,7 @@ function tickHostageFollow(g, j, m) {
 function killHostage(c, d) {
     const BA = cX;
     if (!(!d.alive || d.delivered)) {
-        if (d.alive = false, TT[oW(c.map, d.pos.x, d.pos.y)].swim) {
+        if (d.alive = false, TT[getTileDefAt(c.map, d.pos.x, d.pos.y)].swim) {
             c.fx.drown(d.pos), c.fx.slick(d.pos, d.id);
             return;
         }
@@ -949,7 +949,7 @@ function stepBullet(d, g, j) {
         let y = v / u,
             A = g.prev.x + (m - g.prev.x) * y,
             C = g.prev.y + (p - g.prev.y) * y,
-            E = TT[oW(d, A, C)];
+            E = TT[getTileDefAt(d, A, C)];
         if (E.blocksShots && !(E.lowWall && g.from && Math.hypot((Math.floor(A / d.tile) + 0.5) * d.tile - g.from.x, (Math.floor(C / d.tile) + 0.5) * d.tile - g.from.y) <= f.cover.overReach)) return g.pos.x = A, g.pos.y = C, true;
     }
     return g.pos.x = m, g.pos.y = p, false;
@@ -1463,7 +1463,7 @@ var silhouetteShadowOffset = {
                     clear: R
                 } = Aa.grass, S = D1(this.map.theme).canopy;
                 for (let U = 0; U < j.width; U++) {
-                    let V = xT(K + U, 7);
+                    let V = hashInt(K + U, 7);
                     if (V % 3 === 0) continue;
                     let X = I + R + (V >> 2 & 3),
                         Y = I + j.height,
@@ -1471,7 +1471,7 @@ var silhouetteShadowOffset = {
                         a8 = Math.max(1, Y - X - 1);
                     for (let a9 = X; a9 < Y; a9++) {
                         let aj = 6.4 - (a9 - X) / a8 * 3.4 + a7;
-                        H.fillStyle = SW(iW(S, aj, K + U, a9)), H.fillRect(K + U, a9, 1, 1);
+                        H.fillStyle = SW(sampleRamp(S, aj, K + U, a9)), H.fillRect(K + U, a9, 1, 1);
                     }
                 }
                 return;
@@ -1541,7 +1541,7 @@ function c3(c, d) {
 
 function resolveCallinDrop(c, d, g) {
     const CV = cX;
-    let j = uT(c.map, g);
+    let j = findOpenPosition(c.map, g);
     if (UT(c, j, c.levers.hearing * 0.6), d === "supplyDrop") {
         c.crates.push({
             pos: {
@@ -1561,7 +1561,7 @@ function resolveCallinDrop(c, d, g) {
     }
     for (let l = 0; l < c.reserves.length; l++) {
         let m = c.reserves[l],
-            p = uT(c.map, {
+            p = findOpenPosition(c.map, {
                 x: j.x + l * 14 - 7,
                 y: j.y + 6
             });
@@ -2131,13 +2131,13 @@ var tr = class {
                     let X = z(j, V, U),
                         Y = V * H + H / 2,
                         a7 = (U + 1) * H,
-                        a8 = n1(V * 131 + U * 977),
+                        a8 = createRngFromSeed(V * 131 + U * 977),
                         a9 = pp[X];
                     if (X === 22 && (a9 = fp(z(j, V, U - 1) === X, z(j, V, U + 1) === X, z(j, V + 1, U) === X, z(j, V - 1, U) === X)), a9) {
-                        let aj = !!Yr[X];
+                        let aj = !!PROP_2X2_NAMES[X];
                         if (aj && (z(j, V - 1, U) === X || z(j, V, U - 1) === X)) continue;
                         let ak = this.atlas.mapObjects[j.theme][a9],
-                            aq = ak[xT(V, U) % ak.length],
+                            aq = ak[hashInt(V, U) % ak.length],
                             aw = a7 + (aj ? H : 0),
                             ax = Math.round(Y + (aj ? H / 2 : 0) - aq.width / 2),
                             az = aw - aq.height;
@@ -2162,7 +2162,7 @@ var tr = class {
                             });
                         } else {
                             if (!N.has(V + ',' + U) && !TT[X].solid && X === 0 && a8() < 0.09) {
-                                let aB = I[xT(V, U) % I.length];
+                                let aB = I[hashInt(V, U) % I.length];
                                 F.push({
                                     sprite: aB,
                                     x: Y - aB.width / 2 + Math.round(a8() * 6 - 3),
@@ -2285,12 +2285,12 @@ var tr = class {
                     height: q
                 } = g.canvas,
                 u = d.preroll,
-                v = xl(d.map, u, d.round);
+                v = roundLabelAt(d.map, u, d.round);
             if (!v) return;
             let y = d.map.countdown?.beat ?? f.countdown.beat,
                 A = 1 - (u / y - Math.floor(u / y)),
                 C = gi(v),
-                E = Math.max(...kl(d.map, d.round).map(L => gi(L).width)),
+                E = Math.max(...roundLabelList(d.map, d.round).map(L => gi(L).width)),
                 F = Math.max(1, Math.floor(j * f.countdown.fill / E)),
                 H = 1 - (1 - Math.min(1, A / 0.2)) ** 3 < 1 ? F + 1 : F,
                 I = C.width * H,
@@ -2839,11 +2839,11 @@ var nr = class {
             const FL = cX;
             return this.aim.mode === "fire";
         } ["boundFor"] = null;
-        ["bound"] = jt(Rt);
+        ["bound"] = buildKeybindMaps(Rt);
         bindings() {
             const FM = cX;
             let c = G();
-            return c !== this.boundFor && (this.boundFor = c, this.bound = jt(c.keys)), this.bound;
+            return c !== this.boundFor && (this.boundFor = c, this.bound = buildKeybindMaps(c.keys)), this.bound;
         }
         getisTouch() {
             const FN = cX;
@@ -3561,7 +3561,7 @@ var RoundEndOverlay = class {
                 let S = document.createElement("div");
                 S.className = "result-diffline", S.appendChild(Object.assign(document.createElement("span"), {
                     className: "hud-diff diff-" + j.difficulty,
-                    textContent: QW[j.difficulty].name + " clear"
+                    textContent: DIFFICULTIES[j.difficulty].name + " clear"
                 })), H.appendChild(S);
             }
             H.appendChild(Object.assign(document.createElement("div"), {
@@ -3594,13 +3594,13 @@ var RoundEndOverlay = class {
                 let V = document.createElement("div");
                 V.className = "result-rating", V.appendChild(wu(M, {
                     rungs: qT,
-                    nameOf: Y => QW[Y].name,
+                    nameOf: Y => DIFFICULTIES[Y].name,
                     justLit: N
                 }));
                 let X = M < qT.length ? qT[M] : null;
                 V.appendChild(Object.assign(document.createElement("span"), {
                     className: "result-rating-note",
-                    textContent: X ? QW[X].name + " for next star" : "Every star on this mission"
+                    textContent: X ? DIFFICULTIES[X].name + " for next star" : "Every star on this mission"
                 })), H.appendChild(V);
             }
             if (E && E.bonds.total > 0) {
@@ -3990,7 +3990,7 @@ var BriefingOverlay = class {
                     M instanceof HTMLButtonElement && (M.type = "button"), L === g.difficulty && M.classList.add('on');
                     let N = w("div", "briefing-diff-stars");
                     for (let P = 0; P <= qT.indexOf(L); P++) N.appendChild(w('i', "fx-star on"));
-                    M.appendChild(N), M.appendChild(w("span", "briefing-diff-name", QW[L].name.toUpperCase())), M.title = QW[L].blurb, K || M.addEventListener("click", () => {
+                    M.appendChild(N), M.appendChild(w("span", "briefing-diff-name", DIFFICULTIES[L].name.toUpperCase())), M.title = DIFFICULTIES[L].blurb, K || M.addEventListener("click", () => {
                         const HU = HT;
                         L !== g.difficulty && j.onDifficulty?.(L);
                     }), I.appendChild(M);

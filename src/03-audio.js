@@ -1,43 +1,43 @@
 function initAudioContext() {
     const dY = cX;
     if (!f.audio.enabled) return false;
-    if (PT) return PT.state === "suspended" && PT.resume(), true;
+    if (audioContext) return audioContext.state === "suspended" && audioContext.resume(), true;
     let c = window.AudioContext ?? window.webkitAudioContext;
     if (!c) return false;
-    PT = new c(), Me = PT.createGain(), Me.gain.value = G().sound ? G().volume : 0, Me.connect(PT.destination), de = PT.createGain(), de.gain.value = Kn, de.connect(Me);
-    let d = Math.floor(PT.sampleRate * 0.5);
-    $n = PT.createBuffer(1, d, PT.sampleRate);
+    audioContext = new c(), Me = audioContext.createGain(), Me.gain.value = G().sound ? G().volume : 0, Me.connect(audioContext.destination), de = audioContext.createGain(), de.gain.value = Kn, de.connect(Me);
+    let d = Math.floor(audioContext.sampleRate * 0.5);
+    $n = audioContext.createBuffer(1, d, audioContext.sampleRate);
     let g = $n.getChannelData(0);
     for (let i = 0; i < d; i++) g[i] = Math.random() * 2 - 1;
     return true;
 }
-A1(c => {
+onSettingsChange(c => {
     const dZ = cX;
-    !PT || !Me || Me.gain.setTargetAtTime(c.sound ? c.volume : 0, PT.currentTime, 0.03);
+    !audioContext || !Me || Me.gain.setTargetAtTime(c.sound ? c.volume : 0, audioContext.currentTime, 0.03);
 });
-var Zr = () => {
+var unlockAudio = () => {
     initAudioContext();
 };
 
-function Ot() {
-    return initAudioContext() ? PT : null;
+function getAudioContext() {
+    return initAudioContext() ? audioContext : null;
 }
-var wl = () => Kn;
+var getWorldLevel = () => Kn;
 
-function Xn(c) {
+function setWorldDuck(c) {
     const e7 = cX;
     let d = c === true ? "ducked" : c === false ? "full" : c;
-    Kn = d === "full" ? 1 : d === "ducked" ? 0.35 : 0, !(!PT || !de) && de.gain.setTargetAtTime(Kn, PT.currentTime, 0.08);
+    Kn = d === "full" ? 1 : d === "ducked" ? 0.35 : 0, !(!audioContext || !de) && de.gain.setTargetAtTime(Kn, audioContext.currentTime, 0.08);
 }
 
-function Nt() {
+function getWorldGain() {
     return initAudioContext() ? de : null;
 }
 var activeVoices = [];
 
 function registerVoice(c, d, g = false) {
     const e8 = cX;
-    let i = PT.currentTime;
+    let i = audioContext.currentTime;
     for (let j = activeVoices.length - 1; j >= 0; j--) activeVoices[j].until <= i && activeVoices.splice(j, 1);
     if (activeVoices.length >= f.audio.maxVoices) {
         let l = activeVoices.findIndex(m => !m.keep);
@@ -55,16 +55,16 @@ function registerVoice(c, d, g = false) {
     }), de;
 }
 
-function Sl() {
+function getLiveVoices() {
     const e9 = cX;
-    if (!PT) return 0;
-    let c = PT.currentTime;
+    if (!audioContext) return 0;
+    let c = audioContext.currentTime;
     return activeVoices.filter(d => d.until > c).length;
 }
 
-function pW() {
-    return !initAudioContext() || !PT || !Me || !de || !$n ? null : {
-        ctx: PT,
+function getAudioNodes() {
+    return !initAudioContext() || !audioContext || !Me || !de || !$n ? null : {
+        ctx: audioContext,
         master: Me,
         world: de,
         noise: $n
@@ -77,8 +77,8 @@ function updateAudioActivity(c) {
     const eg = cX;
     Jr = performance.now() / 1000, c && (lastAudioGestureAt = Jr);
 }
-var ps = {};
-J2(ps, {
+var sfxRegistry = {};
+J2(sfxRegistry, {
     sfxAirstrike: () => Ws,
     sfxClick: () => ls,
     sfxCollapse: () => is,
@@ -99,10 +99,10 @@ J2(ps, {
     sfxWin: () => us
 });
 
-function fW(c) {
+function playTone(c) {
     const ej = cX;
     if (!G().sound) return;
-    let d = pW();
+    let d = getAudioNodes();
     if (!d) return;
     let {
         ctx: g,
@@ -119,7 +119,7 @@ function fW(c) {
 function playSineTone(c, d, g) {
     const ek = cX;
     if (!G().sound) return;
-    let j = pW();
+    let j = getAudioNodes();
     if (!j) return;
     let {
         ctx: l
@@ -130,14 +130,14 @@ function playSineTone(c, d, g) {
 }
 var lastPlayedAt = new Map();
 
-function Ce(c, d) {
+function canPlaySfx(c, d) {
     const eq = cX;
     let g = performance.now() / 1000;
     return g - (lastPlayedAt.get(c) ?? -1000000000) < d ? false : (lastPlayedAt.set(c, g), true);
 }
 var $T = (c, d = 0.18) => c * (1 + (Math.random() * 2 - 1) * d),
     Ts = () => {
-        updateAudioActivity(true), fW({
+        updateAudioActivity(true), playTone({
             duration: 0.09,
             gain: 0.55,
             freq: $T(1500),
@@ -147,7 +147,7 @@ var $T = (c, d = 0.18) => c * (1 + (Math.random() * 2 - 1) * d),
         });
     },
     Jn = () => {
-        updateAudioActivity(false), fW({
+        updateAudioActivity(false), playTone({
             duration: 0.1,
             gain: 0.4,
             freq: $T(950),
@@ -157,7 +157,7 @@ var $T = (c, d = 0.18) => c * (1 + (Math.random() * 2 - 1) * d),
     },
     Zn = () => {
         const ew = cX;
-        updateAudioActivity(false), fW({
+        updateAudioActivity(false), playTone({
             duration: 0.55,
             gain: 0.9,
             freq: 800,
@@ -170,7 +170,7 @@ var $T = (c, d = 0.18) => c * (1 + (Math.random() * 2 - 1) * d),
         const ex = cX;
         Zn(), window.setTimeout(() => {
             const ez = ex;
-            fW({
+            playTone({
                 duration: 0.9,
                 gain: 0.75,
                 freq: 420,
@@ -183,7 +183,7 @@ var $T = (c, d = 0.18) => c * (1 + (Math.random() * 2 - 1) * d),
     es = () => {
         const eA = cX;
         if (!G().sound) return;
-        let c = pW();
+        let c = getAudioNodes();
         if (!c) return;
         let {
             ctx: d
@@ -199,7 +199,7 @@ var $T = (c, d = 0.18) => c * (1 + (Math.random() * 2 - 1) * d),
     },
     ts = () => {
         const eB = cX;
-        fW({
+        playTone({
             duration: 0.5,
             gain: 0.4,
             freq: 420,
@@ -210,7 +210,7 @@ var $T = (c, d = 0.18) => c * (1 + (Math.random() * 2 - 1) * d),
     },
     ns = () => {
         const eC = cX;
-        updateAudioActivity(false), fW({
+        updateAudioActivity(false), playTone({
             duration: 0.28,
             gain: 0.95,
             freq: 3400,
@@ -221,7 +221,7 @@ var $T = (c, d = 0.18) => c * (1 + (Math.random() * 2 - 1) * d),
     },
     os = c => {
         const eD = cX;
-        let d = Nt();
+        let d = getWorldGain();
         if (!d) return;
         let g = d.context,
             j = g.currentTime,
@@ -234,8 +234,8 @@ var $T = (c, d = 0.18) => c * (1 + (Math.random() * 2 - 1) * d),
     },
     is = () => {
         const eE = cX;
-        if (!Ce("collapse", 0.18) || !G().sound) return;
-        let c = pW();
+        if (!canPlaySfx("collapse", 0.18) || !G().sound) return;
+        let c = getAudioNodes();
         if (!c) return;
         let {
             ctx: d,
@@ -255,7 +255,7 @@ var $T = (c, d = 0.18) => c * (1 + (Math.random() * 2 - 1) * d),
     rs = () => {
         const eG = cX;
         if (!G().sound) return;
-        let c = pW();
+        let c = getAudioNodes();
         if (!c) return;
         let {
             ctx: d,
@@ -268,7 +268,7 @@ var $T = (c, d = 0.18) => c * (1 + (Math.random() * 2 - 1) * d),
     Ft = () => {
         const eH = cX;
         if (!G().sound) return;
-        let c = pW();
+        let c = getAudioNodes();
         if (!c) return;
         let {
             ctx: d,
@@ -280,9 +280,9 @@ var $T = (c, d = 0.18) => c * (1 + (Math.random() * 2 - 1) * d),
     },
     ss = c => {
         const eI = cX;
-        if (Ce("wade", 0.12)) {
+        if (canPlaySfx("wade", 0.12)) {
             if (c) {
-                fW({
+                playTone({
                     duration: 0.26,
                     gain: 0.2,
                     freq: $T(420, 0.1),
@@ -292,7 +292,7 @@ var $T = (c, d = 0.18) => c * (1 + (Math.random() * 2 - 1) * d),
                 }), playSineTone($T(90, 0.12), 0.2, 0.22);
                 return;
             }
-            fW({
+            playTone({
                 duration: 0.09,
                 gain: 0.22,
                 freq: $T(2200),
@@ -301,20 +301,20 @@ var $T = (c, d = 0.18) => c * (1 + (Math.random() * 2 - 1) * d),
             });
         }
     },
-    as = () => fW({
+    as = () => playTone({
         duration: 0.045,
         gain: 0.16,
         freq: 2400,
         q: 3
     }),
-    ls = () => fW({
+    ls = () => playTone({
         chrome: true,
         duration: 0.05,
         gain: 0.3,
         freq: 1500,
         q: 3
     }),
-    cs = () => fW({
+    cs = () => playTone({
         duration: 0.07,
         gain: 0.2,
         freq: 320,
@@ -324,7 +324,7 @@ var $T = (c, d = 0.18) => c * (1 + (Math.random() * 2 - 1) * d),
     ds = () => {
         const eJ = cX;
         if (!G().sound) return;
-        let c = pW();
+        let c = getAudioNodes();
         if (!c) return;
         let {
             ctx: d,
@@ -341,7 +341,7 @@ var $T = (c, d = 0.18) => c * (1 + (Math.random() * 2 - 1) * d),
     us = () => {
         const eK = cX;
         if (!G().sound) return;
-        let c = pW();
+        let c = getAudioNodes();
         if (!c) return;
         let {
             ctx: d,
@@ -358,7 +358,7 @@ var $T = (c, d = 0.18) => c * (1 + (Math.random() * 2 - 1) * d),
     ms = () => {
         const eM = cX;
         if (!G().sound) return;
-        let c = pW();
+        let c = getAudioNodes();
         if (!c) return;
         let {
             ctx: d,
@@ -381,10 +381,10 @@ J2(fs, {
     sfxVoice: () => O1
 });
 
-function Qn(j, q, A) {
+function playToneSequence(j, q, A) {
     const eO = cX;
     if (!G().sound) return;
-    let C = pW();
+    let C = getAudioNodes();
     if (!C) return;
     let {
         ctx: F,

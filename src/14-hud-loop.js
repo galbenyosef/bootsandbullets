@@ -199,8 +199,8 @@ function tickAmbience(j, q, A, C) {
     if (!k1 || !ke || (Nn += A, Nn < AMBIENCE_CONFIG.tick)) return;
     let F = Nn;
     if (Nn = 0, !bT) {
-        let aj = Ot(),
-            ak = Nt();
+        let aj = getAudioContext(),
+            ak = getWorldGain();
         if (!aj || !ak) return;
         bT = createAmbienceGraph(aj, ak);
     }
@@ -208,10 +208,10 @@ function tickAmbience(j, q, A, C) {
         I = j.x + j.viewW / 2,
         K = j.y + j.viewH / 2,
         L = performance.now() / 1000,
-        N = (aq, aw) => wW(ke.wetSdf, ke.width, ke.height, k1.tile, aq, aw),
+        N = (aq, aw) => sampleSdf(ke.wetSdf, ke.width, ke.height, k1.tile, aq, aw),
         P = Math.min(N(I, K), N(j.x + j.viewW * 0.25, K), N(j.x + j.viewW * 0.75, K), N(I, j.y + j.viewH * 0.25), N(I, j.y + j.viewH * 0.75)),
         Q = W5(1 - P / AMBIENCE_CONFIG.waterRange),
-        R = wW(ke.foliageSdf, ke.width, ke.height, k1.tile, I, K),
+        R = sampleSdf(ke.foliageSdf, ke.width, ke.height, k1.tile, I, K),
         S = W5(1 - R / AMBIENCE_CONFIG.foliageRange),
         U = 0.65 + 0.35 * Math.sin((I + K) * H.gustScale + q * H.gustSpeed),
         V = L - zn() < AMBIENCE_CONFIG.scareTime,
@@ -342,7 +342,7 @@ async function enterSpectatorMode(d) {
         layout: q
     } = d.shell, u = null;
     fadeOutMusic();
-    let v = Te(aT[SPECTATOR_MAP], SPECTATOR_MAP);
+    let v = parseMapDef(aT[SPECTATOR_MAP], SPECTATOR_MAP);
     j.prepare(v, BW(v, "veteran")), m.mode = "spectator", document.body.dataset.mode = "spectator", q.apply(), u = new St(v, g, m, () => j.clearDecals());
     let y = u;
     d.set({
@@ -363,9 +363,9 @@ async function enterSpectatorMode(d) {
         },
         C = F => {
             const M7 = LZ;
-            F.key === 'c' || F.key === 'C' ? (mW({
+            F.key === 'c' || F.key === 'C' ? (updateSettings({
                 arenaLockCamera: !G().arenaLockCamera
-            }), G().arenaLockCamera || g.release(), A()) : (F.key === 'h' || F.key === 'H') && (mW({
+            }), G().arenaLockCamera || g.release(), A()) : (F.key === 'h' || F.key === 'H') && (updateSettings({
                 arenaShowScore: !G().arenaShowScore
             }), A());
         };
@@ -691,7 +691,7 @@ async function enterSkirmish(g, j) {
         input: q,
         hud: u,
         controls: v
-    } = g.shell, y = null, A = j && aT[j]?.objective === "skirmish" ? j : l_, C = Te(aT[A], A);
+    } = g.shell, y = null, A = j && aT[j]?.objective === "skirmish" ? j : l_, C = parseMapDef(aT[A], A);
     await prepareWithLoading(p, C, "rookie"), y = new SkirmishSession(C, m, p, q);
     let E = y;
     g.set({
@@ -701,13 +701,13 @@ async function enterSkirmish(g, j) {
             const MO = MN;
             v.update(E.world);
             let K = JT();
-            K ? B1() : H1(), !K && (E.step(I), u.update(E.world));
+            K ? pauseComms() : resumeComms(), !K && (E.step(I), u.update(E.world));
         },
         draw: (I, K) => {
             const MP = MN;
             p.draw(E.world, m, I, K, q.aim), tickAmbience(m, p.windTime, K, !st() && !E.world.skirmish?.over);
         }
-    }), startAmbience(C), He(f.banner.fade), q.mode = "play", je(EW.trumper, "The other lot want the glade. They have been told it is spoken for; persuade them.", {
+    }), startAmbience(C), He(f.banner.fade), q.mode = "play", speakLine(EW.trumper, "The other lot want the glade. They have been told it is spoken for; persuade them.", {
         seconds: 9
     });
     let F = () => {
@@ -765,7 +765,7 @@ async function enterSkirmish(g, j) {
             const MY = MX;
             y && (P === "again" ? y.restart() : y.exitRequested = true);
         });
-    }, await waitForValue(() => y?.exitRequested ? (y = null, g.set(null), stopAmbience(), zW(), G1(), q.onPause = null, u.onExit = u.onPause = null, u.setTools({
+    }, await waitForValue(() => y?.exitRequested ? (y = null, g.set(null), stopAmbience(), zW(), destroyComms(), q.onPause = null, u.onExit = u.onPause = null, u.setTools({
         restart: true,
         pause: true,
         exitLabel: "Leave the mission"
@@ -1080,7 +1080,7 @@ async function runNetRound(j, q, y) {
         input: E,
         hud: F,
         controls: H
-    } = j.shell, I = null, K = null, L = false, M = 0, N = netMapId(q), P = Te(aT[N], N);
+    } = j.shell, I = null, K = null, L = false, M = 0, N = netMapId(q), P = parseMapDef(aT[N], N);
     y !== N && await prepareWithLoading(C, P, "rookie"), I = new Lr(P, A, C, E, q);
     let Q = I;
     j.set({
@@ -1088,7 +1088,7 @@ async function runNetRound(j, q, y) {
         world: Q.world,
         step: X => {
             const Nz = Nx;
-            H.update(Q.world), JT() ? B1() : H1(), Q.step(X), F.update(Q.world), F.setLink(Q.pausedBy ? {
+            H.update(Q.world), JT() ? pauseComms() : resumeComms(), Q.step(X), F.update(Q.world), F.setLink(Q.pausedBy ? {
                 kind: "away",
                 who: Q.pausedBy
             } : !$.connected || Q.sinceSnap > u_ ? {
@@ -1188,7 +1188,7 @@ async function runNetRound(j, q, y) {
         X.t === "gone" ? R() : I?.handleMsg(X);
     });
     let V = await waitForValue(() => I?.exitRequested || L && I?.over?.last ? "left" : L && K || K && !I?.over ? K : L && performance.now() - M > (Fa + d_) * 1000 ? "left" : null);
-    return I = null, j.set(null), E.edgeScrollBlocked = false, $.onGameMsg = null, $.onStart = null, stopAmbience(), F.setLink(null), F.hideClock(), zW(), G1(), E.onPause = null, F.onExit = null, F.setTools({
+    return I = null, j.set(null), E.edgeScrollBlocked = false, $.onGameMsg = null, $.onStart = null, stopAmbience(), F.setLink(null), F.hideClock(), zW(), destroyComms(), E.onPause = null, F.onExit = null, F.setTools({
         restart: true,
         pause: true,
         exitLabel: "Leave the mission"
@@ -1320,14 +1320,14 @@ var MissionSession = class {
         } due(c) {
             const NU = cX;
             let d = f.onboarding;
-            if (this.fresh(c), this.said >= d.nudgeMax || this.order > d.nudgeUntilOrder || c.time < this.nextAt || Ul()) return null;
+            if (this.fresh(c), this.said >= d.nudgeMax || this.order > d.nudgeUntilOrder || c.time < this.nextAt || isCommsBusy()) return null;
             this.said++, this.nextAt = c.time + d.nudgeEvery;
             let g = p_.has(c.map.objective) ? Math.max(0, c.enemyTotal - c.kills) : null;
             return Im(_t(c.map), g, c.jitter());
         } step(c) {
             const NV = cX;
             let d = this.due(c);
-            d !== null && je(EW.trumper, d, {
+            d !== null && speakLine(EW.trumper, d, {
                 delay: 0
             });
         }
@@ -1356,7 +1356,7 @@ async function enterCampaignLevel(K) {
             } catch {}
         };
     fadeOutMusic();
-    let aA = Te(aT[a7.id], a7.id),
+    let aA = parseMapDef(aT[a7.id], a7.id),
         aB = Ha(aT[a7.id]);
     await prepareWithLoading(P, aA, ak);
     let aC = Kt(Ut[a7.id]).roster === "fresh",
@@ -1412,7 +1412,7 @@ async function enterCampaignLevel(K) {
             const O9 = NX;
             Y.update(aJ.world), aJ.world.phase === 0 && !JT() && vm(b4), U.setCallInArmed(Q.callInArmed);
             let b7 = JT();
-            b7 ? B1() : H1(), !(b7 || U.briefingUp) && (aJ.step(b4), aK.step(aJ.world), U.update(aJ.world));
+            b7 ? pauseComms() : resumeComms(), !(b7 || U.briefingUp) && (aJ.step(b4), aK.step(aJ.world), U.update(aJ.world));
         },
         draw: (b4, b7) => {
             const Oj = NX;
@@ -1515,7 +1515,7 @@ async function enterCampaignLevel(K) {
     document.addEventListener("visibilitychange", aS), aw = () => document.removeEventListener("visibilitychange", aS), az(), aq.onCallIn = () => {
         const OG = NX;
         let b4 = EW.trumper;
-        b4 && aq && je(b4, Rm(aq.world.jitter()), {
+        b4 && aq && speakLine(b4, Rm(aq.world.jitter()), {
             seconds: 3
         });
     }, U.onCallInPress = b4 => {
@@ -1530,7 +1530,7 @@ async function enterCampaignLevel(K) {
     }, aq.onArmCallIn = () => {
         const OI = NX;
         let b4 = EW.trumper;
-        b4 && je(b4, Am(), {
+        b4 && speakLine(b4, Am(), {
             sticky: true
         });
     };
@@ -1583,8 +1583,8 @@ async function enterCampaignLevel(K) {
             let b7 = b4.target;
             if (b7 instanceof Element && b7.closest(".briefing-diff, .briefing-kit, .briefing-shop")) return;
             b4.preventDefault(), b4.stopPropagation(), aI(), U.hideOverlay(), He(f.banner.fade), aZ();
-            let b8 = Kl(aA);
-            b8 && je(b8.speaker, b8.text, b8.opts);
+            let b8 = buildAdviceLine(aA);
+            b8 && speakLine(b8.speaker, b8.text, b8.opts);
         },
         aZ = () => {
             const OM = NX;
@@ -1597,7 +1597,7 @@ async function enterCampaignLevel(K) {
     return waitForValue(() => {
         const ON = NX;
         let b4 = aq?.exitRequested ? "menu" : aq?.nextRequested ? "next" : null;
-        return b4 ? (aq && ai(a8, aq.world), aq = null, K.set(null), stopAmbience(), U.hideOverlay(), U.hideClock(), zW(), aZ(), G1(), aw?.(), aw = null, Q.onPause = null, U.onExit = U.onRestart = U.onPause = null, ax?.release().catch(() => {}), ax = null, b4) : null;
+        return b4 ? (aq && ai(a8, aq.world), aq = null, K.set(null), stopAmbience(), U.hideOverlay(), U.hideClock(), zW(), aZ(), destroyComms(), aw?.(), aw = null, Q.onPause = null, U.onExit = U.onRestart = U.onPause = null, ax?.release().catch(() => {}), ax = null, b4) : null;
     });
 }
 async function loadMissionsData() {
