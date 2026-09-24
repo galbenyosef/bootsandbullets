@@ -59,7 +59,7 @@ function WW(g, j, m, p, q, v = -1, y = D.Enemy, A = null, C, E) {
     };
 }
 
-function _1(c, d, g, i, j = D.Player) {
+function createSoldier(c, d, g, i, j = D.Player) {
     const AH = cX;
     return {
         ...h2(c, d, j, f.soldier.radius, g),
@@ -229,7 +229,7 @@ function hashString(c, d) {
     return g >>> 0 || 1;
 }
 
-function BW(j, q, A, C, F = 0) {
+function createWorld(j, q, A, C, F = 0) {
     const AQ = cX;
     Kr(j);
     let H = buildDifficultyLevers(q, j.doctrine);
@@ -250,7 +250,7 @@ function BW(j, q, A, C, F = 0) {
         S = j.playerSpawns.slice(0, R).map((aj, ak) => {
             const AR = AQ;
             let aq = N[ak % N.length];
-            return _1(M, aj, Q(ak), aq);
+            return createSoldier(M, aj, Q(ak), aq);
         }),
         U = buildEnemyArmy(j, H, M, L),
         V = buildBuildings(j, H, L),
@@ -392,14 +392,14 @@ function BW(j, q, A, C, F = 0) {
     return x1(a7), a7.fog.refresh(j, S), a7;
 }
 
-function Fi(c) {
+function countAliveBySide(c) {
     const AS = cX;
     let d = new Array(c.sides).fill(0);
     for (let g of c.soldiers) g.alive && g.faction < c.sides && d[g.faction]++;
     return d;
 }
 
-function g2(c) {
+function winningSideIndex(c) {
     const AT = cX;
     let d = -1,
         g = null,
@@ -407,10 +407,10 @@ function g2(c) {
     for (let j = 0; j < c.length; j++) c[j] > d ? (d = c[j], g = j, i = false) : c[j] === d && (i = true);
     return i ? null : g;
 }
-var eW = (c, d = D.Player) => c.soldiers.filter(g => g.alive && g.faction === d),
-    b2 = (c, d = D.Player) => eW(c, d);
+var aliveSoldiersOfSide = (c, d = D.Player) => c.soldiers.filter(g => g.alive && g.faction === d),
+    b2 = (c, d = D.Player) => aliveSoldiersOfSide(c, d);
 
-function hT(c, d = D.Player) {
+function sideCentroid(c, d = D.Player) {
     const AU = cX;
     let g = 0,
         i = 0,
@@ -422,11 +422,11 @@ function hT(c, d = D.Player) {
     };
 }
 
-function ve(c, d) {
+function registerEnemy(c, d) {
     const AV = cX;
     c.enemies.push(d), c.actors.push(d);
 }
-var Sn = c => c.map.arena || c.map.spawn.maxAlive !== null;
+var isCappedSpawnMode = c => c.map.arena || c.map.spawn.maxAlive !== null;
 
 function x1(c) {
     const AX = cX;
@@ -439,7 +439,7 @@ function spawnIntervalFor(c, d) {
     return c.arenaPace ? g * c.arenaPace(d.owner) : g;
 }
 
-function Vh(c, d) {
+function stepBuildings(c, d) {
     const AZ = cX;
     for (let g of c.buildings) {
         if (g.flash = Math.max(0, g.flash - d * 3), !g.standing) {
@@ -477,11 +477,11 @@ function Vh(c, d) {
             ...c.lastKnown
         } : {
             ...p
-        }, v.memory = f.enemy.alertMemory), ve(c, v), v.faction === D.Enemy && c.enemyTotal++, g.spawned++;
+        }, v.memory = f.enemy.alertMemory), registerEnemy(c, v), v.faction === D.Enemy && c.enemyTotal++, g.spawned++;
     }
 }
 
-function qh(j, q) {
+function stepWaves(j, q) {
     const B7 = cX;
     let A = j.map.waves;
     if (!A || j.wavesSent >= A.count || (j.waveTimer -= q, j.waveTimer > 0)) return;
@@ -505,7 +505,7 @@ function qh(j, q) {
         N = Math.min(N, Math.max(0, j.map.spawn.maxAlive - U));
     }
     let P = j.buildings.find(X => X.role === "protect" && X.standing),
-        Q = P ? P.centre : hT(j),
+        Q = P ? P.centre : sideCentroid(j),
         R = F.map((X, Y) => ({
             b: X,
             k: (Y + j.wavesSent) % F.length
@@ -519,7 +519,7 @@ function qh(j, q) {
             a9 = WW(j, a7, 0, null, j.levers, Y.id, Y.owner, a8);
         P ? a9.state = 0 : (a9.state = 4, a9.investigate = Q ? searchPointNear(j, Q, a9.id, f.wave.fan) : {
             ...a7
-        }, a9.memory = f.enemy.alertMemory), ve(j, a9), j.enemyTotal++, Y.spawned++, S++;
+        }, a9.memory = f.enemy.alertMemory), registerEnemy(j, a9), j.enemyTotal++, Y.spawned++, S++;
     }
     S > 0 && (j.map.waves?.interval ?? 1 / 0) >= f.fx.waveNoticeInterval && (j.sounds.push({
         kind: "klaxon"
@@ -566,7 +566,7 @@ function damageBuilding(c, d, g, i = null, j = null) {
     return l && i && c.fx.spall(i, j ?? d.centre), d.flash = l ? 0.25 : 1, d.hp > 0 ? false : (collapseBuilding(c, d), l && alertEnemiesInRange(c, d.centre, c.levers.hearing * 2, null, f.enemy.alert.blastHold), true);
 }
 
-function ft(d, g, j, m = 0) {
+function buildingAtPoint(d, g, j, m = 0) {
     const Bj = cX;
     let p = d.map.tile;
     for (let q of d.buildings)
@@ -605,7 +605,7 @@ function collapseBuilding(c, d) {
     }
 }
 
-function Uh(g, j, q, v, y) {
+function lineHitsHostage(g, j, q, v, y) {
     const Bq = cX;
     let A = q.x - j.x,
         C = q.y - j.y,
@@ -736,7 +736,7 @@ function markHostageLost(c, d) {
     }, "LOST", "#ff6a48", "bond"));
 }
 
-function zh(c) {
+function collectPickups(c) {
     const BC = cX;
     for (let d of c.supplies)
         if (!(!d.alive || d.collected)) {
@@ -783,7 +783,7 @@ function zh(c) {
             }
 }
 
-function Yh(c, d) {
+function stepMines(c, d) {
     const BD = cX;
     for (let g of c.mines)
         if (g.alive) {
@@ -840,7 +840,7 @@ function explodeAt(d, g, j, m) {
     }
     for (let F of d.hostages) !F.alive || F.delivered || Math.hypot(F.pos.x - g.x, F.pos.y - g.y) <= p && killHostage(d, F);
     for (let H of d.critters) H.alive && Math.hypot(H.pos.x - g.x, H.pos.y - g.y) <= p && killCritter(d, H);
-    let q = ft(d, g.x, g.y, j);
+    let q = buildingAtPoint(d, g.x, g.y, j);
     q && !isProtectedBy(q, m) && damageBuilding(d, q, f.building.blastDamage);
     for (let I of d.crates) I.alive && Math.hypot(I.pos.x - g.x, I.pos.y - g.y) <= j && detonateContainer(d, I);
     triggerMinesNear(d, g.x, g.y, j);
@@ -856,7 +856,7 @@ function detonateContainer(c, d) {
     d.alive && (d.alive = false, explodeAt(c, d.pos, d.barrel ? f.barrel.blastRadius : f.crate.blastRadius));
 }
 
-function y1(g, j, q, v, y) {
+function fireWeapon(g, j, q, v, y) {
     const BH = cX;
     let A = q.x - j.pos.x,
         C = q.y - j.pos.y,
@@ -955,7 +955,7 @@ function stepBullet(d, g, j) {
     return g.pos.x = m, g.pos.y = p, false;
 }
 
-function Zh(c, d) {
+function stepBullets(c, d) {
     const BL = cX;
     for (let g = c.bullets.length - 1; g >= 0; g--) {
         let i = c.bullets[g];
@@ -963,7 +963,7 @@ function Zh(c, d) {
     }
 }
 
-function Ui(c, d) {
+function stepBulletsWithCollision(c, d) {
     const BM = cX;
     let {
         map: g
@@ -975,7 +975,7 @@ function Ui(c, d) {
             continue;
         }
         if (stepBullet(g, l, d)) {
-            let m = ft(c, l.pos.x, l.pos.y, 3);
+            let m = buildingAtPoint(c, l.pos.x, l.pos.y, 3);
             if (m && !isProtectedBy(m, l.faction)) {
                 let o = {
                     x: l.pos.x - l.vel.x,
@@ -1049,7 +1049,7 @@ function resolveBulletHit(c, d) {
     return false;
 }
 
-function Ri(c, d, g, j, l = "frag") {
+function launchGrenade(c, d, g, j, l = "frag") {
     const BS = cX;
     let m = g.x - d.x,
         p = g.y - d.y,
@@ -1080,7 +1080,7 @@ function Ri(c, d, g, j, l = "frag") {
     });
 }
 
-function Rn(c) {
+function grenadeStatus(c) {
     const BT = cX;
     return c.grenadesHeld <= 0 ? "empty" : c.grenadeCooldown > 0 ? "cooling" : 'ok';
 }
@@ -1098,11 +1098,11 @@ function nearestAlly(c, d, g, j = null) {
     return l;
 }
 
-function ht(c, d, g = D.Player, i = c, j = null) {
+function throwGrenadeToAlly(c, d, g = D.Player, i = c, j = null) {
     const BV = cX;
-    if (Rn(i) !== 'ok') return false;
+    if (grenadeStatus(i) !== 'ok') return false;
     let l = nearestAlly(c, g, d, j);
-    return l ? (i.grenadesHeld--, i.grenadeCooldown = f.grenade.cooldown, Ri(c, l.pos, d, g, i.squadThrowable), true) : false;
+    return l ? (i.grenadesHeld--, i.grenadeCooldown = f.grenade.cooldown, launchGrenade(c, l.pos, d, g, i.squadThrowable), true) : false;
 }
 
 function stepProjectile(c, d) {
@@ -1110,7 +1110,7 @@ function stepProjectile(c, d) {
     return c.prev.x = c.pos.x, c.prev.y = c.pos.y, c.t += d / c.duration, c.t >= 1 ? true : (c.pos.x = c.from.x + (c.to.x - c.from.x) * c.t, c.pos.y = c.from.y + (c.to.y - c.from.y) * c.t, false);
 }
 
-function T3(c, d) {
+function stepGrenades(c, d) {
     const BY = cX;
     for (let g = c.grenades.length - 1; g >= 0; g--) stepProjectile(c.grenades[g], d) && c.grenades.splice(g, 1);
 }
@@ -1140,7 +1140,7 @@ function deploySmoke(c, d) {
     }), alertEnemiesInRange(c, d, c.levers.hearing * 0.3);
 }
 
-function gt(c, d) {
+function stepClouds(c, d) {
     const C5 = cX;
     for (let g = c.clouds.length - 1; g >= 0; g--) c.clouds[g].life -= d, c.clouds[g].life <= 0 && c.clouds.splice(g, 1);
 }
@@ -1490,7 +1490,7 @@ var silhouetteShadowOffset = {
         }
     };
 
-function k2(c, d) {
+function requestCallIn(c, d) {
     const CP = cX;
     return c.callInsLeft <= 0 || c.callIn !== null || c.squadCallIn === "none" ? false : (c.callInsLeft--, c.callInsUsed++, c.callIn = {
         kind: c.squadCallIn,
@@ -1528,7 +1528,7 @@ function chuteProgress(c) {
     return Math.max(0, Math.min(1, (c.t - d.dropAt) / d.chuteTime));
 }
 
-function c3(c, d) {
+function stepCallIn(c, d) {
     const CU = cX;
     let g = c.callIn;
     if (!g) return;
@@ -1565,7 +1565,7 @@ function resolveCallinDrop(c, d, g) {
                 x: j.x + l * 14 - 7,
                 y: j.y + 6
             });
-        c.soldiers.push(_1(c, p, c.squadWeapon, m));
+        c.soldiers.push(createSoldier(c, p, c.squadWeapon, m));
     }
     c.reserves = [], x1(c);
 }
@@ -1798,7 +1798,7 @@ var AimRenderer = class {
             let j = this.ctx,
                 l = 1 / g;
             if (d.mode === "fire") {
-                if (!hT(c)) return;
+                if (!sideCentroid(c)) return;
                 drawSkull(this.ctx, d.point, Qo.crosshair, gT.night);
                 return;
             }
@@ -2043,7 +2043,7 @@ function clearCanvas(c) {
     const DY = cX;
     c && (c.width = 0, c.height = 0);
 }
-var tr = class {
+var WorldRenderer = class {
         constructor(c) {
             const DZ = cX;
             this.ctx = c, (this.figures = new Xi(c, this.atlas), this.effects = new ShadowRenderer(c, this.atlas), this.markers = new AimRenderer(c, this.atlas), this.props = new Tr(c, this.atlas), this.water = new Wr(c));
@@ -2363,7 +2363,7 @@ function h3() {
         return "ontouchstart" in window;
     }
 }
-var nr = class {
+var ViewportController = class {
         constructor(c, d) {
             const EI = cX;
             this.canvas = c, this.ctx = d, this.state = {
@@ -2456,7 +2456,7 @@ var nr = class {
         } armGrenade(c) {
             const EU = cX;
             this.mode = "grenade", this.placed = false;
-            let d = hT(c, c.viewSide ?? D.Player) ?? {
+            let d = sideCentroid(c, c.viewSide ?? D.Player) ?? {
                 x: 0,
                 y: 0
             };
@@ -2469,7 +2469,7 @@ var nr = class {
             this.mode = "fire", this.point.x = c.x, this.point.y = c.y;
         } fireAlong(c, d) {
             const EZ = cX;
-            let g = hT(c, c.viewSide ?? D.Player);
+            let g = sideCentroid(c, c.viewSide ?? D.Player);
             if (!g) return;
             let i = Math.hypot(d.x, d.y);
             if (i < 0.001) return;
@@ -2481,7 +2481,7 @@ var nr = class {
             let g = f.grenade,
                 j = null,
                 l = 1 / 0;
-            for (let m of eW(c, c.viewSide ?? D.Player)) {
+            for (let m of aliveSoldiersOfSide(c, c.viewSide ?? D.Player)) {
                 if (m.wading) continue;
                 let p = Math.hypot(m.pos.x - d.x, m.pos.y - d.y);
                 p < l && (l = p, j = m);
@@ -2494,7 +2494,7 @@ var nr = class {
                 let q = g.throwRange / l;
                 this.point.x = j.pos.x + (d.x - j.pos.x) * q, this.point.y = j.pos.y + (d.y - j.pos.y) * q;
             } else this.point.x = d.x, this.point.y = d.y;
-            this.friendly = eW(c, c.viewSide ?? D.Player).some(s => Math.hypot(s.pos.x - this.point.x, s.pos.y - this.point.y) <= g.blastRadius);
+            this.friendly = aliveSoldiersOfSide(c, c.viewSide ?? D.Player).some(s => Math.hypot(s.pos.x - this.point.x, s.pos.y - this.point.y) <= g.blastRadius);
         } canThrow(c) {
             const F7 = cX;
             return this.mode === "grenade" && !this.blocked && c.grenadesHeld > 0 && c.grenadeCooldown <= 0;
@@ -3247,18 +3247,18 @@ var nr = class {
 function tickHoldSurvive(c, d) {
     const GP = cX;
     if (c.map.objective === "hold") {
-        let g = eW(c);
+        let g = aliveSoldiersOfSide(c);
         c.inZone = g.some(i => c.extraction.some(j => Math.hypot(j.x - i.pos.x, j.y - i.pos.y) <= j.pad + f.extraction.radius)), c.inZone && (c.heldFor = Math.min(c.map.duration, c.heldFor + d));
         return;
     }
     c.map.objective === "survive" && (c.timeLeft = Math.max(0, c.timeLeft - d));
 }
 
-function w2(c) {
+function objectiveStatus(c) {
     const GQ = cX;
     switch (c.map.objective) {
         case "skirmish": {
-            let d = Fi(c),
+            let d = countAliveBySide(c),
                 g = d[D.Player] ?? 0,
                 i = d.reduce((j, l, m) => m === D.Player ? j : j + l, 0);
             return {
@@ -3290,7 +3290,7 @@ function w2(c) {
             };
         }
         case "reach": {
-            let p = eW(c),
+            let p = aliveSoldiersOfSide(c),
                 q = p.filter(r => c.extraction.some(s => Math.hypot(s.x - r.pos.x, s.y - r.pos.y) <= s.pad + f.extraction.radius)).length;
             return {
                 status: q + '/' + p.length + " at extraction" + ar(c),
@@ -3369,17 +3369,17 @@ function waveStatusText(c) {
 
 function objectiveFailed(c) {
     const GS = cX;
-    if (eW(c).length === 0 || c.map.nokill && c.kills > 0 || c.map.timeLimit > 0 && c.time >= c.map.timeLimit || c.map.objective === "rescue" && c.hostages.some(g => !g.alive && !g.delivered) || c.map.objective === "collect" && c.supplies.some(g => !g.alive && !g.collected)) return true;
+    if (aliveSoldiersOfSide(c).length === 0 || c.map.nokill && c.kills > 0 || c.map.timeLimit > 0 && c.time >= c.map.timeLimit || c.map.objective === "rescue" && c.hostages.some(g => !g.alive && !g.delivered) || c.map.objective === "collect" && c.supplies.some(g => !g.alive && !g.collected)) return true;
     let d = protectBuildingOf(c);
     return !!(d && !d.standing);
 }
 var protectBuildingOf = c => c.buildings.find(d => d.role === "protect") ?? null;
 
-function _3(c, d) {
+function advanceObjectivePhase(c, d) {
     const GU = cX;
     if (c.phase !== 0) return;
     tickHoldSurvive(c, d);
-    let g = w2(c);
+    let g = objectiveStatus(c);
     c.status = g.status, g.won ? (c.phase = 1, c.phaseTime = 0) : objectiveFailed(c) && (c.phase = 2, c.phaseTime = 0);
 }
 var OBJECTIVE_TEXT = {
@@ -3397,7 +3397,7 @@ var OBJECTIVE_TEXT = {
     cull: "Kill every chicken"
 };
 
-function _t(c) {
+function objectiveLabel(c) {
     const GV = cX;
     let d = c.objective === "survive" && c.protects ? "Hold the outpost until the clock runs down" : OBJECTIVE_TEXT[c.objective] ?? c.objective,
         g = c.objective === "reach" || c.objective === "covert",
@@ -3712,7 +3712,7 @@ function loadBestScores() {
     }
 }
 
-function C3(c, d, g) {
+function recordChallengeScore(c, d, g) {
     const HF = cX;
     let j = g[0] ?? "time",
         l = pr[j],
@@ -3739,7 +3739,7 @@ function C3(c, d, g) {
 }
 var SQUAD_NAMES = ["ABLE", "BAKER", "CHARLIE", "DOG", "EASY", "FOX"];
 
-function A3(c) {
+function buildSquad(c) {
     const HG = cX;
     let d = [];
     for (let g = 0; g < c; g++) {
@@ -3980,7 +3980,7 @@ var BriefingOverlay = class {
                 C = w("div", "briefing-ident");
             j.missionNumber > 0 && C.appendChild(w("div", "briefing-num", "MISSION " + String(j.missionNumber).padStart(2, '0'))), j.theatreName && C.appendChild(w("div", "briefing-theatre", j.theatreName.toUpperCase())), A.appendChild(C), A.appendChild(w("div", "briefing-title", g.map.name.toUpperCase())), A.appendChild(w("div", "briefing-bonds")), q.appendChild(A), q.appendChild(w("div", "briefing-rule bare"));
             let E = w("div", "briefing-box");
-            y("briefing-obj", _t(g.map), E), g.map.brief && y("briefing-line", g.map.brief, E);
+            y("briefing-obj", objectiveLabel(g.map), E), g.map.brief && y("briefing-line", g.map.brief, E);
             let F = w("div", "briefing-chips");
             if (g.map.nokill && F.appendChild(w("span", "mi-chip warn", "NO KILLING")), g.map.timeLimit > 0 && F.appendChild(w("span", "mi-chip warn", formatClock(g.map.timeLimit) + " LIMIT")), F.childElementCount > 0 && E.appendChild(F), q.appendChild(E), !(g.map.challenge !== null)) {
                 let I = w("div", "briefing-diff"),

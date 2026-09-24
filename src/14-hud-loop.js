@@ -313,7 +313,7 @@ function waitForValue(c) {
 }
 async function prepareWithLoading(c, d, g) {
     const LX = cX;
-    showLoading(), await doubleFrame(), await c.prepareStaged(d, BW(d, g), async i => {
+    showLoading(), await doubleFrame(), await c.prepareStaged(d, createWorld(d, g), async i => {
         stepLoading(i), await doubleFrame();
     }), hideLoading();
 }
@@ -343,7 +343,7 @@ async function enterSpectatorMode(d) {
     } = d.shell, u = null;
     fadeOutMusic();
     let v = parseMapDef(aT[SPECTATOR_MAP], SPECTATOR_MAP);
-    j.prepare(v, BW(v, "veteran")), m.mode = "spectator", document.body.dataset.mode = "spectator", q.apply(), u = new St(v, g, m, () => j.clearDecals());
+    j.prepare(v, createWorld(v, "veteran")), m.mode = "spectator", document.body.dataset.mode = "spectator", q.apply(), u = new St(v, g, m, () => j.clearDecals());
     let y = u;
     d.set({
         name: "arena",
@@ -394,13 +394,13 @@ function createSkirmishWorld(g, j = f.skirmish.seconds, m = DEFAULT_LOADOUT, p =
     const M9 = cX;
     let A = Number.isInteger(v) && v > 0 ? v : f.skirmish.squad,
         C = Math.max(1, Math.min(A, g.playerSpawns.length, g.playerSpawnsB.length)),
-        E = BW(g, "rookie", p5(o_, C), {
+        E = createWorld(g, "rookie", p5(o_, C), {
             weapon: m.weapon,
             grenades: m.grenades,
             throwable: m.throwable
         }, u),
         F = p5(i_, C);
-    for (let H = 0; H < C; H++) E.soldiers.push(_1(E, g.playerSpawnsB[H], p.weapon, F[H], D.Enemy));
+    for (let H = 0; H < C; H++) E.soldiers.push(createSoldier(E, g.playerSpawnsB[H], p.weapon, F[H], D.Enemy));
     x1(E), E.fog = new ze(g, y), E.playerSides = [D.Player, D.Enemy], E.fog.refresh(g, E.soldiers, D.Player), E.seatColours = q;
     for (let I of E.soldiers) I.owner = I.faction === D.Player ? 0 : 1;
     return E.autoEngage = false, E.sideB = {
@@ -429,13 +429,13 @@ function checkSkirmishEnd(c) {
     const Mj = cX;
     let d = c.skirmish;
     if (!d || d.over) return;
-    let g = Fi(c),
+    let g = countAliveBySide(c),
         i = g.filter(j => j > 0).length;
     if (i <= 1) {
-        d.over = true, d.reason = "elimination", d.winner = i === 0 ? null : g2(g);
+        d.over = true, d.reason = "elimination", d.winner = i === 0 ? null : winningSideIndex(g);
         return;
     }
-    c.time >= d.endsAt && (d.over = true, d.reason = "time", d.winner = g2(g));
+    c.time >= d.endsAt && (d.over = true, d.reason = "time", d.winner = winningSideIndex(g));
 }
 var SideCommander = class {
         constructor(c, d) {
@@ -505,12 +505,12 @@ var SideCommander = class {
             };
         } maybeGrenade(c, d, g) {
             const MA = cX;
-            if (Rn(this.ctx) !== 'ok') return;
+            if (grenadeStatus(this.ctx) !== 'ok') return;
             let i = f.skirmish;
             for (let j of g) {
                 if (g.filter(m => Math.hypot(m.pos.x - j.pos.x, m.pos.y - j.pos.y) < i.grenadeCluster).length < 2) continue;
                 let l = d.find(m => !m.wading && Math.hypot(m.pos.x - j.pos.x, m.pos.y - j.pos.y) <= f.grenade.throwRange);
-                if (l && ht(c, j.pos, this.side, this.ctx, l)) return;
+                if (l && throwGrenadeToAlly(c, j.pos, this.side, this.ctx, l)) return;
             }
         }
     },
@@ -532,7 +532,7 @@ function centroidOf(c) {
 }
 
 function squadFocus(c, d) {
-    return hT(c, d);
+    return sideCentroid(c, d);
 }
 
 function commandedFocus(g, j) {
@@ -605,7 +605,7 @@ var SkirmishSession = class {
             const MG = cX;
             let c = createSkirmishWorld(this.map, this.seconds, void 0, void 0, [], 0, f.skirmish.squad, f.skirmish.fog);
             this.renderer.clearDecals();
-            let d = hT(c);
+            let d = sideCentroid(c);
             return d && this.camera.centreOn(d, this.map), this.camera.release(), c;
         } restart() {
             const MH = cX;
@@ -616,7 +616,7 @@ var SkirmishSession = class {
             this.input.syncWorld(this.camera), this.input.syncAim(d), this.handleCommands(), this.moveCamera(c), d.skirmish?.over || this.commander.step(d, c), wt(d, c, {
                 manualAim: this.input.firing ? this.input.aim.point : null,
                 cursor: this.input.inside ? this.input.world : null
-            }), checkSkirmishEnd(d), d.status = w2(d).status, d.skirmish?.over && !this.overFired && (this.overFired = true, d.skirmish.winner === d.viewSide ? d.sounds.push({
+            }), checkSkirmishEnd(d), d.status = objectiveStatus(d).status, d.skirmish?.over && !this.overFired && (this.overFired = true, d.skirmish.winner === d.viewSide ? d.sounds.push({
                 kind: "win"
             }) : d.sounds.push({
                 kind: "lose"
@@ -648,7 +648,7 @@ var SkirmishSession = class {
                 }
                 if (d.type === "callin" || d.type === "armcallin" || d.type === "select") continue;
                 if (d.type === "march") {
-                    let i = hT(c),
+                    let i = sideCentroid(c),
                         j = f.controls.marchStep;
                     i && (ae(c, {
                         x: i.x + d.dir.x * j,
@@ -664,7 +664,7 @@ var SkirmishSession = class {
         } tryGrenade() {
             const MK = cX;
             let c = this.world;
-            ht(c, {
+            throwGrenadeToAlly(c, {
                 ...this.input.aim.point
             }, D.Player, c, this.input.aim.thrower) && this.input.aim.idle();
         } moveCamera(c) {
@@ -677,8 +677,8 @@ var SkirmishSession = class {
         } standing() {
             const MM = cX;
             return {
-                a: eW(this.world, D.Player).length,
-                b: eW(this.world, D.Enemy).length
+                a: aliveSoldiersOfSide(this.world, D.Player).length,
+                b: aliveSoldiersOfSide(this.world, D.Enemy).length
             };
         }
     },
@@ -774,7 +774,7 @@ async function enterSkirmish(g, j) {
 
 function stepWorld(c, d) {
     const MZ = cX;
-    c.fx.step(d), c.fog.step(c.map, c.soldiers, d, c.viewSide ?? D.Player), Zh(c, d), T3(c, d), gt(c, d), advanceCorpseFade(c, d), advanceCritterCorpseFade(c, d);
+    c.fx.step(d), c.fog.step(c.map, c.soldiers, d, c.viewSide ?? D.Player), stepBullets(c, d), stepGrenades(c, d), stepClouds(c, d), advanceCorpseFade(c, d), advanceCritterCorpseFade(c, d);
 }
 var syncLerpRate = 14,
     c_ = 100,
@@ -784,7 +784,7 @@ var syncLerpRate = 14,
             this.map = c, this.camera = d, this.input = j, (this.serverSide = l.side, this.roundId = l.roundId, this.world = createSkirmishWorld(c, l.seconds, void 0, void 0, l.colours, 0, l.squad, l.fog ? f.skirmish.fog : 0), this.world.viewSide = l.side, this.input.edgeScrollBlocked = !l.edgeScroll);
             let m = (performance.now() - (l.receivedAt ?? performance.now())) / 1000;
             this.world.preroll = Math.max(0, l.preroll - m), this.world.round = l.round, g.clearDecals();
-            let p = hT(this.world, this.serverSide);
+            let p = sideCentroid(this.world, this.serverSide);
             p && this.camera.centreOn(p, c), this.camera.release();
         } ["world"];
         ["exitRequested"] = false;
@@ -977,7 +977,7 @@ var syncLerpRate = 14,
                 A.angle += I * E;
             }
             d.orderMarker = Math.max(0, d.orderMarker - c);
-            let g = eW(d, this.serverSide).length,
+            let g = aliveSoldiersOfSide(d, this.serverSide).length,
                 j = d.soldiers.filter(K => K.alive && K.faction !== this.serverSide).length;
             d.status = g + " v " + j;
         } sendTrigger() {
@@ -1007,7 +1007,7 @@ var syncLerpRate = 14,
                     if (c.type === "order" || c.type === "march") {
                         let d = c.type === "order" ? c.world : null;
                         if (c.type === "march") {
-                            let g = hT(this.world, this.serverSide),
+                            let g = sideCentroid(this.world, this.serverSide),
                                 i = f.controls.marchStep;
                             d = g ? {
                                 x: g.x + c.dir.x * i,
@@ -1046,7 +1046,7 @@ var syncLerpRate = 14,
         } standing() {
             const Nv = cX;
             return {
-                a: eW(this.world, this.serverSide).length,
+                a: aliveSoldiersOfSide(this.world, this.serverSide).length,
                 b: this.world.soldiers.filter(c => c.alive && c.faction !== this.serverSide).length
             };
         }
@@ -1207,9 +1207,9 @@ var MissionSession = class {
         ["autopilot"] = null;
         newWorld() {
             const NL = cX;
-            let c = BW(this.map, this.difficulty, this.roster(), this.loadout(), this.runSeed);
+            let c = createWorld(this.map, this.difficulty, this.roster(), this.loadout(), this.runSeed);
             this.renderer.clearDecals();
-            let d = hT(c);
+            let d = sideCentroid(c);
             return d && this.camera.centreOn(d, this.map), this.camera.release(), c;
         } restart() {
             const NM = cX;
@@ -1226,12 +1226,12 @@ var MissionSession = class {
                     manualAim: this.autopilot?.aim ?? (this.input.firing ? this.input.aim.point : null),
                     targeted: this.autopilot != null,
                     cursor: this.input.inside ? this.input.world : null
-                }), g === 0 && (_3(d, c), d.phase !== g)) {
+                }), g === 0 && (advanceObjectivePhase(d, c), d.phase !== g)) {
                 if (d.phase === 1) {
                     d.sounds.push({
                         kind: "win"
                     });
-                    for (let i of eW(d)) i.angle = Math.PI / 2, i.vel.x = 0, i.vel.y = 0;
+                    for (let i of aliveSoldiersOfSide(d)) i.angle = Math.PI / 2, i.vel.x = 0, i.vel.y = 0;
                 } else d.phase === 2 && d.sounds.push({
                     kind: "lose"
                 });
@@ -1267,12 +1267,12 @@ var MissionSession = class {
                     continue;
                 }
                 if (d.type === "callin") {
-                    k2(c, d.at) && this.onCallIn?.(c.squadCallIn);
+                    requestCallIn(c, d.at) && this.onCallIn?.(c.squadCallIn);
                     continue;
                 }
                 if (d.type === "select") continue;
                 if (d.type === "march") {
-                    let i = hT(c),
+                    let i = sideCentroid(c),
                         j = f.controls.marchStep;
                     i && (ae(c, {
                         x: i.x + d.dir.x * j,
@@ -1288,15 +1288,15 @@ var MissionSession = class {
         } tryGrenade(c) {
             const NQ = cX;
             let d = this.world,
-                g = Rn(d);
+                g = grenadeStatus(d);
             if (g !== 'ok') {
-                let i = hT(d) ?? c;
+                let i = sideCentroid(d) ?? c;
                 g === "empty" ? d.fx.popup(i, "no grenades", "#ff6a48") : d.fx.popup(i, "reloading", "#d8a13c"), d.sounds.push({
                     kind: "denied"
                 });
                 return;
             }
-            ht(d, c, D.Player, d, this.input.aim.thrower);
+            throwGrenadeToAlly(d, c, D.Player, d, this.input.aim.thrower);
         } moveCamera(c) {
             const NR = cX;
             let d = this.input.consumePan(this.camera.zoom),
@@ -1323,7 +1323,7 @@ var MissionSession = class {
             if (this.fresh(c), this.said >= d.nudgeMax || this.order > d.nudgeUntilOrder || c.time < this.nextAt || isCommsBusy()) return null;
             this.said++, this.nextAt = c.time + d.nudgeEvery;
             let g = p_.has(c.map.objective) ? Math.max(0, c.enemyTotal - c.kills) : null;
-            return buildDispatchLine(_t(c.map), g, c.jitter());
+            return buildDispatchLine(objectiveLabel(c.map), g, c.jitter());
         } step(c) {
             const NV = cX;
             let d = this.due(c);
@@ -1364,7 +1364,7 @@ async function enterCampaignLevel(K) {
         aE = !aC && currentCallIn(a8) === "reinforcements",
         aF = () => {
             const NZ = NX;
-            if (aC) return aD = [], A3(aA.squadSize);
+            if (aC) return aD = [], buildSquad(aA.squadSize);
             let b4 = fillSquadToCapacity(a8, aA.squadSize + (aE ? f.callin.reserves : 0));
             return aD = b4.slice(aA.squadSize), b4.slice(0, aA.squadSize);
         },
@@ -1548,7 +1548,7 @@ async function enterCampaignLevel(K) {
     aq.onResolved = b4 => {
         const OJ = NX;
         if (aC) {
-            U.close(null, null, aA.challenge ? C3(a7.id, b4, aA.challenge.score) : null), aa(a7.id, ak, aB, b4.phase === 1, aU(b4)), recordMissionOutcome(b4.phase === 1);
+            U.close(null, null, aA.challenge ? recordChallengeScore(a7.id, b4, aA.challenge.score) : null), aa(a7.id, ak, aB, b4.phase === 1, aU(b4)), recordMissionOutcome(b4.phase === 1);
             return;
         }
         settleCallInUse(a8, b4);
@@ -1570,8 +1570,8 @@ async function enterCampaignLevel(K) {
             bonds: b8.bonds.total,
             balance: a8.bonds
         }), recordMissionOutcome(b4.phase === 1);
-    }, ambienceStatus, WW, ve, IW, nW;
-    let aV = hT(aq.world);
+    }, ambienceStatus, WW, registerEnemy, IW, nW;
+    let aV = sideCentroid(aq.world);
     aV && L.centreOn(aV, aA);
     let aX = () => {
             const OK = NX;

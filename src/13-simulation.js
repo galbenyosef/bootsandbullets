@@ -40,7 +40,7 @@
             })), c.skirmish || this.mission.appendChild(Object.assign(document.createElement("span"), {
                 className: "hud-diff diff-" + c.difficulty,
                 textContent: DIFFICULTIES[c.difficulty].name
-            })), this.goal.textContent = _t(c.map), this.plates = [], this.lastPhase = null), this.ensureRoster(c);
+            })), this.goal.textContent = objectiveLabel(c.map), this.plates = [], this.lastPhase = null), this.ensureRoster(c);
             let g = this.mine(c);
             for (let q = 0; q < this.plates.length; q++) {
                 let s = g[q].alive;
@@ -439,9 +439,9 @@ async function q3() {
             alpha: false
         }),
         g = new CameraState(),
-        j = new tr(d);
+        j = new WorldRenderer(d);
     j.setBlood(G().blood), onSettingsChange(u => j.setBlood(u.blood)), buildSpriteVars(), await setLoadPhase("sprites");
-    let l = new nr(c, d),
+    let l = new ViewportController(c, d),
         m = new rr(c, l),
         p = new Ln(),
         q = new sr(m, l);
@@ -745,7 +745,7 @@ var musterRadius = 34,
                         y: j[0].centre.y - c.map.tile * 2
                     },
                     m = WW(c, l, 1, null, c.sideLevers[g], -1, g);
-                ve(c, m), m.squad = -2;
+                registerEnemy(c, m), m.squad = -2;
             }
             c.arenaPace = p => {
                 const Kv = Kq;
@@ -844,7 +844,7 @@ function spawnReinforcements(g, j) {
             });
         if (A.some(L => Math.hypot(L.pos.x - I.x, L.pos.y - I.y) < y)) continue;
         let K = WW(g, I, 0, null, g.levers, -1, D.Enemy, g.map.personas);
-        re(g, K), K.state = 0, ve(g, K), g.enemyTotal++, C++;
+        re(g, K), K.state = 0, registerEnemy(g, K), g.enemyTotal++, C++;
     }
 }
 var pathFollowDistance = 40,
@@ -863,7 +863,7 @@ function Er(c, d, g = 9, j) {
         kind: "enemy",
         actor: l
     };
-    let p = ft(c, d.x, d.y, 2);
+    let p = buildingAtPoint(c, d.x, d.y, 2);
     return p && p.role !== "protect" ? {
         kind: "building",
         building: p
@@ -1014,7 +1014,7 @@ function $6(c, d, g) {
     const KP = cX;
     let j = f.soldier.manualFan;
     if (j <= 0) return g;
-    let l = hT(c, d.faction);
+    let l = sideCentroid(c, d.faction);
     if (!l) return g;
     let m = d.pos.x - l.x,
         p = d.pos.y - l.y,
@@ -1063,7 +1063,7 @@ function tickFire(c, d, g, j, m, p, q = false) {
         let E = rankWeaponModifiers(g);
         g.fireCooldown = E.fireInterval, g.fireLatch = 0;
         let F = _T[g.weapon];
-        y1(c, g, v, E.spread, u ? F.fireRange * m.manualRange : void 0);
+        fireWeapon(c, g, v, E.spread, u ? F.fireRange * m.manualRange : void 0);
     }
 }
 
@@ -1091,7 +1091,7 @@ function findEngageTarget(c, d) {
     for (let p of c.actors) {
         if (!p.alive || p.faction === d.faction) continue;
         let q = Math.hypot(p.pos.x - d.pos.x, p.pos.y - d.pos.y);
-        isCritterNoticing(c, p, q) && q < l && kW(c.map, d.pos, p.pos) && PW(c.map, d.pos, p.pos) && !Uh(c, d.pos, p.pos, j.spread, m) && (l = q, g = p);
+        isCritterNoticing(c, p, q) && q < l && kW(c.map, d.pos, p.pos) && PW(c.map, d.pos, p.pos) && !lineHitsHostage(c, d.pos, p.pos, j.spread, m) && (l = q, g = p);
     }
     return g;
 }
@@ -1129,7 +1129,7 @@ function wt(c, d, g, i = null) {
         return;
     }
     if (c.time += d, c.phaseTime += d, c.stepIndex++, c.phase !== 0) {
-        c.fx.step(d), Ui(c, d), $i(c, d), gt(c, d), spawnCritterCorpseFx(c, d), spawnCorpseFx(c, d);
+        c.fx.step(d), stepBulletsWithCollision(c, d), $i(c, d), stepClouds(c, d), spawnCritterCorpseFx(c, d), spawnCorpseFx(c, d);
         return;
     }
     if (c.orderMarker = Math.max(0, c.orderMarker - d), c.shouts.length > 0) {
@@ -1138,7 +1138,7 @@ function wt(c, d, g, i = null) {
     }
     c.grenadeCooldown = Math.max(0, c.grenadeCooldown - d), c.herdField && (c.herdField.age += d), c.hostageField && (c.hostageField.age += d), c.sideB && (c.sideB.grenadeCooldown = Math.max(0, c.sideB.grenadeCooldown - d), c.sideB.orderMarker = Math.max(0, c.sideB.orderMarker - d)), c.screams.length = 0, c.deaths.length = 0, c.sounds.length = 0, updateCampAnchor(c, d), applyCampingPressure(c);
     let j = collectWorldActors(c);
-    c.hash.rebuild(j), g && thinkSoldier(c, d, g.manualAim, g.cursor, c, D.Player, g.targeted), c.sideB && thinkSoldier(c, d, i?.manualAim ?? null, null, c.sideB, D.Enemy), tickEnemies(c, d), $h(c, d), mh(c, d), $3(c, d), x0(j, c.hash, c.map, 2), c.lastKnownAge += d, c.fog.step(c.map, c.soldiers, d, c.viewSide ?? D.Player), Vh(c, d), qh(c, d), Ui(c, d), $i(c, d), gt(c, d), c3(c, d), spawnCorpseFx(c, d), Yh(c, d), zh(c), c.fx.step(d), Sn(c) && reapDeadActors(c, d);
+    c.hash.rebuild(j), g && thinkSoldier(c, d, g.manualAim, g.cursor, c, D.Player, g.targeted), c.sideB && thinkSoldier(c, d, i?.manualAim ?? null, null, c.sideB, D.Enemy), tickEnemies(c, d), $h(c, d), mh(c, d), $3(c, d), x0(j, c.hash, c.map, 2), c.lastKnownAge += d, c.fog.step(c.map, c.soldiers, d, c.viewSide ?? D.Player), stepBuildings(c, d), stepWaves(c, d), stepBulletsWithCollision(c, d), $i(c, d), stepClouds(c, d), stepCallIn(c, d), spawnCorpseFx(c, d), stepMines(c, d), collectPickups(c), c.fx.step(d), isCappedSpawnMode(c) && reapDeadActors(c, d);
 }
 
 function reapDeadActors(c, d) {
@@ -1163,7 +1163,7 @@ var St = class {
         ["idle"] = 0;
         newWorld() {
             const L5 = cX;
-            let c = BW(this.map, "veteran", void 0, void 0, this.runSeed);
+            let c = createWorld(this.map, "veteran", void 0, void 0, this.runSeed);
             return this.onClearDecals(), c.fog = new ze(this.map, 0), c.viewSide = null, c;
         } centre() {
             const L7 = cX;
@@ -1231,7 +1231,7 @@ function Y3(c) {
             try {
                 if (q) g.prepare(u, q.world);
                 else {
-                    u = parseMapDef(aT[z3], z3), g.prepare(u, BW(u, "veteran"));
+                    u = parseMapDef(aT[z3], z3), g.prepare(u, createWorld(u, "veteran"));
                     let F = Math.floor(Math.random() * 2147483647);
                     q = new St(u, d, j, () => g.clearDecals(), true, F);
                 }

@@ -723,7 +723,7 @@ function applyCampingPressure(c) {
 
 function updateCampAnchor(c, d) {
     const xG = cX;
-    let g = hT(c);
+    let g = sideCentroid(c);
     if (!g) return;
     if (!c.campAnchor) {
         c.campAnchor = {
@@ -1129,7 +1129,7 @@ function computeEnemyPath(c, d, g) {
 
 function searchHerdField(c, d, g) {
     const yw = cX;
-    if (!Sn(c)) return null;
+    if (!isCappedSpawnMode(c)) return null;
     let j = c.lastKnown;
     if (!j) return null;
     let l = f.enemy.searchSpread * searchSpreadScale * 1.5;
@@ -1240,7 +1240,7 @@ function tryFire(d, g) {
         y = v || PW(d.map, g.pos, m);
     if (y && u <= g.stats.fireRange && !g.wading && (g.angle = Math.atan2(q, p), g.fireCooldown <= 0)) {
         let E = g.traits.triggerHappy ? f.enemy.triggerHappy : null;
-        g.fireCooldown = g.stats.fireInterval * (E ? E.rate : 1) * (0.8 + d.jitter(g.faction) * 0.4), y1(d, g, m, g.stats.spread * (E ? E.spread : 1)), g.fought = true;
+        g.fireCooldown = g.stats.fireInterval * (E ? E.rate : 1) * (0.8 + d.jitter(g.faction) * 0.4), fireWeapon(d, g, m, g.stats.spread * (E ? E.spread : 1)), g.fought = true;
     }
     pickGrenadeTarget(d, g, u);
     let A = updateCoverSpot(d, g, m);
@@ -1289,7 +1289,7 @@ function pickGrenadeTarget(d, g, j) {
         });
     }
     let u = g.traits.grenadeKind === "frag" ? f.enemy.grenadeMinCluster : 1;
-    !p || q < u || Math.hypot(p.x - g.pos.x, p.y - g.pos.y) > f.enemy.grenadeRange || (g.grenades--, g.grenadeCooldown = f.enemy.grenadeCooldown, Ri(d, g.pos, p, g.faction, g.traits.grenadeKind));
+    !p || q < u || Math.hypot(p.x - g.pos.x, p.y - g.pos.y) > f.enemy.grenadeRange || (g.grenades--, g.grenadeCooldown = f.enemy.grenadeCooldown, launchGrenade(d, g.pos, p, g.faction, g.traits.grenadeKind));
 }
 
 function tickFidget(c, d, g) {
@@ -1362,7 +1362,7 @@ function protectBuilding(c, d) {
     let j = g.centre.x - d.pos.x,
         l = g.centre.y - d.pos.y,
         m = Math.hypot(j, l) || 1;
-    if (m <= d.stats.fireRange && PW(c.map, d.pos, g.centre) && !d.wading) return d.angle = Math.atan2(l, j), d.fireCooldown <= 0 && (d.fireCooldown = d.stats.fireInterval * (0.8 + c.jitter(d.faction) * 0.4), y1(c, d, g.centre, d.stats.spread)), null;
+    if (m <= d.stats.fireRange && PW(c.map, d.pos, g.centre) && !d.wading) return d.angle = Math.atan2(l, j), d.fireCooldown <= 0 && (d.fireCooldown = d.stats.fireInterval * (0.8 + c.jitter(d.faction) * 0.4), fireWeapon(c, d, g.centre, d.stats.spread)), null;
     let p = d.stats.fireRange * (0.62 + mT(d.id, 3) * 0.26);
     return findOpenPosition(c.map, {
         x: g.centre.x - j / m * p,
