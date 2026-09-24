@@ -774,7 +774,7 @@ async function enterSkirmish(g, j) {
 
 function stepWorld(c, d) {
     const MZ = cX;
-    c.fx.step(d), c.fog.step(c.map, c.soldiers, d, c.viewSide ?? D.Player), Zh(c, d), T3(c, d), gt(c, d), oh(c, d), uh(c, d);
+    c.fx.step(d), c.fog.step(c.map, c.soldiers, d, c.viewSide ?? D.Player), Zh(c, d), T3(c, d), gt(c, d), advanceCorpseFade(c, d), advanceCritterCorpseFade(c, d);
 }
 var syncLerpRate = 14,
     c_ = 100,

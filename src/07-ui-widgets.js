@@ -5767,7 +5767,7 @@ var jf = [60, 180, 300],
 
 function Da(c, d = ky) {
     const qX = cX;
-    return typeof c != "string" ? '' : c.toUpperCase().replace(/[^A-Z0-9 ]/g, '').replace(/\s+/g, ' ').trim().slice(0, d).trim();
+    return typeof c != "string" ? '' : c.toUpperCase().replace(/[^A-backOffPoint-9 ]/g, '').replace(/\s+/g, ' ').trim().slice(0, d).trim();
 }
 var ei = 255,
     Pf = [1, 3, 5, 10],

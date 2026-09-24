@@ -648,7 +648,7 @@ var musterRadius = 34,
             }
             for (let i of this.squads) {
                 if (i.members = i.members.filter(j => j.alive), i.age += c, i.goal === null) {
-                    this.world.squadFields[i.id] || (this.world.squadFields[i.id] = yW(this.world.map, i.rally, true)), (i.members.filter(j => Math.hypot(j.pos.x - i.rally.x, j.pos.y - i.rally.y) < musterRadius).length >= f.arena.squadSize || i.age > f.arena.musterTimeout && i.members.length > 0) && this.commit(i);
+                    this.world.squadFields[i.id] || (this.world.squadFields[i.id] = buildDistanceField(this.world.map, i.rally, true)), (i.members.filter(j => Math.hypot(j.pos.x - i.rally.x, j.pos.y - i.rally.y) < musterRadius).length >= f.arena.squadSize || i.age > f.arena.musterTimeout && i.members.length > 0) && this.commit(i);
                     continue;
                 }
                 i.retarget -= c, i.retarget <= 0 && (i.retarget = f.arena.retargetInterval, this.aim(i));
@@ -699,7 +699,7 @@ var musterRadius = 34,
                 m < g && (g = m, d = l);
             }
             let j = d ? d.centre : this.muster;
-            c.state = 4, c.investigate = FW(this.world, j, c.id, f.arena.loneSpread), c.memory = f.enemy.alertMemory, c.searchTime = 0, c.path.length = 0;
+            c.state = 4, c.investigate = searchPointNear(this.world, j, c.id, f.arena.loneSpread), c.memory = f.enemy.alertMemory, c.searchTime = 0, c.path.length = 0;
         } aim(c) {
             const Kp = cX;
             let d = c.members.length > 0 ? {
@@ -725,7 +725,7 @@ var musterRadius = 34,
                 }
                 g = u ? u.centre : this.muster;
             }
-            c.goal = g, this.world.squadFields[c.id] = yW(this.world.map, g, true);
+            c.goal = g, this.world.squadFields[c.id] = buildDistanceField(this.world.map, g, true);
         }
     },
     Sr = class {
@@ -883,7 +883,7 @@ function ae(c, d, g = c, j, l = {}) {
     const KH = cX;
     if (c.preroll > 0) return;
     let m = findOpenPosition(c.map, d);
-    g.squadTarget = null, g.targetBuilding = null, g.field = yW(c.map, m, true, l.swimCost ?? 1), g.orderGoal = m, g.orderMarker = f.soldier.orderMarkerTime, assignFormation(c, m, j);
+    g.squadTarget = null, g.targetBuilding = null, g.field = buildDistanceField(c.map, m, true, l.swimCost ?? 1), g.orderGoal = m, g.orderMarker = f.soldier.orderMarkerTime, assignFormation(c, m, j);
     for (let p of soldiersOfSide(c, j)) p.alive && (p.state = 1);
     l.quiet || P2(c, j);
 }
@@ -899,7 +899,7 @@ function Cr(c, d, g) {
 function kt(c, d, g = c, i, j = {}) {
     const KJ = cX;
     if (!(c.preroll > 0)) {
-        g.squadTarget = d, g.targetBuilding = null, g.field = yW(c.map, d.pos, true, j.swimCost ?? 1), g.orderGoal = {
+        g.squadTarget = d, g.targetBuilding = null, g.field = buildDistanceField(c.map, d.pos, true, j.swimCost ?? 1), g.orderGoal = {
             ...d.pos
         }, g.orderMarker = f.soldier.orderMarkerTime, g.lastTargetPos = {
             ...d.pos
@@ -914,7 +914,7 @@ function Ar(c, d, g = c, j, l = {}) {
     if (c.preroll > 0) return;
     g.squadTarget = null, g.targetBuilding = d;
     let m = findOpenPosition(c.map, d.centre);
-    g.field = yW(c.map, m, true, l.swimCost ?? 1), g.orderGoal = {
+    g.field = buildDistanceField(c.map, m, true, l.swimCost ?? 1), g.orderGoal = {
         ...d.centre
     }, g.orderMarker = f.soldier.orderMarkerTime, assignFormation(c, m, j);
     for (let p of soldiersOfSide(c, j)) p.alive && (p.state = 2);
@@ -926,7 +926,7 @@ function assignFormation(c, d, g) {
     let j = c.soldiers.filter(u => u.alive && u.faction === g),
         l = f.soldier.formationSpacing,
         m = f.soldier.formationJitter,
-        p = Ci(d, j.length * 3, l).map(u => ({
+        p = spiralPoints(d, j.length * 3, l).map(u => ({
             x: u.x + (c.jitter() * 2 - 1) * m,
             y: u.y + (c.jitter() * 2 - 1) * m
         })).filter(u => !fT(c.map, u.x, u.y, f.soldier.radius)).slice(0, Math.max(j.length, 1));
@@ -936,7 +936,7 @@ function assignFormation(c, d, g) {
         }, u.slotStuck = 0;
         return;
     }
-    let q = k0(j, p);
+    let q = assignToNearestPoints(j, p);
     for (let v of j) v.slot = q.get(v) ?? {
         ...d
     }, v.slotStuck = 0;
@@ -955,7 +955,7 @@ function findFreeSlot(g, j, m) {
                 x: q.x + Math.cos(C) * E,
                 y: q.y + Math.sin(C) * E
             };
-        if (fT(g.map, F.x, F.y, m.radius) || !DW(g.map, m.pos, F, m.radius)) continue;
+        if (fT(g.map, F.x, F.y, m.radius) || !canWalkStraight(g.map, m.pos, F, m.radius)) continue;
         let H = Math.hypot(F.x - q.x, F.y - q.y),
             I = TT[getTileDefAt(g.map, F.x, F.y)].blocksSight,
             K = -H + (I ? p * 1.5 : 0);
@@ -972,7 +972,7 @@ function thinkSoldier(d, g, j, l = null, m = d, p, q = false) {
         else {
             m.repathTimer -= g;
             let v = m.lastTargetPos ? Math.hypot(m.squadTarget.pos.x - m.lastTargetPos.x, m.squadTarget.pos.y - m.lastTargetPos.y) : 1 / 0;
-            m.repathTimer <= 0 && v > V6 && (m.field = yW(d.map, m.squadTarget.pos, true, m.field?.swimCost ?? 1), m.orderGoal = {
+            m.repathTimer <= 0 && v > V6 && (m.field = buildDistanceField(d.map, m.squadTarget.pos, true, m.field?.swimCost ?? 1), m.orderGoal = {
                 ...m.squadTarget.pos
             }, m.lastTargetPos = {
                 ...m.squadTarget.pos
@@ -981,9 +981,9 @@ function thinkSoldier(d, g, j, l = null, m = d, p, q = false) {
     }
     m.targetBuilding && !m.targetBuilding.standing && (m.targetBuilding = null);
     for (let y of d.soldiers) {
-        if (!y.alive || y.faction !== p || (y.prev.x = y.pos.x, y.prev.y = y.pos.y, y.fireCooldown -= g, y.fireLatch > 0 && (y.fireLatch -= g), Mi(y, d.map, g))) continue;
-        let A = moveTargetFor(d, m, y) ?? ut(d.map, y);
-        if (Ei(y, A, d.hash, d.map, w0, g), h1(y, d.map, g), g1(y, d.map), A && y.slot && Math.hypot(y.vel.x, y.vel.y) < f.movement.slotStuckSpeed ? (y.slotStuck += g, y.slotStuck > f.movement.slotStuckTrigger && findFreeSlot(d, m, y)) : y.slotStuck > 0 && (y.slotStuck = Math.max(0, y.slotStuck - g * 2)), ji(d, y), p === d.viewSide && y.wading && d.jitter() < 0.08 && Math.hypot(y.vel.x, y.vel.y) > 8) {
+        if (!y.alive || y.faction !== p || (y.prev.x = y.pos.x, y.prev.y = y.pos.y, y.fireCooldown -= g, y.fireLatch > 0 && (y.fireLatch -= g), stepStagger(y, d.map, g))) continue;
+        let A = moveTargetFor(d, m, y) ?? swimEscapeTarget(d.map, y);
+        if (steerSoldier(y, A, d.hash, d.map, SOLDIER_MOVE_PROFILE, g), moveWithCollision(y, d.map, g), unstickEntity(y, d.map), A && y.slot && Math.hypot(y.vel.x, y.vel.y) < f.movement.slotStuckSpeed ? (y.slotStuck += g, y.slotStuck > f.movement.slotStuckTrigger && findFreeSlot(d, m, y)) : y.slotStuck > 0 && (y.slotStuck = Math.max(0, y.slotStuck - g * 2)), emitFootprint(d, y), p === d.viewSide && y.wading && d.jitter() < 0.08 && Math.hypot(y.vel.x, y.vel.y) > 8) {
             let C = z(d.map, Math.floor(y.pos.x / d.map.tile), Math.floor(y.pos.y / d.map.tile)) === 9;
             d.fx.splash(y.pos, C), d.sounds.push({
                 kind: "wade",
@@ -1007,7 +1007,7 @@ function moveTargetFor(c, d, g) {
     }
     if (g.state === 0 || !g.slot) return null;
     let l = Math.hypot(g.slot.x - g.pos.x, g.slot.y - g.pos.y);
-    return l <= f.movement.slotArrived ? (j || (g.state = 0), null) : l < pathFollowDistance || !d.field ? g.slot : f1(d.field, c.map, g.pos, g.radius) ?? g.slot;
+    return l <= f.movement.slotArrived ? (j || (g.state = 0), null) : l < pathFollowDistance || !d.field ? g.slot : followDistanceField(d.field, c.map, g.pos, g.radius) ?? g.slot;
 }
 
 function $6(c, d, g) {
@@ -1091,7 +1091,7 @@ function findEngageTarget(c, d) {
     for (let p of c.actors) {
         if (!p.alive || p.faction === d.faction) continue;
         let q = Math.hypot(p.pos.x - d.pos.x, p.pos.y - d.pos.y);
-        wi(c, p, q) && q < l && kW(c.map, d.pos, p.pos) && PW(c.map, d.pos, p.pos) && !Uh(c, d.pos, p.pos, j.spread, m) && (l = q, g = p);
+        isCritterNoticing(c, p, q) && q < l && kW(c.map, d.pos, p.pos) && PW(c.map, d.pos, p.pos) && !Uh(c, d.pos, p.pos, j.spread, m) && (l = q, g = p);
     }
     return g;
 }
@@ -1109,7 +1109,7 @@ function tickStepNoise(c, d) {
     }
     if (!g) return;
     let l = Math.min(1, j / f.soldier.speed);
-    Ai(c, g.pos, f.enemy.stepNoise * l);
+    startleEnemiesNear(c, g.pos, f.enemy.stepNoise * l);
 }
 var On = [];
 
@@ -1129,16 +1129,16 @@ function wt(c, d, g, i = null) {
         return;
     }
     if (c.time += d, c.phaseTime += d, c.stepIndex++, c.phase !== 0) {
-        c.fx.step(d), Ui(c, d), $i(c, d), gt(c, d), c2(c, d), Ii(c, d);
+        c.fx.step(d), Ui(c, d), $i(c, d), gt(c, d), spawnCritterCorpseFx(c, d), spawnCorpseFx(c, d);
         return;
     }
     if (c.orderMarker = Math.max(0, c.orderMarker - d), c.shouts.length > 0) {
         for (let l of c.shouts) l.t -= d;
         c.shouts = c.shouts.filter(m => m.t > 0);
     }
-    c.grenadeCooldown = Math.max(0, c.grenadeCooldown - d), c.herdField && (c.herdField.age += d), c.hostageField && (c.hostageField.age += d), c.sideB && (c.sideB.grenadeCooldown = Math.max(0, c.sideB.grenadeCooldown - d), c.sideB.orderMarker = Math.max(0, c.sideB.orderMarker - d)), c.screams.length = 0, c.deaths.length = 0, c.sounds.length = 0, E0(c, d), S0(c);
+    c.grenadeCooldown = Math.max(0, c.grenadeCooldown - d), c.herdField && (c.herdField.age += d), c.hostageField && (c.hostageField.age += d), c.sideB && (c.sideB.grenadeCooldown = Math.max(0, c.sideB.grenadeCooldown - d), c.sideB.orderMarker = Math.max(0, c.sideB.orderMarker - d)), c.screams.length = 0, c.deaths.length = 0, c.sounds.length = 0, updateCampAnchor(c, d), applyCampingPressure(c);
     let j = collectWorldActors(c);
-    c.hash.rebuild(j), g && thinkSoldier(c, d, g.manualAim, g.cursor, c, D.Player, g.targeted), c.sideB && thinkSoldier(c, d, i?.manualAim ?? null, null, c.sideB, D.Enemy), th(c, d), $h(c, d), mh(c, d), $3(c, d), x0(j, c.hash, c.map, 2), c.lastKnownAge += d, c.fog.step(c.map, c.soldiers, d, c.viewSide ?? D.Player), Vh(c, d), qh(c, d), Ui(c, d), $i(c, d), gt(c, d), c3(c, d), Ii(c, d), Yh(c, d), zh(c), c.fx.step(d), Sn(c) && reapDeadActors(c, d);
+    c.hash.rebuild(j), g && thinkSoldier(c, d, g.manualAim, g.cursor, c, D.Player, g.targeted), c.sideB && thinkSoldier(c, d, i?.manualAim ?? null, null, c.sideB, D.Enemy), tickEnemies(c, d), $h(c, d), mh(c, d), $3(c, d), x0(j, c.hash, c.map, 2), c.lastKnownAge += d, c.fog.step(c.map, c.soldiers, d, c.viewSide ?? D.Player), Vh(c, d), qh(c, d), Ui(c, d), $i(c, d), gt(c, d), c3(c, d), spawnCorpseFx(c, d), Yh(c, d), zh(c), c.fx.step(d), Sn(c) && reapDeadActors(c, d);
 }
 
 function reapDeadActors(c, d) {

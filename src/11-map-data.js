@@ -9,11 +9,11 @@ function a() {
 
 function mh(c, d) {
     const zz = cX;
-    c2(c, d);
-    let g = ih(c);
+    spawnCritterCorpseFx(c, d);
+    let g = flockCentroids(c);
     for (let i of c.critters) {
         if (!i.alive) continue;
-        switch (i.prev.x = i.pos.x, i.prev.y = i.pos.y, i.stateTime -= d, rh(c, i) && (i.clock -= d, i.clock <= 0 && sh(c, i)), Cv(c, i, d), i.state) {
+        switch (i.prev.x = i.pos.x, i.prev.y = i.pos.y, i.stateTime -= d, isFlockLeader(c, i) && (i.clock -= d, i.clock <= 0 && triggerFlockDash(c, i)), tickCritterAttack(c, i, d), i.state) {
             case 1:
                 i.stateTime <= 0 && pickWanderGoal(c, i, g.get(i.flock) ?? i.pos), dampVelocity(i, d);
                 break;
@@ -64,7 +64,7 @@ function pickWanderGoal(c, d, g) {
                 x: v + (g.x - v) * u,
                 y: y + (g.y - y) * u
             });
-        if (Mn(c.map, A) && DW(c.map, d.pos, A, d.radius, false)) {
+        if (isLandTile(c.map, A) && canWalkStraight(c.map, d.pos, A, d.radius, false)) {
             d.goal = A, d.state = 0, d.stateTime = f.critter.wanderMax;
             return;
         }
@@ -101,12 +101,12 @@ function moveToward(g, j, m, p, q) {
         E = Math.min(1, 9 * q);
     j.vel.x += (u / y * C - j.vel.x) * E, j.vel.y += (v / y * C - j.vel.y) * E;
     let F = j.pos.x + j.vel.x * q;
-    !fT(g.map, F, j.pos.y, j.radius) && Mn(g.map, {
+    !fT(g.map, F, j.pos.y, j.radius) && isLandTile(g.map, {
         x: F,
         y: j.pos.y
     }) ? j.pos.x = F : j.vel.x = 0;
     let H = j.pos.y + j.vel.y * q;
-    !fT(g.map, j.pos.x, H, j.radius) && Mn(g.map, {
+    !fT(g.map, j.pos.x, H, j.radius) && isLandTile(g.map, {
         x: j.pos.x,
         y: H
     }) ? j.pos.y = H : j.vel.y = 0;

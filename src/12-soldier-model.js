@@ -255,7 +255,7 @@ function BW(j, q, A, C, F = 0) {
         U = buildEnemyArmy(j, H, M, L),
         V = buildBuildings(j, H, L),
         X = buildHostages(j, M),
-        Y = dh(j, M, L),
+        Y = spawnChickens(j, M, L),
         a7 = {
             map: j,
             difficulty: q,
@@ -517,7 +517,7 @@ function qh(j, q) {
         if (!a7) continue;
         let a8 = j.map.sidePersonas?.[Y.owner] ?? j.map.personas,
             a9 = WW(j, a7, 0, null, j.levers, Y.id, Y.owner, a8);
-        P ? a9.state = 0 : (a9.state = 4, a9.investigate = Q ? FW(j, Q, a9.id, f.wave.fan) : {
+        P ? a9.state = 0 : (a9.state = 4, a9.investigate = Q ? searchPointNear(j, Q, a9.id, f.wave.fan) : {
             ...a7
         }, a9.memory = f.enemy.alertMemory), ve(j, a9), j.enemyTotal++, Y.spawned++, S++;
     }
@@ -563,7 +563,7 @@ function damageBuilding(c, d, g, i = null, j = null) {
     if (d.indestructible) return d.flash = Math.max(d.flash, 0.4), i && c.fx.spall(i, j ?? d.centre), false;
     d.hp -= g;
     let l = g < d.maxHp * f.building.scratchFraction;
-    return l && i && c.fx.spall(i, j ?? d.centre), d.flash = l ? 0.25 : 1, d.hp > 0 ? false : (collapseBuilding(c, d), l && UT(c, d.centre, c.levers.hearing * 2, null, f.enemy.alert.blastHold), true);
+    return l && i && c.fx.spall(i, j ?? d.centre), d.flash = l ? 0.25 : 1, d.hp > 0 ? false : (collapseBuilding(c, d), l && alertEnemiesInRange(c, d.centre, c.levers.hearing * 2, null, f.enemy.alert.blastHold), true);
 }
 
 function ft(d, g, j, m = 0) {
@@ -673,7 +673,7 @@ function hostageFollowSlot(c, d, g) {
     const Bw = cX;
     let i = c.hostages.filter(l => l.alive && l.freed && !l.delivered),
         j = i.indexOf(d);
-    return j <= 0 ? g.pos : Ci(g.pos, i.length, f.hostage.followDistance * 0.8)[j] ?? g.pos;
+    return j <= 0 ? g.pos : spiralPoints(g.pos, i.length, f.hostage.followDistance * 0.8)[j] ?? g.pos;
 }
 
 function hostageRouteTo(c, d, g) {
@@ -687,7 +687,7 @@ function hostageRouteTo(c, d, g) {
     }, c.hostageField = l);
     let m = Math.floor(g.pos.x / j.tile) + ',' + Math.floor(g.pos.y / j.tile),
         p = l.fields.get(m);
-    return p || (p = yW(j, g.pos, false, f.hostage.swimCost), l.fields.set(m, p)), f1(p, j, d.pos, d.radius);
+    return p || (p = buildDistanceField(j, g.pos, false, f.hostage.swimCost), l.fields.set(m, p)), followDistanceField(p, j, d.pos, d.radius);
 }
 
 function tickHostageFollow(g, j, m) {
@@ -700,8 +700,8 @@ function tickHostageFollow(g, j, m) {
         return;
     }
     let A = j.swimming ? null : hostageFollowSlot(g, j, y),
-        C = A !== null && !DW(g.map, j.pos, y.pos, j.radius, false),
-        E = A === null ? ut(g.map, j) ?? y.pos : C ? hostageRouteTo(g, j, y) ?? A : A,
+        C = A !== null && !canWalkStraight(g.map, j.pos, y.pos, j.radius, false),
+        E = A === null ? swimEscapeTarget(g.map, j) ?? y.pos : C ? hostageRouteTo(g, j, y) ?? A : A,
         F = E.x - j.pos.x,
         H = E.y - j.pos.y,
         I = Math.hypot(F, H),
@@ -714,7 +714,7 @@ function tickHostageFollow(g, j, m) {
         K = F / I * P * Q, L = H / I * P * Q;
     }
     let M = Math.min(1, 9 * m);
-    j.vel.x += (K - j.vel.x) * M, j.vel.y += (L - j.vel.y) * M, h1(j, g.map, m), g1(j, g.map), Math.hypot(j.pos.x - j.prev.x, j.pos.y - j.prev.y) > 0.05 && (j.angle = Math.atan2(j.vel.y, j.vel.x));
+    j.vel.x += (K - j.vel.x) * M, j.vel.y += (L - j.vel.y) * M, moveWithCollision(j, g.map, m), unstickEntity(j, g.map), Math.hypot(j.pos.x - j.prev.x, j.pos.y - j.prev.y) > 0.05 && (j.angle = Math.atan2(j.vel.y, j.vel.x));
 }
 
 function killHostage(c, d) {
@@ -816,7 +816,7 @@ function explodeAt(d, g, j, m) {
     d.fx.explosion(g, j), d.sounds.push({
         kind: "explosion",
         at: g
-    }), d.fx.shake(f.fx.screenShake), UT(d, g, d.levers.hearing * 2, null, f.enemy.alert.blastHold), v1(d, g, f.critter.startleRadius * 2);
+    }), d.fx.shake(f.fx.screenShake), alertEnemiesInRange(d, g, d.levers.hearing * 2, null, f.enemy.alert.blastHold), startleCrittersNear(d, g, f.critter.startleRadius * 2);
     let p = j * f.blast.lethal;
     for (let u of d.actors) {
         if (!u.alive) continue;
@@ -825,7 +825,7 @@ function explodeAt(d, g, j, m) {
             A = Math.hypot(v, y);
         if (A > j) continue;
         if (A <= p) {
-            Ye(d, u);
+            applyDamage(d, u);
             continue;
         }
         let C = 1 - (A - p) / Math.max(0.000001, j - p),
@@ -839,7 +839,7 @@ function explodeAt(d, g, j, m) {
         u.vel.x += E.x * f.blast.knockback * C, u.vel.y += E.y * f.blast.knockback * C, u.stagger = Math.max(u.stagger, f.blast.stagger * C);
     }
     for (let F of d.hostages) !F.alive || F.delivered || Math.hypot(F.pos.x - g.x, F.pos.y - g.y) <= p && killHostage(d, F);
-    for (let H of d.critters) H.alive && Math.hypot(H.pos.x - g.x, H.pos.y - g.y) <= p && pt(d, H);
+    for (let H of d.critters) H.alive && Math.hypot(H.pos.x - g.x, H.pos.y - g.y) <= p && killCritter(d, H);
     let q = ft(d, g.x, g.y, j);
     q && !isProtectedBy(q, m) && damageBuilding(d, q, f.building.blastDamage);
     for (let I of d.crates) I.alive && Math.hypot(I.pos.x - g.x, I.pos.y - g.y) <= j && detonateContainer(d, I);
@@ -908,7 +908,7 @@ function y1(g, j, q, v, y) {
         kind: "shot",
         at: j.pos,
         by: j.faction
-    }), g.playerSides.includes(j.faction) && UT(g, j.pos, g.levers.hearing), v1(g, j.pos, f.critter.startleRadius);
+    }), g.playerSides.includes(j.faction) && alertEnemiesInRange(g, j.pos, g.levers.hearing), startleCrittersNear(g, j.pos, f.critter.startleRadius);
 }
 
 function d2(c, d, g) {
@@ -920,7 +920,7 @@ function d2(c, d, g) {
         let p = Math.hypot(m.pos.x - d.pos.x, m.pos.y - d.pos.y);
         p < l && (l = p, j = m);
     }
-    d.faction === c.viewSide ? c.shotsFired++ : c.incomingFired++, j && (d.faction === c.viewSide ? c.shotsHit++ : c.incomingHit++, Ye(c, j, 1, {
+    d.faction === c.viewSide ? c.shotsFired++ : c.incomingFired++, j && (d.faction === c.viewSide ? c.shotsHit++ : c.incomingHit++, applyDamage(c, j, 1, {
         x: d.pos.x,
         y: d.pos.y
     }, d.faction));
@@ -986,7 +986,7 @@ function Ui(c, d) {
                     y: l.pos.y
                 }, o);
             }
-            l.blast > 0 ? An(c, l) : c.fx.impact(l.pos), UT(c, l.pos, Math.max(c.levers.hearing * f.enemy.impactAlarm, f.enemy.impactAlarmFloor)), c.bullets.splice(j, 1);
+            l.blast > 0 ? An(c, l) : c.fx.impact(l.pos), alertEnemiesInRange(c, l.pos, Math.max(c.levers.hearing * f.enemy.impactAlarm, f.enemy.impactAlarmFloor)), c.bullets.splice(j, 1);
             continue;
         }
         alertNearMiss(c, l), resolveBulletHit(c, l) && c.bullets.splice(j, 1);
@@ -999,7 +999,7 @@ function alertNearMiss(c, d) {
     let g = f.enemy.alert,
         i = g.nearMiss * g.sensitivity;
     if (!(i <= 0)) {
-        for (let j of c.enemies) !j.alive || j.wounded || j.faction === d.faction || bodyHitTest(d, j.pos, i) && H0(c, j, d.from);
+        for (let j of c.enemies) !j.alive || j.wounded || j.faction === d.faction || bodyHitTest(d, j.pos, i) && onBodySpotted(c, j, d.from);
     }
 }
 var An = (c, d) => {
@@ -1028,14 +1028,14 @@ function bodyHitTest(c, d, g) {
 function resolveBulletHit(c, d) {
     const BR = cX;
     for (let g of c.actors)
-        if (!(!g.alive || g.faction === d.faction) && bodyHitTest(d, g.pos, f.body.radius)) return d.faction === c.viewSide ? c.shotsHit++ : c.incomingHit++, d.blast > 0 ? An(c, d) : Ye(c, g, 1, {
+        if (!(!g.alive || g.faction === d.faction) && bodyHitTest(d, g.pos, f.body.radius)) return d.faction === c.viewSide ? c.shotsHit++ : c.incomingHit++, d.blast > 0 ? An(c, d) : applyDamage(c, g, 1, {
             x: d.pos.x - d.vel.x,
             y: d.pos.y - d.vel.y
         }, d.faction), true;
     for (let i of c.hostages)
         if (!(!i.alive || i.delivered) && bodyHitTest(d, i.pos, f.body.radius)) return d.blast > 0 ? An(c, d) : killHostage(c, i), true;
     for (let j of c.critters)
-        if (j.alive && bodyHitTest(d, j.pos, f.critter.radius)) return d.blast > 0 ? An(c, d) : pt(c, j), true;
+        if (j.alive && bodyHitTest(d, j.pos, f.critter.radius)) return d.blast > 0 ? An(c, d) : killCritter(c, j), true;
     for (let l of c.crates) {
         if (!l.alive) continue;
         let m = (l.barrel ? f.barrel.radius : f.crate.radius) + f.bullet.radius;
@@ -1137,7 +1137,7 @@ function deploySmoke(c, d) {
     }), c.fx.sparkle(d, "#c9cec6"), c.sounds.push({
         kind: "smoke",
         at: d
-    }), UT(c, d, c.levers.hearing * 0.3);
+    }), alertEnemiesInRange(c, d, c.levers.hearing * 0.3);
 }
 
 function gt(c, d) {
@@ -1151,7 +1151,7 @@ function detonateFlashbang(c, d) {
     c.fx.bang(d, g.blastRadius), c.sounds.push({
         kind: "flashbang",
         at: d
-    }), c.fx.shake(f.fx.screenShake * 0.6), UT(c, d, c.levers.hearing * 2), v1(c, d, f.critter.startleRadius * 2);
+    }), c.fx.shake(f.fx.screenShake * 0.6), alertEnemiesInRange(c, d, c.levers.hearing * 2), startleCrittersNear(c, d, f.critter.startleRadius * 2);
     let j = new Set();
     for (let l of c.actors) {
         if (!l.alive) continue;
@@ -1542,7 +1542,7 @@ function c3(c, d) {
 function resolveCallinDrop(c, d, g) {
     const CV = cX;
     let j = findOpenPosition(c.map, g);
-    if (UT(c, j, c.levers.hearing * 0.6), d === "supplyDrop") {
+    if (alertEnemiesInRange(c, j, c.levers.hearing * 0.6), d === "supplyDrop") {
         c.crates.push({
             pos: {
                 ...j
@@ -2104,7 +2104,7 @@ var tr = class {
         } endTerrain(c) {
             const Ew = cX;
             let d = this.decalLayer;
-            this.decalLayer = new yi(c.pixelWidth, c.pixelHeight, this.atlas), d?.dispose(), this.decalLayer.blood = this.blood, this.fogMask = document.createElement("canvas"), this.fogMask.width = c.width, this.fogMask.height = c.height, this.fogCtx = this.fogMask.getContext('2d'), this.fogPixels = this.fogCtx.createImageData(c.width, c.height), this.fogDrawn = -1;
+            this.decalLayer = new DecalLayer(c.pixelWidth, c.pixelHeight, this.atlas), d?.dispose(), this.decalLayer.blood = this.blood, this.fogMask = document.createElement("canvas"), this.fogMask.width = c.width, this.fogMask.height = c.height, this.fogCtx = this.fogMask.getContext('2d'), this.fogPixels = this.fogCtx.createImageData(c.width, c.height), this.fogDrawn = -1;
         } collectScenery(j, q, A) {
             const Ex = cX;
             let F = [],
@@ -2228,7 +2228,7 @@ var tr = class {
                 if (I1(a9) || !a9.alive && !(a9.deathTime >= 0 && a9.deathTime < f.fx.deathTime)) continue;
                 let aj = lerp(a9.prev.x, a9.pos.x, A),
                     ak = lerp(a9.prev.y, a9.pos.y, A);
-                aj < L - 20 || aj > N + 20 || ak < M - 24 || ak > P + 24 || a9.faction !== j.viewSide && (!a9.visible || !j.fog.isVisible(aj, ak) || !j.map.arena && (j.map.conceals || j.clouds.length > 0) && n2(j.map, j.soldiers, a9.pos, f.enemy.aggroRadius, j.levers.concealment, j.clouds)) || this.drawList.push({
+                aj < L - 20 || aj > N + 20 || ak < M - 24 || ak > P + 24 || a9.faction !== j.viewSide && (!a9.visible || !j.fog.isVisible(aj, ak) || !j.map.arena && (j.map.conceals || j.clouds.length > 0) && isHiddenFromEnemies(j.map, j.soldiers, a9.pos, f.enemy.aggroRadius, j.levers.concealment, j.clouds)) || this.drawList.push({
                     sortY: ak,
                     actor: a9
                 });
