@@ -431,7 +431,7 @@ function installOverlayObserver() {
         });
     }
 }
-async function q3() {
+async function bootGame() {
     const JG = cX;
     startBootTimer(), await embedFonts(), revealBootFace(), loadSettings(), applyTitleArtVars(), revealBootLogo(), await setLoadPhase("boot"), startMusic(), installClickRouter(), installOverlayObserver(), preloadMusicTrack();
     let c = document.getElementById("screen"),
@@ -519,7 +519,7 @@ function soundForEvent(c, d, g) {
     }
 }
 
-function xe(c, d) {
+function flushAudioEvents(c, d) {
     const JM = cX;
     for (let g of c.screams) To(viewEdgeX(d, g));
     for (let i of c.deaths) Wo(viewEdgeX(d, i));
@@ -850,7 +850,7 @@ function spawnReinforcements(g, j) {
 var pathFollowDistance = 40,
     V6 = 20;
 
-function Er(c, d, g = 9, j) {
+function findTargetAt(c, d, g = 9, j) {
     const KF = cX;
     let l = null,
         m = 1 / 0;
@@ -879,7 +879,7 @@ var soldiersOfSide = (c, d) => c.soldiers.filter(g => g.faction === d),
         });
     };
 
-function ae(c, d, g = c, j, l = {}) {
+function orderSquadMove(c, d, g = c, j, l = {}) {
     const KH = cX;
     if (c.preroll > 0) return;
     let m = findOpenPosition(c.map, d);
@@ -888,7 +888,7 @@ function ae(c, d, g = c, j, l = {}) {
     l.quiet || P2(c, j);
 }
 
-function Cr(c, d, g) {
+function orderSquadFireAt(c, d, g) {
     const KI = cX;
     for (let i of soldiersOfSide(c, g)) i.alive && (i.fireLatch = _T[i.weapon].fireInterval, i.fireLatchAt = {
         x: d.x,
@@ -896,7 +896,7 @@ function Cr(c, d, g) {
     });
 }
 
-function kt(c, d, g = c, i, j = {}) {
+function orderSquadAttack(c, d, g = c, i, j = {}) {
     const KJ = cX;
     if (!(c.preroll > 0)) {
         g.squadTarget = d, g.targetBuilding = null, g.field = buildDistanceField(c.map, d.pos, true, j.swimCost ?? 1), g.orderGoal = {
@@ -909,7 +909,7 @@ function kt(c, d, g = c, i, j = {}) {
     }
 }
 
-function Ar(c, d, g = c, j, l = {}) {
+function orderSquadAttackBuilding(c, d, g = c, j, l = {}) {
     const KK = cX;
     if (c.preroll > 0) return;
     g.squadTarget = null, g.targetBuilding = d;
@@ -1122,7 +1122,7 @@ function collectWorldActors(c) {
     return On;
 }
 
-function wt(c, d, g, i = null) {
+function stepSimulation(c, d, g, i = null) {
     const KX = cX;
     if (c.preroll > 0) {
         c.preroll = Math.max(0, c.preroll - d), c.fx.step(d);
@@ -1138,7 +1138,7 @@ function wt(c, d, g, i = null) {
     }
     c.grenadeCooldown = Math.max(0, c.grenadeCooldown - d), c.herdField && (c.herdField.age += d), c.hostageField && (c.hostageField.age += d), c.sideB && (c.sideB.grenadeCooldown = Math.max(0, c.sideB.grenadeCooldown - d), c.sideB.orderMarker = Math.max(0, c.sideB.orderMarker - d)), c.screams.length = 0, c.deaths.length = 0, c.sounds.length = 0, updateCampAnchor(c, d), applyCampingPressure(c);
     let j = collectWorldActors(c);
-    c.hash.rebuild(j), g && thinkSoldier(c, d, g.manualAim, g.cursor, c, D.Player, g.targeted), c.sideB && thinkSoldier(c, d, i?.manualAim ?? null, null, c.sideB, D.Enemy), tickEnemies(c, d), $h(c, d), mh(c, d), $3(c, d), x0(j, c.hash, c.map, 2), c.lastKnownAge += d, c.fog.step(c.map, c.soldiers, d, c.viewSide ?? D.Player), stepBuildings(c, d), stepWaves(c, d), stepBulletsWithCollision(c, d), $i(c, d), stepClouds(c, d), stepCallIn(c, d), spawnCorpseFx(c, d), stepMines(c, d), collectPickups(c), c.fx.step(d), isCappedSpawnMode(c) && reapDeadActors(c, d);
+    c.hash.rebuild(j), g && thinkSoldier(c, d, g.manualAim, g.cursor, c, D.Player, g.targeted), c.sideB && thinkSoldier(c, d, i?.manualAim ?? null, null, c.sideB, D.Enemy), tickEnemies(c, d), $h(c, d), stepCritters(c, d), $3(c, d), x0(j, c.hash, c.map, 2), c.lastKnownAge += d, c.fog.step(c.map, c.soldiers, d, c.viewSide ?? D.Player), stepBuildings(c, d), stepWaves(c, d), stepBulletsWithCollision(c, d), $i(c, d), stepClouds(c, d), stepCallIn(c, d), spawnCorpseFx(c, d), stepMines(c, d), collectPickups(c), c.fx.step(d), isCappedSpawnMode(c) && reapDeadActors(c, d);
 }
 
 function reapDeadActors(c, d) {
@@ -1151,7 +1151,7 @@ function reapDeadActors(c, d) {
         c.enemies = c.enemies.filter(j => !g(j)), x1(c);
     }
 }
-var St = class {
+var SpectatorStage = class {
         constructor(c, d, g, j, l = false, m = 0) {
             const KZ = cX;
             this.map = c, this.camera = d, this.input = g, this.onClearDecals = j, this.alwaysLocked = l, this.runSeed = m, (this.world = this.newWorld(), this.arena = new Sr(this.world));
@@ -1173,12 +1173,12 @@ var St = class {
             };
         } step(c) {
             const L8 = cX;
-            this.moveCamera(c), wt(this.world, c, null), this.arena.step(c);
+            this.moveCamera(c), stepSimulation(this.world, c, null), this.arena.step(c);
             for (let d of this.input.drain()) d.type === "exit" && (this.exitRequested = true), d.type === "recentre" && this.camera.release();
         } moveCamera(c) {
             const L9 = cX;
             if (this.alwaysLocked || G().arenaLockCamera) {
-                this.input.consumePan(this.camera.zoom), this.input.edgeScroll(c), this.world.fx.takeShake(), this.camera.lookAt(this.centre(), this.map), this.camera.update(c, null, this.map), xe(this.world, this.camera);
+                this.input.consumePan(this.camera.zoom), this.input.edgeScroll(c), this.world.fx.takeShake(), this.camera.lookAt(this.centre(), this.map), this.camera.update(c, null, this.map), flushAudioEvents(this.world, this.camera);
                 return;
             }
             let d = this.input.consumePan(this.camera.zoom),
@@ -1187,7 +1187,7 @@ var St = class {
             let i = this.world.fx.takeShake();
             i > 0 && this.camera.addShake(i);
             let j = this.idle > f.arena.driftAfter ? this.arena.front() ?? this.centre() : null;
-            this.camera.update(c, j, this.map), xe(this.world, this.camera);
+            this.camera.update(c, j, this.map), flushAudioEvents(this.world, this.camera);
         } readout() {
             const Lj = cX;
             let c = this.world,
@@ -1214,7 +1214,7 @@ var St = class {
     },
     z3 = "arena-forest";
 
-function Y3(c) {
+function createBackdropScene(c) {
     const Lk = cX;
     let {
         camera: d,
@@ -1233,7 +1233,7 @@ function Y3(c) {
                 else {
                     u = parseMapDef(aT[z3], z3), g.prepare(u, createWorld(u, "veteran"));
                     let F = Math.floor(Math.random() * 2147483647);
-                    q = new St(u, d, j, () => g.clearDecals(), true, F);
+                    q = new SpectatorStage(u, d, j, () => g.clearDecals(), true, F);
                 }
             } catch {
                 return;
@@ -1259,7 +1259,7 @@ function Y3(c) {
     };
 }
 
-function X3(g) {
+function buildWaterLayer(g) {
     const Lx = cX;
     let {
         ctx: j,
@@ -1283,7 +1283,7 @@ function X3(g) {
     return v;
 }
 
-function J3(c) {
+function buildWindLayer(c) {
     const Lz = cX;
     let {
         ctx: d,
@@ -1301,7 +1301,7 @@ function J3(c) {
     return p;
 }
 
-function Z3(c) {
+function buildRustleLayer(c) {
     const LA = cX;
     let {
         ctx: d,

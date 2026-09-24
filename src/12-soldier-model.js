@@ -10,16 +10,16 @@
 
 function WW(g, j, m, p, q, v = -1, y = D.Enemy, A = null, C, E) {
     const AG = cX;
-    let F = Ph(A, g.nextId),
-        H = Lh(q, m, F, g.nextId),
+    let F = pickPersona(A, g.nextId),
+        H = rollEnemyTraits(q, m, F, g.nextId),
         I = C ?? F.weapon;
     E && (H.grenadeKind = E);
     let K = g.nextId;
     return {
-        ...h2(g, j, y, f.enemy.radius, I ?? Di[m]),
+        ...h2(g, j, y, f.enemy.radius, I ?? WEAPON_KIND_NAMES[m]),
         faction: y,
         kind: m,
-        stats: Yv(Xv(m, q, I), H.pace),
+        stats: Yv(scaleCombatStats(m, q, I), H.pace),
         state: p !== null || H.patrols ? 1 : 0,
         home: p ? {
             ...p
@@ -324,7 +324,7 @@ function createWorld(j, q, A, C, F = 0) {
             extraction: j.extraction.map(aj => ({
                 ...aj
             })),
-            fx: new Ni(() => a7.jitter()),
+            fx: new EffectsSystem(() => a7.jitter()),
             hash: new Si(24),
             field: null,
             orderGoal: null,
@@ -471,7 +471,7 @@ function stepBuildings(c, d) {
         let p = spawnPointsAroundRect(c, g, c.map.arena) ?? spawnPointsAroundRect(c, g);
         if (!p) continue;
         let q = c.map.sidePersonas?.[g.owner] ?? c.map.personas,
-            u = c.map.arena ? f2(c.nextId) : null,
+            u = c.map.arena ? rollArenaKit(c.nextId) : null,
             v = WW(c, p, u?.kind ?? 0, null, j, g.id, g.owner, q, u?.gun, u?.throwable);
         c.map.arena ? v.state = 0 : (v.state = 4, v.investigate = c.lastKnown ? {
             ...c.lastKnown
@@ -1672,7 +1672,7 @@ var ShadowRenderer = class W {
             if (d.delay > 0) continue;
             let {
                 r: g
-            } = vh(1 - d.life / d.maxLife, d.full, d.scale);
+            } = blastDrawRadius(1 - d.life / d.maxLife, d.full, d.scale);
             g < 1 || this.drawEffect(this.atlas.blastAnim, d.pos, g, 1 - d.life / d.maxLife);
         }
     } ["blood"] = "normal";
@@ -1694,7 +1694,7 @@ var ShadowRenderer = class W {
         let d = this.ctx;
         for (let g of c.fx.birds) {
             if (g.delay > 0) continue;
-            let i = this.atlas.birds[g.look][gh(g)];
+            let i = this.atlas.birds[g.look][birdFrameIndex(g)];
             d.drawImage(i, Math.round(g.pos.x - i.width / 2), Math.round(g.pos.y - i.height / 2));
         }
     } drawMuzzleFlashes(c) {

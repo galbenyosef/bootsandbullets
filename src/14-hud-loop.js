@@ -144,9 +144,9 @@ function createAmbienceGraph(g, j) {
                 return N.gain.value = 0, N.connect(l), N;
             }
         },
-        F = X3(E),
-        H = J3(E),
-        I = Z3(E),
+        F = buildWaterLayer(E),
+        H = buildWindLayer(E),
+        I = buildRustleLayer(E),
         K = Q3(E),
         L = createBirdLayer(E);
     return {
@@ -343,7 +343,7 @@ async function enterSpectatorMode(d) {
     } = d.shell, u = null;
     fadeOutMusic();
     let v = parseMapDef(aT[SPECTATOR_MAP], SPECTATOR_MAP);
-    j.prepare(v, createWorld(v, "veteran")), m.mode = "spectator", document.body.dataset.mode = "spectator", q.apply(), u = new St(v, g, m, () => j.clearDecals());
+    j.prepare(v, createWorld(v, "veteran")), m.mode = "spectator", document.body.dataset.mode = "spectator", q.apply(), u = new SpectatorStage(v, g, m, () => j.clearDecals());
     let y = u;
     d.set({
         name: "arena",
@@ -465,21 +465,21 @@ var SideCommander = class {
             if (v && (this.lastSeen = {
                     ...v.pos
                 }, this.lastSeenAge = 0), !this.regrouped && u.length - q.length >= m.retreatDeficit) {
-                this.regrouped = true, ae(g, this.home(g), this.ctx, this.side);
+                this.regrouped = true, orderSquadMove(g, this.home(g), this.ctx, this.side);
                 return;
             }
             if (v) {
                 if (this.maybeGrenade(g, q, u), g.jitter(this.side) < m.flankChance) {
                     let H = Math.atan2(v.pos.y - q[0].pos.y, v.pos.x - q[0].pos.x) + (g.jitter(this.side) < 0.5 ? 1 : -1) * Math.PI / 2;
-                    ae(g, {
+                    orderSquadMove(g, {
                         x: v.pos.x + Math.cos(H) * m.flankOffset,
                         y: v.pos.y + Math.sin(H) * m.flankOffset
                     }, this.ctx, this.side);
-                } else kt(g, v, this.ctx, this.side);
+                } else orderSquadAttack(g, v, this.ctx, this.side);
                 return;
             }
             let A = this.lastSeen && this.lastSeenAge < m.memory ? this.lastSeen : this.probe(g);
-            ae(g, this.bound(q, A), this.ctx, this.side);
+            orderSquadMove(g, this.bound(q, A), this.ctx, this.side);
         } home(c) {
             const Mw = cX;
             let d = this.side === D.Player ? c.map.playerSpawns : c.map.playerSpawnsB;
@@ -613,7 +613,7 @@ var SkirmishSession = class {
         } step(c) {
             const MI = cX;
             let d = this.world;
-            this.input.syncWorld(this.camera), this.input.syncAim(d), this.handleCommands(), this.moveCamera(c), d.skirmish?.over || this.commander.step(d, c), wt(d, c, {
+            this.input.syncWorld(this.camera), this.input.syncAim(d), this.handleCommands(), this.moveCamera(c), d.skirmish?.over || this.commander.step(d, c), stepSimulation(d, c, {
                 manualAim: this.input.firing ? this.input.aim.point : null,
                 cursor: this.input.inside ? this.input.world : null
             }), checkSkirmishEnd(d), d.status = objectiveStatus(d).status, d.skirmish?.over && !this.overFired && (this.overFired = true, d.skirmish.winner === d.viewSide ? d.sounds.push({
@@ -643,14 +643,14 @@ var SkirmishSession = class {
                     continue;
                 }
                 if (d.type === "fire") {
-                    Cr(c, this.input.aim.point, D.Player);
+                    orderSquadFireAt(c, this.input.aim.point, D.Player);
                     continue;
                 }
                 if (d.type === "callin" || d.type === "armcallin" || d.type === "select") continue;
                 if (d.type === "march") {
                     let i = sideCentroid(c),
                         j = f.controls.marchStep;
-                    i && (ae(c, {
+                    i && (orderSquadMove(c, {
                         x: i.x + d.dir.x * j,
                         y: i.y + d.dir.y * j
                     }, c, D.Player, {
@@ -658,8 +658,8 @@ var SkirmishSession = class {
                     }), this.camera.release());
                     continue;
                 }
-                let g = Er(c, d.world, this.input.slack, D.Player);
-                g.kind === "enemy" ? kt(c, g.actor, c, D.Player) : g.kind === "building" ? Ar(c, g.building, c, D.Player) : ae(c, d.world, c, D.Player), this.camera.release();
+                let g = findTargetAt(c, d.world, this.input.slack, D.Player);
+                g.kind === "enemy" ? orderSquadAttack(c, g.actor, c, D.Player) : g.kind === "building" ? orderSquadAttackBuilding(c, g.building, c, D.Player) : orderSquadMove(c, d.world, c, D.Player), this.camera.release();
             }
         } tryGrenade() {
             const MK = cX;
@@ -673,7 +673,7 @@ var SkirmishSession = class {
                 g = this.input.edgeScroll(c);
             this.camera.pan(d.x + g.x, d.y + g.y, this.map, this.input.isTouch ? "timed" : "sticky");
             let i = this.world.fx.takeShake();
-            i > 0 && this.camera.addShake(i), this.camera.update(c, cameraFocusFor(this.world), this.map), xe(this.world, this.camera);
+            i > 0 && this.camera.addShake(i), this.camera.update(c, cameraFocusFor(this.world), this.map), flushAudioEvents(this.world, this.camera);
         } standing() {
             const MM = cX;
             return {
@@ -1042,7 +1042,7 @@ var syncLerpRate = 14,
                 g = this.input.edgeScroll(c);
             this.camera.pan(d.x + g.x, d.y + g.y, this.map, this.input.isTouch ? "timed" : "sticky");
             let i = this.world.fx.takeShake();
-            i > 0 && this.camera.addShake(i), this.camera.update(c, cameraFocusFor(this.world, this.serverSide), this.map), xe(this.world, this.camera);
+            i > 0 && this.camera.addShake(i), this.camera.update(c, cameraFocusFor(this.world, this.serverSide), this.map), flushAudioEvents(this.world, this.camera);
         } standing() {
             const Nv = cX;
             return {
@@ -1222,7 +1222,7 @@ var MissionSession = class {
             let d = this.world;
             d.autoEngage = G().autoFire, this.input.syncWorld(this.camera), this.input.syncAim(d), this.handleCommands(), this.moveCamera(c);
             let g = d.phase;
-            if (g === 0 && this.autopilot?.step(d, c), wt(d, c, {
+            if (g === 0 && this.autopilot?.step(d, c), stepSimulation(d, c, {
                     manualAim: this.autopilot?.aim ?? (this.input.firing ? this.input.aim.point : null),
                     targeted: this.autopilot != null,
                     cursor: this.input.inside ? this.input.world : null
@@ -1259,7 +1259,7 @@ var MissionSession = class {
                     continue;
                 }
                 if (d.type === "fire") {
-                    Cr(c, this.input.aim.point, D.Player);
+                    orderSquadFireAt(c, this.input.aim.point, D.Player);
                     continue;
                 }
                 if (d.type === "grenade") {
@@ -1274,7 +1274,7 @@ var MissionSession = class {
                 if (d.type === "march") {
                     let i = sideCentroid(c),
                         j = f.controls.marchStep;
-                    i && (ae(c, {
+                    i && (orderSquadMove(c, {
                         x: i.x + d.dir.x * j,
                         y: i.y + d.dir.y * j
                     }, c, D.Player, {
@@ -1282,8 +1282,8 @@ var MissionSession = class {
                     }), this.camera.release());
                     continue;
                 }
-                let g = Er(c, d.world, this.input.slack, D.Player);
-                g.kind === "enemy" ? kt(c, g.actor, c, D.Player) : g.kind === "building" ? Ar(c, g.building, c, D.Player) : ae(c, d.world, c, D.Player), this.camera.release();
+                let g = findTargetAt(c, d.world, this.input.slack, D.Player);
+                g.kind === "enemy" ? orderSquadAttack(c, g.actor, c, D.Player) : g.kind === "building" ? orderSquadAttackBuilding(c, g.building, c, D.Player) : orderSquadMove(c, d.world, c, D.Player), this.camera.release();
             }
         } tryGrenade(c) {
             const NQ = cX;
@@ -1303,7 +1303,7 @@ var MissionSession = class {
                 g = this.input.edgeScroll(c);
             this.camera.pan(d.x + g.x, d.y + g.y, this.map, this.input.isTouch ? "timed" : "sticky");
             let i = this.world.fx.takeShake();
-            i > 0 && this.camera.addShake(i), this.camera.update(c, cameraFocusFor(this.world), this.map), xe(this.world, this.camera);
+            i > 0 && this.camera.addShake(i), this.camera.update(c, cameraFocusFor(this.world), this.map), flushAudioEvents(this.world, this.camera);
         }
     },
     p_ = new Set(["eliminate"]),
@@ -1603,7 +1603,7 @@ async function enterCampaignLevel(K) {
 async function loadMissionsData() {
     const OO = cX;
     installGlobalErrorHandlers();
-    let j = await q3(),
+    let j = await bootGame(),
         q = await loadCampaignMissions();
     if (await setLoadPhase("missions"), q.length === 0) throw new Error("no missions found in data/");
     let y = filterCampaignMissions(q),
@@ -1617,7 +1617,7 @@ async function loadMissionsData() {
             U = Math.min(0.1, (S - F) / 1000);
         F = S, (C ?? E)?.draw(R, U);
     });
-    let H = Y3({
+    let H = createBackdropScene({
             shell: j,
             set: R => {
                 E = R;

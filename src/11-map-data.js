@@ -7,7 +7,7 @@ function a() {
     return a();
 }
 
-function mh(c, d) {
+function stepCritters(c, d) {
     const zz = cX;
     spawnCritterCorpseFx(c, d);
     let g = flockCentroids(c);
@@ -158,7 +158,7 @@ function hh(c, d) {
         i.pos.x += i.vel.x * d, i.pos.y += i.vel.y * d, i.vel.y *= Math.exp(-f.birds.levelOff * d);
     }
 }
-var gh = c => (c.seed + Math.floor((c.maxLife - c.life) * c.beat)) % 2,
+var birdFrameIndex = c => (c.seed + Math.floor((c.maxLife - c.life) * c.beat)) % 2,
     jv = [],
     Iv = Object.freeze([]),
     bh = 0.32,
@@ -199,7 +199,7 @@ var gh = c => (c.seed + Math.floor((c.maxLife - c.life) * c.beat)) % 2,
     u2 = ["#dbc06d", "#bf8a37", "#925b1e", "#6e3c13", "#4d250d"],
     yh = [0.06, 0.2, 0.45, 0.75, 1];
 
-function vh(c, d, g) {
+function blastDrawRadius(c, d, g) {
     const zH = cX;
     let i = Math.cbrt(Math.min(1, c * 3)),
         j = c < 0.35 ? 1 : 1 - (c - 0.35) / 0.65;
@@ -215,7 +215,7 @@ function pickTier(c) {
         if (d < yh[g]) return u2[g];
     return u2[u2.length - 1];
 }
-var Ni = class W {
+var EffectsSystem = class W {
         ["rnd"];
         constructor(c = Math.random) {
             const zJ = cX;
@@ -927,7 +927,7 @@ var Ni = class W {
         return g;
     })());
 
-function Ph(c, d = 0) {
+function pickPersona(c, d = 0) {
     const AB = cX;
     let g = m2.get(p2),
         j = c && Object.keys(c).length > 0 ? Object.entries(c) : [...m2.values()].filter(p => p.weight > 0).map(p => [p.id, p.weight]),
@@ -943,7 +943,7 @@ function Ph(c, d = 0) {
         } return g;
 }
 
-function Lh(c, d, g, j = 0) {
+function rollEnemyTraits(c, d, g, j = 0) {
     const AC = cX;
     let l = d === 0,
         m = g.traits,
@@ -977,13 +977,13 @@ function Lh(c, d, g, j = 0) {
         persona: g.id
     };
 }
-var Di = {
+var WEAPON_KIND_NAMES = {
         0x0: "enemyRifle",
         0x1: "sniperRifle",
         0x3: "pistol",
         0x2: "bazooka"
     },
-    zv = new Map(Object.entries(Di).map(([c, d]) => [d, Number(c)])),
+    zv = new Map(Object.entries(WEAPON_KIND_NAMES).map(([c, d]) => [d, Number(c)])),
     Dh = c => zv.get(c) ?? 0;
 
 function pickWeighted(c, d) {
@@ -996,7 +996,7 @@ function pickWeighted(c, d) {
     return c[c.length - 1];
 }
 
-function f2(c) {
+function rollArenaKit(c) {
     const AE = cX;
     let d = pickWeighted(f.arena.kit.guns, mT(c, 19271)).id;
     return {
@@ -1025,9 +1025,9 @@ var resolveCombatStats = (c, d) => ({
         speed: c.speed * d
     };
 
-function Xv(c, d, g) {
+function scaleCombatStats(c, d, g) {
     const AF = cX;
-    let i = g && g !== Di[c] ? resolveCombatStats(g, Nh[c]) : Nh[c];
+    let i = g && g !== WEAPON_KIND_NAMES[c] ? resolveCombatStats(g, Nh[c]) : Nh[c];
     return {
         speed: i.speed * d.speed,
         fireRange: i.fireRange * d.fireRange,

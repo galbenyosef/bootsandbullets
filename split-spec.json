@@ -2,7 +2,7 @@
   "defaultFile": "bundle.js",
   "source": "bundle.js -> readable/bundle.pretty.js (23979 lines). The bundle is javascript-obfuscator protected (string array + decoder `b` + rotator IIFE, aliases of `cX`); tools/deobfuscate.mjs runs the array in a VM and inlines all 20736 encoded-string calls into readable/bundle.deob.pretty.js. All app slices below are cut from the deobfuscated view so every string reads literally.",
   "sourceFile": "readable/bundle.deob.pretty.js",
-  "note": "Line numbers index readable/bundle.deob.pretty.js. The first 3746 lines are the obfuscator runtime + game data tables (changelog, weapons, palettes, maps); the string-array function `a` (L15643) is data, not logic, and is indexed by the data-tables slice range it sits in. src/ slices carry semantic renames (209 identifiers); runtime index.html is untouched. Spec renameMap documents the mapping. src/ slices carry semantic renames (591 identifiers); runtime index.html is untouched. Spec renameMap documents the mapping. src/ slices carry semantic renames (641 identifiers); runtime index.html is untouched. Spec renameMap documents the mapping. src/ slices carry semantic renames (104 identifiers); runtime index.html is untouched. Spec renameMap documents the mapping. src/ slices carry semantic renames (350 identifiers); runtime index.html is untouched. Spec renameMap documents the mapping. src/ slices carry semantic renames (300 identifiers); runtime index.html is untouched. Spec renameMap documents the mapping. src/ slices carry semantic renames (72 identifiers); runtime index.html is untouched. Spec renameMap documents the mapping. src/ slices carry semantic renames (132 identifiers); runtime index.html is untouched. Spec renameMap documents the mapping. src/ slices carry semantic renames (152 identifiers); runtime index.html is untouched. Spec renameMap documents the mapping. src/ slices carry semantic renames (115 identifiers); runtime index.html is untouched. Spec renameMap documents the mapping.",
+  "note": "Line numbers index readable/bundle.deob.pretty.js. The first 3746 lines are the obfuscator runtime + game data tables (changelog, weapons, palettes, maps); the string-array function `a` (L15643) is data, not logic, and is indexed by the data-tables slice range it sits in. src/ slices carry semantic renames (209 identifiers); runtime index.html is untouched. Spec renameMap documents the mapping. src/ slices carry semantic renames (591 identifiers); runtime index.html is untouched. Spec renameMap documents the mapping. src/ slices carry semantic renames (641 identifiers); runtime index.html is untouched. Spec renameMap documents the mapping. src/ slices carry semantic renames (104 identifiers); runtime index.html is untouched. Spec renameMap documents the mapping. src/ slices carry semantic renames (350 identifiers); runtime index.html is untouched. Spec renameMap documents the mapping. src/ slices carry semantic renames (300 identifiers); runtime index.html is untouched. Spec renameMap documents the mapping. src/ slices carry semantic renames (72 identifiers); runtime index.html is untouched. Spec renameMap documents the mapping. src/ slices carry semantic renames (132 identifiers); runtime index.html is untouched. Spec renameMap documents the mapping. src/ slices carry semantic renames (152 identifiers); runtime index.html is untouched. Spec renameMap documents the mapping. src/ slices carry semantic renames (115 identifiers); runtime index.html is untouched. Spec renameMap documents the mapping. src/ slices carry semantic renames (64 identifiers); runtime index.html is untouched. Spec renameMap documents the mapping.",
   "sections": [
     {
       "file": "00-obfuscator-runtime.js",
@@ -882,6 +882,28 @@
     "_3": "advanceObjectivePhase",
     "_t": "objectiveLabel",
     "C3": "recordChallengeScore",
-    "A3": "buildSquad"
+    "A3": "buildSquad",
+    "mh": "stepCritters",
+    "gh": "birdFrameIndex",
+    "vh": "blastDrawRadius",
+    "Ni": "EffectsSystem",
+    "Ph": "pickPersona",
+    "Lh": "rollEnemyTraits",
+    "Di": "WEAPON_KIND_NAMES",
+    "f2": "rollArenaKit",
+    "Xv": "scaleCombatStats",
+    "q3": "bootGame",
+    "xe": "flushAudioEvents",
+    "Er": "findTargetAt",
+    "ae": "orderSquadMove",
+    "Cr": "orderSquadFireAt",
+    "kt": "orderSquadAttack",
+    "Ar": "orderSquadAttackBuilding",
+    "wt": "stepSimulation",
+    "St": "SpectatorStage",
+    "Y3": "createBackdropScene",
+    "X3": "buildWaterLayer",
+    "J3": "buildWindLayer",
+    "Z3": "buildRustleLayer"
   }
 }
