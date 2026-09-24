@@ -196,7 +196,7 @@
                             maxLength: 12
                         }).then(cF => {
                             const tR = tQ;
-                            cF !== null && (Df(cF), $.rename(), bx());
+                            cF !== null && (setPlayerName(cF), $.rename(), bx());
                         });
                     }, cw.appendChild(cx), aj.appendChild(cw);
                     let cA = (cF, cG, cH, cI) => {
@@ -245,13 +245,13 @@
                     } else {
                         cI.appendChild(w("span", "lb-slot-name", "WAITING FOR ANOTHER SOLDIER...")), cI.appendChild(w("span", "lb-slot-state", "INVITE YOUR FRIEND"));
                         let cN = w("div", "lb-invite"),
-                            cO = w("span", "lb-url", ri(bU.code)),
+                            cO = w("span", "lb-url", buildJoinUrl(bU.code)),
                             cP = w("div", "lb-invite-row");
                         cP.appendChild(cO), cP.appendChild(RW("COPY LINK", "lb-copy", () => {
                             const tV = tO;
-                            navigator.clipboard?.writeText(ri(bU.code)), cO.textContent = "COPIED", window.setTimeout(() => {
+                            navigator.clipboard?.writeText(buildJoinUrl(bU.code)), cO.textContent = "COPIED", window.setTimeout(() => {
                                 const tW = tV;
-                                cO.textContent = ri(bU.code);
+                                cO.textContent = buildJoinUrl(bU.code);
                             }, 900);
                         })), cN.appendChild(cP);
                         let cQ = w("div", "lb-orcode");
@@ -312,7 +312,7 @@
         let bA = Ff();
         bA && history.replaceState(null, '', '/');
         let bB = bA ?? $.rememberedCode;
-        $.room ? aN("lobby") : bB && (aN("lobby"), Bf(bB).then(bU => {
+        $.room ? aN("lobby") : bB && (aN("lobby"), fetchRoom(bB).then(bU => {
             const u8 = tC;
             if (!bU) {
                 $.note("that muster has stood down");
@@ -362,10 +362,10 @@
                     c7.appendChild(w("span", "fx-card-num", String(c8).padStart(2, '0')));
                     let c9 = w("span", "fx-card-body");
                     c9.appendChild(w("span", "fx-card-name", bX.name.toUpperCase()));
-                    let cj = Ny(bX);
+                    let cj = truncateBrief(bX);
                     cj && c9.appendChild(w("span", "fx-card-desc", cj)), c7.appendChild(c9);
                     let ck = w("span", "fx-card-tail");
-                    bY ? ck.appendChild(Oy(highestClearedRung(bZ))) : ck.appendChild(w('i', "fx-lock")), c7.appendChild(ck), c7.addEventListener("click", () => {
+                    bY ? ck.appendChild(renderDifficultyStars(highestClearedRung(bZ))) : ck.appendChild(w('i', "fx-lock")), c7.appendChild(ck), c7.addEventListener("click", () => {
                         const uk = uj;
                         bY ? bE(bX) : CW(c7, bV > 0 ? bV + " stars needed" : "clear another mission first");
                     }), az.appendChild(c7);
@@ -456,7 +456,7 @@ var SHOP_OFFER_LIMIT = 3;
 
 function getAffordableOffers(c, d) {
     const uD = cX;
-    return bW.filter(g => g.ready && g.category !== "squad" && !$e(c, g.id)).map(g => ({
+    return ARMOURY_ITEMS.filter(g => g.ready && g.category !== "squad" && !$e(c, g.id)).map(g => ({
         id: g.id,
         name: g.name,
         price: ZW(g.id)
@@ -476,7 +476,7 @@ function renderShopPanel({
     let q = w("div", "dsp-shelf");
     for (let u of getAffordableOffers(d, c.bonds)) {
         let v = w("div", "dsp-good"),
-            y = Ke(u.id),
+            y = getItemIcon(u.id),
             A = w("div", "dsp-good-stand");
         y && A.appendChild(scaleCanvas(y, 2, "dsp-good-art")), v.appendChild(A), v.appendChild(w("span", "dsp-good-name", u.name)), q.appendChild(v);
     }
@@ -636,13 +636,13 @@ var DISPATCH_FADE = f.timing.dispatchFade,
     W0 = false,
     e0 = false;
 
-function t0(c = true) {
+function setDispatchSuppressed(c = true) {
     e0 = c;
 }
 
 function getCheapestOffer(c) {
     const uQ = cX;
-    let d = bW.filter(g => g.ready && g.category !== "squad" && !$e(c, g.id)).map(g => ZW(g.id));
+    let d = ARMOURY_ITEMS.filter(g => g.ready && g.category !== "squad" && !$e(c, g.id)).map(g => ZW(g.id));
     return d.length ? Math.min(...d) : null;
 }
 async function buildDispatchStats(c, d = dispatchStore, g = Date.now()) {
@@ -660,7 +660,7 @@ async function buildDispatchStats(c, d = dispatchStore, g = Date.now()) {
         shownThisSession: W0
     };
 }
-async function n0(c, d, g = dispatchStore) {
+async function maybeShowDispatch(c, d, g = dispatchStore) {
     const uS = cX;
     if (e0) return "continue";
     try {
@@ -681,7 +681,7 @@ async function n0(c, d, g = dispatchStore) {
         return "continue";
     }
 }
-var fi = class {
+var CameraState = class {
         ['x'] = 0;
         ['y'] = 0;
         ["zoom"] = f.camera.zoom.start;
@@ -810,7 +810,7 @@ var fi = class {
     Uy = c => Math.max(0, c.length * 12 - 2) + 4 + hi.x + 1,
     i0 = new Map();
 
-function gi(g, j = {}) {
+function renderTextCanvas(g, j = {}) {
     const vz = cX;
     let {
         fill: q = "#f2ead6",
@@ -879,7 +879,7 @@ function $y(j, q, y, A) {
 var blitOffsetX = 5,
     s0 = 6;
 
-function a0(K, L) {
+function buildGroundLayer(K, L) {
     const vC = cX;
     let {
         treeSdf: U,
@@ -1135,7 +1135,7 @@ var terrainJitterAmplitude = 11,
         }
     };
 
-function m0(K, L, U) {
+function buildTerrainLayer(K, L, U) {
     const vK = cX;
     let Y = L.tile,
         a7 = L.pixelWidth,
@@ -1626,7 +1626,7 @@ function drawRoadSurface(K, L, Q, U) {
             }
         }
 }
-var T2 = (c, d) => ((Math.imul(c + 1, 2654435761) >>> 16) % d + d) % d,
+var hashBucket = (c, d) => ((Math.imul(c + 1, 2654435761) >>> 16) % d + d) % d,
     dt = 4,
     p0 = 0.5,
     ov = [0, 8, 2, 10, 12, 4, 14, 6, 3, 11, 1, 9, 15, 7, 13, 5];

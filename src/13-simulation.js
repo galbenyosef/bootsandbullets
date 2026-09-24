@@ -22,7 +22,7 @@
             };
             if (setChildren(this.loadout, j(c.squadWeapon, ci[c.squadWeapon] ?? c.squadWeapon, ''), j(d === "flash" ? "flashbang" : d, S6[d] ?? d, 'x' + c.grenadesHeld)), c.squadCallIn !== "none") {
                 let l = c.callInsLeft <= 0,
-                    m = j(c.squadCallIn, di[c.squadCallIn] ?? c.squadCallIn, 'x' + c.callInsLeft, "hud-kit-callin" + (this.armed ? " on" : '') + (l ? " off" : ''));
+                    m = j(c.squadCallIn, CALLIN_NAMES[c.squadCallIn] ?? c.squadCallIn, 'x' + c.callInsLeft, "hud-kit-callin" + (this.armed ? " on" : '') + (l ? " off" : ''));
                 m instanceof HTMLButtonElement && (l && m.setAttribute("aria-disabled", "true"), m.addEventListener("click", () => this.onCallInPress?.(m))), this.loadout.appendChild(m);
             }
         } update(c) {
@@ -438,7 +438,7 @@ async function q3() {
         d = c.getContext('2d', {
             alpha: false
         }),
-        g = new fi(),
+        g = new CameraState(),
         j = new tr(d);
     j.setBlood(G().blood), onSettingsChange(u => j.setBlood(u.blood)), buildSpriteVars(), await setLoadPhase("sprites");
     let l = new nr(c, d),

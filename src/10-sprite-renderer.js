@@ -66,7 +66,7 @@ var yi = class {
                 } else {
                     if (g.kind === "corpse") {
                         let L = g.who === "player" ? this.atlas.corpsePlayer : g.who === "hostage" ? this.atlas.corpseHostage : g.who === "chicken" ? this.atlas.chickenCorpse[g.seed % this.atlas.chickenCorpse.length] : Wi(this.atlas, g.who ?? "enemy"),
-                            M = T2(g.seed, L.length),
+                            M = hashBucket(g.seed, L.length),
                             N = L[M],
                             P = j === 0 ? N : this.wornCorpse(N, g.who ?? "player", M, j);
                         q.drawImage(P, Math.round(g.pos.x - N.width / 2), Math.round(g.pos.y - N.height + 4));

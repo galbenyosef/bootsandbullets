@@ -1361,7 +1361,7 @@ async function enterCampaignLevel(K) {
     await prepareWithLoading(P, aA, ak);
     let aC = getZone(Ut[a7.id]).roster === "fresh",
         aD = [],
-        aE = !aC && _n(a8) === "reinforcements",
+        aE = !aC && currentCallIn(a8) === "reinforcements",
         aF = () => {
             const NZ = NX;
             if (aC) return aD = [], A3(aA.squadSize);
@@ -1384,7 +1384,7 @@ async function enterCampaignLevel(K) {
                 weapon: li(a8),
                 grenades: Math.max(0, Math.min(a8.loadout.take, b8)),
                 throwable: b7 ? b4 : "frag",
-                callIn: _n(a8),
+                callIn: currentCallIn(a8),
                 reserves: aD,
                 packagesTaken: a8.records[a7.id]?.taken?.[ak] ?? []
             };
@@ -1397,7 +1397,7 @@ async function enterCampaignLevel(K) {
             let b4 = a8.loadout.throwable;
             if (b4 === "none" || !Ya(a8, b4)) return;
             let b7 = Math.max(0, Math.min(a8.loadout.take, gW(a8, ge[b4])));
-            b7 > 0 && Ka(a8, ge[b4], b7);
+            b7 > 0 && consumeStock(a8, ge[b4], b7);
         };
     aq = new MissionSession(aA, L, P, Q, ak, aF, aG);
     let aJ = aq,
@@ -1478,7 +1478,7 @@ async function enterCampaignLevel(K) {
     };
     let aQ = async () => {
         const OB = NX;
-        mm(a7.id, ak, aB), await Om(f.banner.fade), aq && ai(a8, aq.world), aq?.restart(), U.hideOverlay(), zW(), aX();
+        mm(a7.id, ak, aB), await Om(f.banner.fade), aq && settleCallInUse(a8, aq.world), aq?.restart(), U.hideOverlay(), zW(), aX();
     };
     U.onRestart = () => {
         const OC = NX;
@@ -1551,7 +1551,7 @@ async function enterCampaignLevel(K) {
             U.close(null, null, aA.challenge ? C3(a7.id, b4, aA.challenge.score) : null), aa(a7.id, ak, aB, b4.phase === 1, aU(b4)), recordMissionOutcome(b4.phase === 1);
             return;
         }
-        ai(a8, b4);
+        settleCallInUse(a8, b4);
         let b7 = a8.records[a7.id]?.taken?.[ak] ?? [],
             b8 = applyMissionResult(a8, {
                 won: b4.phase === 1,
@@ -1597,7 +1597,7 @@ async function enterCampaignLevel(K) {
     return waitForValue(() => {
         const ON = NX;
         let b4 = aq?.exitRequested ? "menu" : aq?.nextRequested ? "next" : null;
-        return b4 ? (aq && ai(a8, aq.world), aq = null, K.set(null), stopAmbience(), U.hideOverlay(), U.hideClock(), zW(), aZ(), destroyComms(), aw?.(), aw = null, Q.onPause = null, U.onExit = U.onRestart = U.onPause = null, ax?.release().catch(() => {}), ax = null, b4) : null;
+        return b4 ? (aq && settleCallInUse(a8, aq.world), aq = null, K.set(null), stopAmbience(), U.hideOverlay(), U.hideClock(), zW(), aZ(), destroyComms(), aw?.(), aw = null, Q.onPause = null, U.onExit = U.onRestart = U.onPause = null, ax?.release().catch(() => {}), ax = null, b4) : null;
     });
 }
 async function loadMissionsData() {
@@ -1654,7 +1654,7 @@ async function loadMissionsData() {
                 C = R;
             }
         });
-    assignExperiment(oi().userId), t0;
+    assignExperiment(oi().userId), setDispatchSuppressed;
     let N = readStoredDifficulty(DIFFICULTY_KEY),
         P = null,
         Q;
@@ -1672,7 +1672,7 @@ async function loadMissionsData() {
                 S = null;
             }
             startMusic(), await setLoadPhase("ready"), hideBootOverlay().then(() => H.start());
-            let U = await Jf(q, S, N, V => {
+            let U = await runFrontMenu(q, S, N, V => {
                 N = V, setStoredValue(DIFFICULTY_KEY, V);
             }, A, Q);
             if (Q = void 0, H.stop(), "skirmish" in U) {
@@ -1685,7 +1685,7 @@ async function loadMissionsData() {
             }
             if (N = U.difficulty, R = q.find(V => V.id === U.id) ?? null, !R) continue;
         }
-        if (await n0(A, y) === "armoury") {
+        if (await maybeShowDispatch(A, y) === "armoury") {
             Q = "armoury";
             continue;
         }

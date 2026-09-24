@@ -2,7 +2,7 @@
     let d = Da(Fe[Math.floor(Math.random() * Fe.length)]) || "SOLDIER";
     return ni(Va, d), d;
 }
-var Df = c => ni(Va, Da(c)),
+var setPlayerName = c => ni(Va, Da(c)),
     wy = () => (location.protocol === "https:" ? "wss" : 'ws') + "://" + location.host + "/ws",
     Sy = () => null,
     ii = class {
@@ -140,7 +140,7 @@ function formatTemplate(c, d = {}) {
     const rF = cX;
     return Ey[c].replace(/\{(\w+)\}/g, (g, i) => i in d ? String(d[i]) : g);
 }
-var ri = c => location.origin + "/join/" + c,
+var buildJoinUrl = c => location.origin + "/join/" + c,
     Ff = () => {
         const rG = cX;
         let c = /^\/join\/([^/]+)\/?$/ .exec(location.pathname);
@@ -462,7 +462,7 @@ var ri = c => location.origin + "/join/" + c,
         }
     },
     $ = new Ua();
-async function Bf(c) {
+async function fetchRoom(c) {
     const sE = cX;
     try {
         let d = await fetch("/api/rooms/" + encodeURIComponent(c.trim().toUpperCase()));
@@ -471,7 +471,7 @@ async function Bf(c) {
         return null;
     }
 }
-var bW = [{
+var ARMOURY_ITEMS = [{
         id: "smg",
         category: "weapon",
         name: "SMG",
@@ -550,7 +550,7 @@ var bW = [{
         requires: "squadSlot5"
     }],
     My = c => f.economy.startingSquadCapacity + ["squadSlot4", "squadSlot5", "squadSlot6"].filter(d => c.includes(d)).length,
-    $a = new Map(bW.map(c => [c.id, c])),
+    $a = new Map(ARMOURY_ITEMS.map(c => [c.id, c])),
     ZW = c => f.economy.prices[c],
     $e = (c, d) => c.unlocked.includes(d),
     si = c => {
@@ -568,16 +568,16 @@ function buyStockItem(c, d) {
     return c.bonds < i ? false : (c.bonds -= i, c.stock[d] = gW(c, d) + 1, saveCampaign(c), true);
 }
 
-function Ka(c, d, g) {
+function consumeStock(c, d, g) {
     const sH = cX;
     let i = Math.max(0, Math.min(Math.floor(g), gW(c, d)));
     return i === 0 ? 0 : (c.stock[d] = gW(c, d) - i, saveCampaign(c), i);
 }
 
-function ai(c, d) {
+function settleCallInUse(c, d) {
     const sI = cX;
     let g = Math.max(0, Math.floor(d.callInsUsed));
-    return d.callInsUsed = 0, g === 0 || d.squadCallIn === "none" ? 0 : Ka(c, d.squadCallIn, g);
+    return d.callInsUsed = 0, g === 0 || d.squadCallIn === "none" ? 0 : consumeStock(c, d.squadCallIn, g);
 }
 
 function unlockItem(c, d) {
@@ -588,14 +588,14 @@ function unlockItem(c, d) {
     return c.bonds < i ? false : (c.bonds -= i, c.unlocked.push(d), c.squadCapacity = My(c.unlocked), saveCampaign(c), true);
 }
 
-function za(c) {
+function ownedWeaponIds(c) {
     const sK = cX;
-    return ["basicRifle", ...bW.filter(d => d.category === "weapon" && d.weapon && $e(c, d.id)).map(d => d.weapon)];
+    return ["basicRifle", ...ARMOURY_ITEMS.filter(d => d.category === "weapon" && d.weapon && $e(c, d.id)).map(d => d.weapon)];
 }
 
 function li(c) {
     const sL = cX;
-    return za(c).includes(c.loadout.weapon) ? c.loadout.weapon : "basicRifle";
+    return ownedWeaponIds(c).includes(c.loadout.weapon) ? c.loadout.weapon : "basicRifle";
 }
 var ci = {
         basicRifle: "Basic Rifle",
@@ -615,30 +615,30 @@ var ci = {
     },
     Ya = (c, d) => gW(c, ge[d]) > 0;
 
-function Vf(c) {
+function availableThrowables(c) {
     const sM = cX;
     return ["frag", "smoke", "flash"].filter(d => {
         const sN = sM;
-        let g = bW.find(i => i.id === ge[d]);
+        let g = ARMOURY_ITEMS.find(i => i.id === ge[d]);
         return g?.ready && gW(c, g.id) > 0;
     });
 }
 
-function Xa(c) {
+function availableCallIns(c) {
     const sO = cX;
     return ["supplyDrop", "airstrike", "reinforcements"].filter(d => {
         const sP = sO;
-        let g = bW.find(i => i.id === d);
+        let g = ARMOURY_ITEMS.find(i => i.id === d);
         return g?.ready && gW(c, g.id) > 0;
     });
 }
 
-function _n(c) {
+function currentCallIn(c) {
     const sQ = cX;
     let d = c.loadout.callin;
-    return d !== "none" && Xa(c).includes(d) ? d : void 0;
+    return d !== "none" && availableCallIns(c).includes(d) ? d : void 0;
 }
-var di = {
+var CALLIN_NAMES = {
         supplyDrop: "Supply Drop",
         airstrike: "Airstrike",
         reinforcements: "Reinforcements"
@@ -649,14 +649,14 @@ var di = {
 
 function $f(c) {
     const sR = cX;
-    if (!Yp(c)) return Ke(c);
+    if (!Yp(c)) return getItemIcon(c);
     let d = Uf.get(c);
     return d || (d = zp(c), Uf.set(c, d)), d;
 }
 var noteSoundChannel = null,
     Ry = null;
 
-function Ke(c, d = false) {
+function getItemIcon(c, d = false) {
     const sS = cX;
     let g = (Cy ??= zo(Ko(0)))[c];
     if (!g || !d) return g;
@@ -668,7 +668,7 @@ var ui = () => noteSoundChannel ??= m1("note"),
     Ja = (c, d, g) => makeFxButton(c, d, g),
     jy = 2;
 
-function zf(c, d) {
+function openArmouryPanel(c, d) {
     let g = armoryTab;
     Ho(i => {
         const sT = b;
@@ -693,7 +693,7 @@ function renderArmouryCard(c, d, g) {
     const sU = cX;
     let j = w("div", "ar-card" + (c.ready ? '' : " pending")),
         l = w("div", "ar-art"),
-        m = Ke(c.id);
+        m = getItemIcon(c.id);
     m && l.appendChild(scaleCanvas(m, jy)), j.appendChild(l), j.appendChild(w("span", "ar-name", c.name.toUpperCase())), j.appendChild(w("span", "ar-blurb", c.blurb));
     let p = w("div", "ar-foot");
     if (si(c.id)) {
@@ -757,12 +757,12 @@ function mi(c) {
     ].map(([v, y, A]) => ({
         id: v,
         label: y,
-        icon: Ke(A),
+        icon: getItemIcon(A),
         panel: () => {
             const sZ = sY;
             let C = w("div", "ar-panel"),
                 E = w("div", "ar-grid");
-            for (let F of bW.filter(H => H.category === v)) E.appendChild(renderArmouryCard(F, j, () => {
+            for (let F of ARMOURY_ITEMS.filter(H => H.category === v)) E.appendChild(renderArmouryCard(F, j, () => {
                 const t7 = sZ;
                 m(), c.onBought?.();
             }));
@@ -800,14 +800,14 @@ var LAST_GROUP_KEY = "cf.lastGroup",
     },
     RW = (c, d, g) => makeFxButton(c, d, g);
 
-function Oy(c) {
+function renderDifficultyStars(c) {
     const tk = cX;
     let d = w("div", "fx-stars");
     for (let g = 0; g < 3; g++) d.appendChild(w('i', g < c ? "fx-star on" : "fx-star"));
     return d;
 }
 
-function Ny(c) {
+function truncateBrief(c) {
     const tq = cX;
     let d = (c.brief || c.mechanic || '').trim();
     if (!d) return '';
@@ -815,7 +815,7 @@ function Ny(c) {
     return g.length <= 10 ? d : g.slice(0, 9).join(' ') + '…';
 }
 
-function Jf(q, A, F, H, K, L) {
+function runFrontMenu(q, A, F, H, K, L) {
     const tw = cX;
     buildSpriteVars();
     let N = document.getElementById("front"),

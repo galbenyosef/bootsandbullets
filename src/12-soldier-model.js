@@ -1397,7 +1397,7 @@ var silhouetteShadowOffset = {
                 return;
             }
             let y = Wi(this.atlas, ct(g, this.lastWorld)),
-                A = y[T2(g.id, y.length)],
+                A = y[hashBucket(g.id, y.length)],
                 C = Math.round(m - A.width / 2),
                 E = Math.round(p - A.height + 4);
             if (TT[z(this.map, Math.floor(g.pos.x / this.map.tile), Math.floor(g.pos.y / this.map.tile))].swim) {
@@ -2072,11 +2072,11 @@ var tr = class {
             return this.figures.map = c, this.info = no(c), d;
         } bakeSurface(c, d) {
             const E5 = cX;
-            let g = m0(c, d, this.info);
+            let g = buildTerrainLayer(c, d, this.info);
             this.water.tiles = g.waterTiles, this.water.shore = g.shore;
         } bakeTrees(c, d) {
             const E7 = cX;
-            let g = a0(d, this.info);
+            let g = buildGroundLayer(d, this.info);
             g.shadow && c.drawImage(g.shadow, 0, 0), g.understorey && c.drawImage(g.understorey, 0, 0);
             let i = this.canopy;
             this.canopy = g.layer, clearCanvas(i), clearCanvas(g.shadow), clearCanvas(g.understorey);
@@ -2289,8 +2289,8 @@ var tr = class {
             if (!v) return;
             let y = d.map.countdown?.beat ?? f.countdown.beat,
                 A = 1 - (u / y - Math.floor(u / y)),
-                C = gi(v),
-                E = Math.max(...roundLabelList(d.map, d.round).map(L => gi(L).width)),
+                C = renderTextCanvas(v),
+                E = Math.max(...roundLabelList(d.map, d.round).map(L => renderTextCanvas(L).width)),
                 F = Math.max(1, Math.floor(j * f.countdown.fill / E)),
                 H = 1 - (1 - Math.min(1, A / 0.2)) ** 3 < 1 ? F + 1 : F,
                 I = C.width * H,
@@ -2305,7 +2305,7 @@ var tr = class {
                     width: q,
                     height: y
                 } = m.canvas,
-                A = j.map(M => gi(M)),
+                A = j.map(M => renderTextCanvas(M)),
                 C = Math.max(...A.map(M => M.width)),
                 E = Math.max(1, Math.floor(q * f.banner.fill / C)),
                 F = 2 * E,
@@ -3841,7 +3841,7 @@ function renderStepper(d) {
         };
     j.appendChild(q(-1));
     let u = w("div", "bl-art"),
-        v = m?.id ? Ke(m.id, !!m.locked) : void 0;
+        v = m?.id ? getItemIcon(m.id, !!m.locked) : void 0;
     v && u.appendChild(scaleCanvas(v, d.icon ?? x6)), j.appendChild(u), j.appendChild(q(1)), g.appendChild(j), g.appendChild(w("span", "bl-name", (m?.name ?? '').toUpperCase())), m?.locked && (g.classList.add("locked"), g.appendChild(w("div", "bl-locked", "NOT PURCHASED")));
     let y = w("div", "bl-meta");
     if (!p) {
@@ -3870,13 +3870,13 @@ function renderStepper(d) {
     }
     return y.childElementCount > 0 && g.appendChild(y), g;
 }
-var itemBlurbOf = c => bW.find(d => d.id === c)?.blurb ?? '',
+var itemBlurbOf = c => ARMOURY_ITEMS.find(d => d.id === c)?.blurb ?? '',
     R3 = {
         id: null,
         name: "None",
         blurb: "Nothing in that hand."
     },
-    C2 = (c, d) => bW.filter(g => g.category === c && g.ready && !d.includes(g.id)).map(g => ({
+    C2 = (c, d) => ARMOURY_ITEMS.filter(g => g.category === c && g.ready && !d.includes(g.id)).map(g => ({
         id: g.id,
         name: g.name,
         blurb: g.blurb,
@@ -3888,28 +3888,28 @@ var itemBlurbOf = c => bW.find(d => d.id === c)?.blurb ?? '',
 
 function buildLoadoutChoices(j, q, A) {
     const HN = cX;
-    let C = za(j),
+    let C = ownedWeaponIds(j),
         E = [...C.map(a7 => ({
             id: a7,
             name: ci[a7],
             blurb: itemBlurbOf(a7) || "Standard issue. Slow, steady, and longer-reaching than it looks."
         })), ...C2("weapon", C)],
         F = Math.max(0, C.indexOf(li(j))),
-        H = Vf(j),
+        H = availableThrowables(j),
         I = a7 => a7 === "flash" ? "flashbang" : a7,
         K = [R3, ...H.map(a7 => ({
             id: I(a7),
-            name: bW.find(a8 => a8.id === I(a7))?.name ?? a7,
+            name: ARMOURY_ITEMS.find(a8 => a8.id === I(a7))?.name ?? a7,
             blurb: itemBlurbOf(I(a7))
         })), ...C2("throwable", H.map(I))],
         L = Math.max(0, K.findIndex((a7, a8) => a8 > 0 && a8 <= H.length && H[a8 - 1] === j.loadout.throwable)),
-        M = Xa(j),
+        M = availableCallIns(j),
         N = [R3, ...M.map(a7 => ({
             id: a7,
-            name: di[a7],
+            name: CALLIN_NAMES[a7],
             blurb: itemBlurbOf(a7)
         })), ...C2("callin", M)],
-        P = _n(j),
+        P = currentCallIn(j),
         Q = Math.max(0, N.findIndex((a7, a8) => a8 > 0 && a8 <= M.length && M[a8 - 1] === P)),
         R = L > 0 ? H[L - 1] : null,
         S = R ? gW(j, ge[R]) : 0,
@@ -4004,7 +4004,7 @@ var BriefingOverlay = class {
                 let R = w("button", "briefing-shop");
                 R.type = "button", R.appendChild(w("span", "briefing-shop-label", "THE ARMOURY")), R.addEventListener("click", () => {
                     const HV = HT;
-                    zf(j.campaign, j.onLoadout);
+                    openArmouryPanel(j.campaign, j.onLoadout);
                 }), q.appendChild(R);
             }
             let H = w("button", "briefing-go");
