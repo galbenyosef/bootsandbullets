@@ -2792,7 +2792,7 @@ var getAssignedExperiment = () => assignedExperiment,
         ...c
     });
 
-function Ro(c, d) {
+function buildAnalyticsProps(c, d) {
     const mA = cX;
     let g = it(),
         j = Co(d, c),
@@ -2813,7 +2813,7 @@ function Ro(c, d) {
     };
 }
 
-function ZT(c, d = {}) {
+function trackDemandEvent(c, d = {}) {
     const mB = cX;
     if (trackEvent(c, wm(d)), c === "purchase_intent_declined" || c === "dialog_closed") {
         let g = cn();
@@ -2845,7 +2845,7 @@ var hasGivenEmail = () => cn().emailGiven,
     },
     Mm = c => '$' + (c / 100).toFixed(2),
     Cm = window;
-async function rt(c, d = {}) {
+async function submitFeedback(c, d = {}) {
     const mC = cX;
     try {
         let g = Cm.cf_track?.feedback;
@@ -2878,9 +2878,9 @@ async function rt(c, d = {}) {
         return false;
     }
 }
-var jo = () => typeof Cm.cf_track?.feedback == "function";
+var isFeedbackAvailable = () => typeof Cm.cf_track?.feedback == "function";
 
-function Am() {
+function callInHintLine() {
     const mE = cX;
     return (new Map(getControlBindings().map(c => [c.action, c.keys])).get("move") ?? "CLICK") + " where you want it. They will hit that, or somewhere they can see from it.";
 }
@@ -2903,7 +2903,7 @@ var DISPATCH_QUIPS = ["Marked. They are on their way, and they have the correct 
     ha = [(c, d, g) => "In case it has gone out of anybody's head: " + d + '.' + g, (c, d, g) => "The orders have not changed. " + c + '.' + g + " They rarely do.", (c, d, g) => "Still with us, then. " + c + '.' + g + " Take your time. The war is not going anywhere, which is the trouble with it."],
     mb = ['no', "one", "two", "three", "four", "five", "six", "seven", "eight", "nine", "ten"];
 
-function Im(c, d, g) {
+function buildDispatchLine(c, d, g) {
     const mG = cX;
     let i = c.charAt(0).toUpperCase() + c.slice(1),
         j = c.charAt(0).toLowerCase() + c.slice(1),
@@ -2981,7 +2981,7 @@ function renderOfferPanel({
         E = pa[C?.offerKey ?? "full_game"] ?? pa.full_game,
         F = formatPrice(C?.priceCents ?? null),
         H = {
-            ...Ro(g, j)
+            ...buildAnalyticsProps(g, j)
         },
         I = {
             source: y,
@@ -3010,13 +3010,13 @@ function renderOfferPanel({
                 content: R,
                 buttons: [makeFxButton(E.cta.replace("{price}", F), "dsp-go primary", () => {
                     const mP = mO;
-                    ZT("purchase_intent_clicked", {
+                    trackDemandEvent("purchase_intent_clicked", {
                         ...I,
                         ...H
                     }), M(P);
                 }), makeFxButton(E.decline, "dsp-go dark", () => {
                     const mQ = mO;
-                    ZT("purchase_intent_declined", {
+                    trackDemandEvent("purchase_intent_declined", {
                         ...I,
                         ...H
                     }), q("declined");
@@ -3033,7 +3033,7 @@ function renderOfferPanel({
             let V = false;
             U.oninput = () => {
                 const mS = mR;
-                V || !U.value || (V = true, ZT("email_entered", I));
+                V || !U.value || (V = true, trackDemandEvent("email_entered", I));
             }, S && R.append(w('p', "dsp-plain dsp-question", E.reveal.ask), U);
             let X = w("textarea", "dsp-box");
             X.rows = 3, X.maxLength = 2000, X.placeholder = "Optional.", X.setAttribute("aria-label", E.reveal.comment), R.append(w('p', "dsp-plain dsp-question", E.reveal.comment), X);
@@ -3047,7 +3047,7 @@ function renderOfferPanel({
                     q("nothing");
                     return;
                 }
-                a7.disabled = true, Y.textContent = "Sending...", rt({
+                a7.disabled = true, Y.textContent = "Sending...", submitFeedback({
                     kind: "offer",
                     email: a8,
                     comment: a9
@@ -3057,14 +3057,14 @@ function renderOfferPanel({
                         a7.disabled = false, Y.textContent = "That did not get through. Your words are still here if you want to try again.";
                         return;
                     }
-                    a8 && ZT("email_submitted", I), a9 && ZT("comment_submitted", I), M(Q);
+                    a8 && trackDemandEvent("email_submitted", I), a9 && trackDemandEvent("comment_submitted", I), M(Q);
                 });
             });
             return {
                 content: R,
                 buttons: [a7, makeFxButton(E.reveal.back, "dsp-go dark", () => {
                     const mX = mR;
-                    ZT("dialog_closed", I), q("closed");
+                    trackDemandEvent("dialog_closed", I), q("closed");
                 })]
             };
         },
@@ -3072,15 +3072,15 @@ function renderOfferPanel({
             content: w('p', "dsp-headline", E.reveal.thanks),
             buttons: [makeFxButton(E.reveal.back, "dsp-go primary", () => {
                 const mY = mM;
-                ZT("returned_to_game", I), q("sent");
+                trackDemandEvent("returned_to_game", I), q("sent");
             })]
         });
-    return ZT("offer_viewed", {
+    return trackDemandEvent("offer_viewed", {
         ...I,
         ...H
     }), M(N), K;
 }
-async function Lo(c, d, g, i) {
+async function showOfferFlow(c, d, g, i) {
     const mZ = cX;
     try {
         await playTypewriterLine({
@@ -3094,7 +3094,7 @@ async function Lo(c, d, g, i) {
                 lead: i,
                 done: l
             })
-        }) === "skipped" && ZT("dialog_closed", {
+        }) === "skipped" && trackDemandEvent("dialog_closed", {
             source: c,
             ...i ? {
                 zone: i.zone
@@ -3104,15 +3104,15 @@ async function Lo(c, d, g, i) {
 }
 var bb = "Want more of this?";
 
-function Pm(c, d, g) {
+function renderDemandCta(c, d, g) {
     const n7 = cX;
     let i = w("button", "demand-cta");
     return i.type = "button", i.appendChild(w('i', "demand-cta-star")), i.appendChild(w("span", '', bb)), i.addEventListener("click", () => {
         const n8 = n7;
-        ZT("demand_cta_clicked", {
+        trackDemandEvent("demand_cta_clicked", {
             source: "home_cta"
-        }), Lo("home_cta", d, g);
-    }), c.appendChild(i), ZT("demand_cta_impression", {
+        }), showOfferFlow("home_cta", d, g);
+    }), c.appendChild(i), trackDemandEvent("demand_cta_impression", {
         source: "home_cta"
     }), () => i.remove();
 }
@@ -3158,7 +3158,7 @@ function setBlackout(c) {
     g && (g.style.opacity = String(d));
 }
 
-function Om(c) {
+function fadeToBlack(c) {
     return new Promise(d => {
         const nq = b;
         let g = Oo;
@@ -3211,7 +3211,7 @@ function clearHint() {
     Do !== null && (clearTimeout(Do), Do = null), ba?.remove(), ba = null;
 }
 
-function CW(c, d) {
+function showToastHint(c, d) {
     const nB = cX;
     clearHint();
     let g = w("div", "toast", d.toUpperCase());
@@ -3259,7 +3259,7 @@ function wipeAndReload() {
     clearAllCfData(), window.location.replace(window.location.pathname);
 }
 
-function Fo(c, {
+function buildTabbedPanel(c, {
     hold: d = false
 } = {}) {
     const nF = cX;
@@ -3303,13 +3303,13 @@ var getSheetEl = () => document.getElementById("sheet"),
     Bo = null,
     st = () => Bo !== null;
 
-function zW() {
+function closeSheet() {
     Bo?.();
 }
 
-function Ho(d, g, j = {}) {
+function openSheet(d, g, j = {}) {
     const nI = cX;
-    zW();
+    closeSheet();
     let m = getSheetEl(),
         p = document.createElement("div");
     p.className = j.wide ? "sheet-wrap wide" : "sheet-wrap";
@@ -3337,7 +3337,7 @@ function Ho(d, g, j = {}) {
 }
 
 function Go(c, d, g, i = false) {
-    Ho(j => {
+    openSheet(j => {
         const nM = b;
         let l = document.createElement("div");
         l.className = "sheet-body panel-body", l.appendChild(Object.assign(document.createElement("div"), {
@@ -3382,8 +3382,8 @@ async function confirmWipeData() {
     }) === "clear" && wipeAndReload();
 }
 
-function Vo() {
-    Ho(j => {
+function openSettings() {
+    openSheet(j => {
         const nP = b;
         let q = Object.assign(document.createElement("div"), {
                 className: "sheet-title",
@@ -3512,7 +3512,7 @@ function Vo() {
             }));
             let aB = document.createElement("button");
             aB.type = "button", aB.className = "ui-seg sheet-key-value", a7.set(az, aB), az.kind === "cluster" ? aB.addEventListener("click", () => {
-                S[az.id] = rl(S[az.id]), X(), a8(), U() && CW(P, V);
+                S[az.id] = rl(S[az.id]), X(), a8(), U() && showToastHint(P, V);
             }) : aB.addEventListener("click", () => {
                 const nU = nP;
                 aB.textContent = "PRESS A KEY", aB.classList.add("listening");
@@ -3553,7 +3553,7 @@ function Vo() {
                 j(), confirmWipeData();
             }
         })), L.appendChild(ak);
-        let aw = Fo([{
+        let aw = buildTabbedPanel([{
             id: "general",
             label: "GENERAL",
             panel: () => L
@@ -3573,7 +3573,7 @@ function Vo() {
         return ax.className = "sheet-actions sheet-foot", P.addEventListener("click", () => {
             const nZ = nP;
             if (P.getAttribute("aria-disabled") === "true") {
-                CW(P, V);
+                showToastHint(P, V);
                 return;
             }
             j();
@@ -3589,7 +3589,7 @@ var PRIVACY_DATE = "7 September 2026",
         ["Contact", "\n    <p>Questions or a request to delete what we hold: <a href=\"https://inselnova.com/imbf/\" target=\"_blank\" rel=\"noopener noreferrer\">IMBF Games</a>. Continued play after this policy changes is acceptance of the change.</p>"]
     ];
 
-function Bm() {
+function showPrivacyDialog() {
     const o7 = cX;
     let c = document.createElement("div");
     return c.className = "privacy", c.innerHTML = "<p class=\"privacy-updated\">Last updated " + PRIVACY_DATE + "</p>" + Eb.map(([d, g]) => "<h3>" + d + "</h3>" + g).join(''), showConfirmDialog({
@@ -4181,7 +4181,7 @@ var mp = {
         0x28: "radio"
     };
 
-function fp(c, d, g, i) {
+function sandbagVariantKey(c, d, g, i) {
     const p7 = cX;
     return (c || d) && (g || i) ? "sandbags" + (c ? 'N' : '') + (d ? 'S' : '') + (g ? 'E' : '') + (i ? 'W' : '') : c || d ? "sandbagsVertical" : "sandbags";
 }
@@ -4552,7 +4552,7 @@ function $o() {
     for (let g = 0; g < 8; g++) k(d, 2 + g, 3 + g, "#6a4a1c"), k(d, 9 - g, 3 + g, "#6a4a1c");
     return h(d, 4, 0, 4, 2, "#c8b23c"), B(c, "#2a1c0a"), c;
 }
-var un = 4,
+var PLANE_FRAME_COUNT = 4,
     he = {
         lit: "#6c6b2c",
         body: "#545323",
@@ -4573,7 +4573,7 @@ function lineDistanceSide(c, d, g, j, l, m) {
     };
 }
 
-function Ko(g = 0) {
+function buildPlaneFrame(g = 0) {
     const pB = cX;
     let j = Uo[0].length,
         q = Uo.length,
@@ -4618,7 +4618,7 @@ function Ko(g = 0) {
         [1, 1],
         [1, 0],
         [1, -1]
-    ][g % un];
+    ][g % PLANE_FRAME_COUNT];
     for (let Y = -L; Y <= L; Y++) k(A, I + M * Y, K + N * Y, "#c9c3a0");
     return h(A, I - 1, K - 1, 2, 2, he.deep), B(y, "#181a09"), y;
 }
@@ -4658,7 +4658,7 @@ function buildBrickWall() {
     } = O(12, 14);
     return h(d, 2, 2, 8, 11, "#8a3a2c"), h(d, 2, 2, 3, 11, "#a54838"), h(d, 8, 2, 2, 11, "#6b2a20"), h(d, 2, 5, 8, 1, "#5c241b"), h(d, 2, 9, 8, 1, "#5c241b"), h(d, 3, 1, 6, 2, "#c2543f"), h(d, 4, 6, 4, 3, "#e0c03a"), B(c, "#2a1109"), c;
 }
-var va = "#5a6152";
+var ACCENT_COLOR = "#5a6152";
 
 function buildDarkShed() {
     const pI = cX;
@@ -4666,7 +4666,7 @@ function buildDarkShed() {
         c: c,
         g: d
     } = O(8, 6);
-    return h(d, 2, 2, 4, 2, "#33372e"), h(d, 1, 3, 6, 1, "#33372e"), h(d, 3, 1, 2, 1, va), k(d, 4, 2, "#1d2019"), B(c, "#191c15"), c;
+    return h(d, 2, 2, 4, 2, "#33372e"), h(d, 1, 3, 6, 1, "#33372e"), h(d, 3, 1, 2, 1, ACCENT_COLOR), k(d, 4, 2, "#1d2019"), B(c, "#191c15"), c;
 }
 
 function buildAmmoBox() {
@@ -4713,7 +4713,7 @@ function buildStarSparkle() {
     return c;
 }
 
-function jp(g, j) {
+function buildTriangleSprite(g, j) {
     const pM = cX;
     let {
         c: q,
@@ -4771,7 +4771,7 @@ function drawFigure(j, q, A, C, E = 0) {
     return B(F, j.outline), F;
 }
 
-function pn(c) {
+function spriteSectorForAngle(c) {
     const pO = cX;
     let d = c - Math.PI / 2;
     return (Math.round(d / (Math.PI * 2) * Ge) % Ge + Ge) % Ge;
@@ -4854,14 +4854,14 @@ var PORTRAIT_STYLE_A = {
     runs: Dp
 };
 
-function zp(c) {
+function getItemPortrait(c) {
     let {
         c: d,
         g: g
     } = O(48, 35);
     return drawSpriteDefFrame(g, PORTRAIT_STYLE_A, ka[c]), trimCanvas(d);
 }
-var Yp = c => c in ka;
+var hasItemPortrait = c => c in ka;
 
 function stampKeyEdge(c, d, g, i) {
     const pR = cX;
@@ -4980,7 +4980,7 @@ function buildFigurePlaque() {
     return drawPerspectiveFloor(d, 34, "#2a2210", 25, g.width), B(c, "#2a2210"), d.drawImage(g, Math.round((34 - g.width) / 2), 25), c;
 }
 
-function m1(c = "icon") {
+function buildIconSprite(c = "icon") {
     const q7 = cX;
     if (c === "note") return buildNoticeBoard();
     let {
@@ -5025,7 +5025,7 @@ var PORTRAIT_STYLE_B = {
     runs: Bp
 };
 
-function Ve(c) {
+function drawPortraitFrame(c) {
     let {
         c: d,
         g: g
@@ -5033,7 +5033,7 @@ function Ve(c) {
     return drawSpriteDefFrame(g, PORTRAIT_STYLE_B, c ? 0 : 1), d;
 }
 
-function zo(c) {
+function buildPortraitAtlas(c) {
     const q9 = cX;
     return {
         smg: renderPortrait("smg"),
@@ -5246,7 +5246,7 @@ function smokeTimeline() {
     }
     return l.push([1, ef]), l;
 }
-var nf = smokeTimeline(),
+var SMOKE_TIMELINE = smokeTimeline(),
     AW = 96,
     of = AW / 2,
     Xo = 44,
@@ -5403,7 +5403,7 @@ function buildChickenFlapFrames() {
         length: py
     }, (d, g) => drawChickenFlap(c, g)));
 }
-var Ca = {
+var CURSOR_COLORS = {
         move: ["#d8f0b0", "#8c9c72", "#4c543e"],
         attack: ["#ff5a3c", "#a63a27", "#591f15"]
     },
@@ -5561,7 +5561,7 @@ var buildWingedMoteFrames = () => _f.map((c, d) => Array.from({
     }, (g, i) => drawWingedMote(d, i))),
     Ti = "seat:";
 
-function ct(c, d) {
+function figureLookKey(c, d) {
     const qM = cX;
     let g = c.owner === void 0 ? void 0 : d?.seatColours?.[c.owner];
     if (g) return Ti + g;
@@ -5602,7 +5602,7 @@ function paletteFor(c) {
     return c.startsWith(Ti) ? wf[c.slice(Ti.length)] ?? null : Sf[c]?.palette ?? _y[c] ?? null;
 }
 
-function Ef(c, d) {
+function getCharacterSheet(c, d) {
     const qO = cX;
     switch (d) {
         case "player":
@@ -5624,7 +5624,7 @@ function Ef(c, d) {
     return i ? c.looks[d] ??= buildCharacterSheet(i, "rifle") : c.enemy;
 }
 
-function Wi(c, d) {
+function getCorpseSet(c, d) {
     const qP = cX;
     if (d === "player") return c.corpsePlayer;
     if (d === "hostage") return c.corpseHostage;
@@ -5632,7 +5632,7 @@ function Wi(c, d) {
     return g ? c.lookCorpses[d] ??= kf(g) : c.corpseEnemy;
 }
 
-function Mf(c, d) {
+function getWoundedPortrait(c, d) {
     const qQ = cX;
     let g = paletteFor(d);
     return g ? c.lookWounded[d] ??= buildFigurePortrait(g) : c.woundedEnemy;
@@ -5646,8 +5646,8 @@ function buildSpriteAtlas() {
         d = buildCharacterSheet,
         g = [0, 1, 2, 3].map(buildRockIsland),
         i = Array.from({
-            length: un
-        }, (j, l) => Ko(l));
+            length: PLANE_FRAME_COUNT
+        }, (j, l) => buildPlaneFrame(l));
     return atlasCache = {
         mapObjects: hp(),
         player: d(FIGURE_PALETTES.player, "rifle"),
@@ -5701,21 +5701,21 @@ function buildSpriteAtlas() {
         icons: {
             grenade: buildAmmoBox(),
             hostage: buildHostageIcon(),
-            bond: m1("icon")
+            bond: buildIconSprite("icon")
         },
-        kit: zo(i[0]),
+        kit: buildPortraitAtlas(i[0]),
         warBond: {
-            icon: m1("icon"),
-            note: m1("note")
+            icon: buildIconSprite("icon"),
+            note: buildIconSprite("note")
         },
-        trooper: [Ve(true), Ve(false)],
+        trooper: [drawPortraitFrame(true), drawPortraitFrame(false)],
         logo: getTitleArt(),
         logoParts: buildTitleSprites()
     }, atlasCache;
 }
 var EMBLEM_ART = ["....#####....", "..##..#..##..", ".#....#....#.", ".#....#....#.", "#.....#.....#", "#.....#.....#", "#############", "#.....#.....#", "#.....#.....#", ".#....#....#.", ".#....#....#.", "..##..#..##..", "....#####...."];
 
-function Na() {
+function drawPublicEmblem() {
     const qS = cX;
     let {
         c: c,
@@ -5735,7 +5735,7 @@ var ICON_ART = {
     },
     Af = new Map();
 
-function Ue(c) {
+function getIconArt(c) {
     const qU = cX;
     let d = Af.get(c);
     if (d) return d;
@@ -5754,35 +5754,35 @@ var tintCache = null;
 function buildTintedBackdrop() {
     const qV = cX;
     if (tintCache) return tintCache;
-    let c = Ve(false),
+    let c = drawPortraitFrame(false),
         {
             c: d,
             g: g
         } = O(c.width, c.height);
     return g.drawImage(c, 0, 0), g.globalCompositeOperation = "source-in", g.fillStyle = "#3a4726", g.fillRect(0, 0, d.width, d.height), g.globalCompositeOperation = "source-over", tintCache = d, d;
 }
-var jf = [60, 180, 300],
+var ROUND_DURATION_OPTIONS = [60, 180, 300],
     If = 180,
     ky = 16;
 
-function Da(c, d = ky) {
+function sanitizeName(c, d = ky) {
     const qX = cX;
     return typeof c != "string" ? '' : c.toUpperCase().replace(/[^A-backOffPoint-9 ]/g, '').replace(/\s+/g, ' ').trim().slice(0, d).trim();
 }
-var ei = 255,
+var MAX_CHAT_LENGTH = 255,
     Pf = [1, 3, 5, 10],
     Lf = [1, 2, 3, 4, 5, 6],
     Fa = 4,
     Ba = 4;
 
-function Ha(c) {
+function hashObject(c) {
     const qY = cX;
     let d = JSON.stringify(c),
         g = 2166136261;
     for (let i = 0; i < d.length; i++) g = Math.imul(g ^ d.charCodeAt(i), 16777619);
     return d.length + '-' + (g >>> 0).toString(16);
 }
-var Ga = Ha({
+var CONTENT_HASH = hashObject({
         maps: aT,
         config: f
     }),
@@ -5805,7 +5805,7 @@ var Ga = Ha({
     },
     ti = null;
 
-function oi() {
+function getUserIdentity() {
     const r8 = cX;
     if (ti) return ti;
     let c = qa(Of),
@@ -5816,6 +5816,6 @@ function oi() {
     }, ti;
 }
 
-function vn() {
+function getPlayerName() {
     const r9 = cX;
     let c = qa(Va);

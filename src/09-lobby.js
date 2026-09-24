@@ -29,7 +29,7 @@
         let aO = document.getElementById("privacy-link");
         aO && (aO.onclick = bU => {
             const tE = tC;
-            bU.preventDefault(), Bm();
+            bU.preventDefault(), showPrivacyDialog();
         });
         let aP = document.getElementById("front-version"),
             aQ = document.getElementById("front-version-sep");
@@ -89,7 +89,7 @@
                         ["MAP", pi(bU.mapId), () => bX("MAP", "Where the next game is fought.", bY.map(c8 => [pi(c8), c8]), c8 => $.settings({
                             mapId: c8
                         }))],
-                        ["DURATION", b9(bU.seconds), () => bX("DURATION", "How long the next game runs.", jf.map(c8 => [b9(c8), String(c8)]), c8 => $.settings({
+                        ["DURATION", b9(bU.seconds), () => bX("DURATION", "How long the next game runs.", ROUND_DURATION_OPTIONS.map(c8 => [b9(c8), String(c8)]), c8 => $.settings({
                             seconds: Number(c8)
                         }))],
                         ["MODE", bU.mode.toUpperCase(), () => bX("MODE", "Skirmish for now. More coming soon.", [
@@ -121,14 +121,14 @@
                         }))]
                     ],
                     c7 = {
-                        MAP: scaleCanvas(Ue("map"), 1),
-                        DURATION: scaleCanvas(Ue("clock"), 1),
-                        MODE: scaleCanvas(Ue("flag"), 1),
+                        MAP: scaleCanvas(getIconArt("map"), 1),
+                        DURATION: scaleCanvas(getIconArt("clock"), 1),
+                        MODE: scaleCanvas(getIconArt("flag"), 1),
                         VISIBILITY: scaleCanvas(drawLockIcon(false), 1),
-                        'FOG\x20OF\x20WAR': scaleCanvas(Ue("cloud"), 1),
-                        'EDGE\x20MOVEMENT': scaleCanvas(Ue("arrows"), 1),
-                        ROUNDS: scaleCanvas(Ue("clock"), 1),
-                        'MEN\x20PER\x20SIDE': scaleCanvas(Ue("flag"), 1)
+                        'FOG\x20OF\x20WAR': scaleCanvas(getIconArt("cloud"), 1),
+                        'EDGE\x20MOVEMENT': scaleCanvas(getIconArt("arrows"), 1),
+                        ROUNDS: scaleCanvas(getIconArt("clock"), 1),
+                        'MEN\x20PER\x20SIDE': scaleCanvas(getIconArt("flag"), 1)
                     };
                 for (let [c8, c9, cj] of bZ) {
                     let ck = w("button", "lb-set");
@@ -177,21 +177,21 @@
                         $.leave(), bx();
                     })), bU) {
                     let cq = w("span", "ar-bonds");
-                    cq.appendChild(scaleCanvas(bU.visibility === "private" ? drawLockIcon(false) : Na(), 1)), cq.appendChild(w("span", void 0, bU.visibility.toUpperCase() + " GAME · " + bU.code)), a9.appendChild(cq), a9.appendChild(w("span", "lb-sub", bU.mode.toUpperCase() + " · " + pi(bU.mapId)));
+                    cq.appendChild(scaleCanvas(bU.visibility === "private" ? drawLockIcon(false) : drawPublicEmblem(), 1)), cq.appendChild(w("span", void 0, bU.visibility.toUpperCase() + " GAME · " + bU.code)), a9.appendChild(cq), a9.appendChild(w("span", "lb-sub", bU.mode.toUpperCase() + " · " + pi(bU.mapId)));
                 }
                 if (aq.classList.toggle("in-room", !!bU), ak.hidden = !!bU, ak.textContent = '', !bU) {
                     bq();
                     let cw = w("div", "lb-box");
                     cw.appendChild(w("span", "lb-box-label", "PLAYING AS:"));
                     let cx = w("div", "lb-box-row");
-                    cx.appendChild(scaleCanvas(Ve(true), 1, "lb-avatar-plate")), cx.appendChild(w("span", "lb-who", vn()));
+                    cx.appendChild(scaleCanvas(drawPortraitFrame(true), 1, "lb-avatar-plate")), cx.appendChild(w("span", "lb-who", getPlayerName()));
                     let cz = w("button", "lb-pencil");
                     cz.type = "button", cz.title = "Change your name", cz.appendChild(scaleCanvas(drawIconTile("pencil"), 2)), cx.appendChild(cz), cz.onclick = () => {
                         const tQ = tO;
                         buildConfirmField({
                             title: "YOUR NAME",
                             label: "What the other lot will call you",
-                            value: vn(),
+                            value: getPlayerName(),
                             placeholder: "SOLDIER",
                             maxLength: 12
                         }).then(cF => {
@@ -206,7 +206,7 @@
                         let cK = w("div", "lb-card-text");
                         return cK.appendChild(w("span", "fx-btn-label", cF)), cK.appendChild(w("span", "lb-box-sub", cG)), cJ.appendChild(cK), cJ;
                     };
-                    aj.appendChild(cA("CREATE PUBLIC GAME", "Anyone can join", scaleCanvas(Na(), 2, "lb-card-icon"), bk("public"))), aj.appendChild(cA("CREATE PRIVATE GAME", "Invite your friends", scaleCanvas(drawLockIcon(true), 2, "lb-card-icon"), bk("private")));
+                    aj.appendChild(cA("CREATE PUBLIC GAME", "Anyone can join", scaleCanvas(drawPublicEmblem(), 2, "lb-card-icon"), bk("public"))), aj.appendChild(cA("CREATE PRIVATE GAME", "Invite your friends", scaleCanvas(drawLockIcon(true), 2, "lb-card-icon"), bk("private")));
                     let cB = w("div", "lb-box");
                     cB.appendChild(w("span", "lb-box-title", "JOIN WITH CODE")), cB.appendChild(w("span", "lb-box-sub", "Enter a join code"));
                     let cC = w("div", "lb-join"),
@@ -226,7 +226,7 @@
                 for (let cF = 0; cF < 2; cF++) {
                     let cG = bU.seats[cF],
                         cH = w("div", "lb-slot");
-                    cG?.ready && cH.classList.add("ready"), cG && !cG.connected && cH.classList.add("away"), cH.appendChild(w("span", "lb-box-label lb-slot-label", cF === bU.you ? "YOUR SQUAD" : "SLOT " + (cF + 1))), cH.appendChild(scaleCanvas(cG ? Ve(true) : buildTintedBackdrop(), 1, "lb-avatar"));
+                    cG?.ready && cH.classList.add("ready"), cG && !cG.connected && cH.classList.add("away"), cH.appendChild(w("span", "lb-box-label lb-slot-label", cF === bU.you ? "YOUR SQUAD" : "SLOT " + (cF + 1))), cH.appendChild(scaleCanvas(cG ? drawPortraitFrame(true) : buildTintedBackdrop(), 1, "lb-avatar"));
                     let cI = w("div", "lb-slot-body");
                     if (cG) {
                         let cJ = w("div", "lb-slot-name");
@@ -274,7 +274,7 @@
                 c7.appendChild(c8);
                 let c9 = w("div", "lb-say"),
                     cj = w("input", "lb-input");
-                cj.dataset.keep = "chat", cj.maxLength = ei, cj.placeholder = "TYPE A MESSAGE...";
+                cj.dataset.keep = "chat", cj.maxLength = MAX_CHAT_LENGTH, cj.placeholder = "TYPE A MESSAGE...";
                 let ck = () => {
                     const tX = tO;
                     let cU = cj.value;
@@ -367,7 +367,7 @@
                     let ck = w("span", "fx-card-tail");
                     bY ? ck.appendChild(renderDifficultyStars(highestClearedRung(bZ))) : ck.appendChild(w('i', "fx-lock")), c7.appendChild(ck), c7.addEventListener("click", () => {
                         const uk = uj;
-                        bY ? bE(bX) : CW(c7, bV > 0 ? bV + " stars needed" : "clear another mission first");
+                        bY ? bE(bX) : showToastHint(c7, bV > 0 ? bV + " stars needed" : "clear another mission first");
                     }), az.appendChild(c7);
                 }
             },
@@ -382,10 +382,10 @@
                 if (!bV) return;
                 let bX = RW('', "fx-group future", () => {
                     const ux = uw;
-                    ZT("future_zone_clicked", {
+                    trackDemandEvent("future_zone_clicked", {
                         source: bV,
                         zone: bU.id
-                    }), Lo(bV, K, q, {
+                    }), showOfferFlow(bV, K, q, {
                         zone: bU.id
                     });
                 });
@@ -420,7 +420,7 @@
                 bN = true;
                 for (let cj of getFutureZones()) {
                     let ck = LOCKED_ZONE_CLASSES[cj.id];
-                    ck && ZT("future_zone_impression", {
+                    ck && trackDemandEvent("future_zone_impression", {
                         source: ck,
                         zone: cj.id
                     });
@@ -429,8 +429,8 @@
         }, document.getElementById("select-foot").textContent = '', bJ(), bK();
         let bO = createMusicToggle(N),
             bP = w("button", "corner-tool front-gear");
-        bP.type = "button", bP.title = "Settings", bP.setAttribute("aria-label", "Settings"), bP.addEventListener("click", () => Vo()), N.appendChild(bP);
-        let bQ = Pm(N, K, q);
+        bP.type = "button", bP.title = "Settings", bP.setAttribute("aria-label", "Settings"), bP.addEventListener("click", () => openSettings()), N.appendChild(bP);
+        let bQ = renderDemandCta(N, K, q);
         L && aN(L), N.hidden = false, requestAnimationFrame(() => N.classList.add('in')), window.setTimeout(() => setBlackout(0), 340), aN(L ?? ($.room || bB ? "lobby" : "intro"));
         let bR = cj => {
             const uB = tC;
@@ -559,12 +559,12 @@ function renderReviewPanel({
     let A = makeFxButton("Send", "dsp-go primary", () => {
         const uM = uK;
         let C = q.value();
-        C !== 0 && (A.disabled = true, y.textContent = "Sending...", rt({
+        C !== 0 && (A.disabled = true, y.textContent = "Sending...", submitFeedback({
             kind: "review",
             stars: C,
             comment: v.value
         }, {
-            ...Ro(d, g),
+            ...buildAnalyticsProps(d, g),
             stars: C
         }).then(E => {
             const uN = uM;
@@ -580,7 +580,7 @@ function renderReviewPanel({
         trackEvent("feedback_skipped", {
             stars: q.value() || null
         }), j("continue", "skipped");
-    })), jo() || (y.textContent = "The line is down, so this would not reach anybody. No harm done.", A.disabled = true, q.disable()), p;
+    })), isFeedbackAvailable() || (y.textContent = "The line is down, so this would not reach anybody. No harm done.", A.disabled = true, q.disable()), p;
 }
 var DISPATCH_PANELS = {
     armoury: renderShopPanel,

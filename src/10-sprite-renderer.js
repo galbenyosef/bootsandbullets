@@ -65,7 +65,7 @@ var DecalLayer = class {
                     v() > A * C.blood || (q.fillStyle = I, q.fillRect(Math.round(g.pos.x + Math.cos(F) * H), Math.round(g.pos.y + Math.sin(F) * H), K, K));
                 } else {
                     if (g.kind === "corpse") {
-                        let L = g.who === "player" ? this.atlas.corpsePlayer : g.who === "hostage" ? this.atlas.corpseHostage : g.who === "chicken" ? this.atlas.chickenCorpse[g.seed % this.atlas.chickenCorpse.length] : Wi(this.atlas, g.who ?? "enemy"),
+                        let L = g.who === "player" ? this.atlas.corpsePlayer : g.who === "hostage" ? this.atlas.corpseHostage : g.who === "chicken" ? this.atlas.chickenCorpse[g.seed % this.atlas.chickenCorpse.length] : getCorpseSet(this.atlas, g.who ?? "enemy"),
                             M = hashBucket(g.seed, L.length),
                             N = L[M],
                             P = j === 0 ? N : this.wornCorpse(N, g.who ?? "player", M, j);
@@ -1484,7 +1484,7 @@ function spawnCorpseFx(c, d) {
                 c.fx.slick(g.pos, g.id);
                 continue;
             }
-            c.fx.blood(g.pos), c.fx.corpse(g.pos, ct(g, c), g.id);
+            c.fx.blood(g.pos), c.fx.corpse(g.pos, figureLookKey(g, c), g.id);
         }
 }
 

@@ -328,7 +328,7 @@ function openPauseDialog(c, d, g) {
         onPick: () => {}
     }, g, {
         label: "Settings",
-        onPick: () => Vo()
+        onPick: () => openSettings()
     }], true);
 }
 var SPECTATOR_MAP = "arena-forest";
@@ -765,7 +765,7 @@ async function enterSkirmish(g, j) {
             const MY = MX;
             y && (P === "again" ? y.restart() : y.exitRequested = true);
         });
-    }, await waitForValue(() => y?.exitRequested ? (y = null, g.set(null), stopAmbience(), zW(), destroyComms(), q.onPause = null, u.onExit = u.onPause = null, u.setTools({
+    }, await waitForValue(() => y?.exitRequested ? (y = null, g.set(null), stopAmbience(), closeSheet(), destroyComms(), q.onPause = null, u.onExit = u.onPause = null, u.setTools({
         restart: true,
         pause: true,
         exitLabel: "Leave the mission"
@@ -1141,15 +1141,15 @@ async function runNetRound(j, q, y) {
         });
     }, I.onPauseChange = () => {
         const NG = Nx;
-        !I || I.over || (I.pausedBy ? (zW(), Go("HOLD POSITION", I.pausedBy + "'s wire is down", [{
+        !I || I.over || (I.pausedBy ? (closeSheet(), Go("HOLD POSITION", I.pausedBy + "'s wire is down", [{
             label: "Leave the match",
             onPick: S
-        }], true)) : zW());
+        }], true)) : closeSheet());
     }, I.onOver = () => {
         const NH = Nx;
         if (!I?.over || M > 0) return;
         let X = I.over;
-        M = performance.now(), zW(), $.reportResult(X.winnerName, X.reason, X.won === null || X.won ? X.a : X.b, X.won === null || X.won ? X.b : X.a, X.won);
+        M = performance.now(), closeSheet(), $.reportResult(X.winnerName, X.reason, X.won === null || X.won ? X.a : X.b, X.won === null || X.won ? X.b : X.a, X.won);
         let Y = document.createElement("div"),
             a7 = document.createElement('p');
         a7.textContent = X.reason === "forfeit" ? X.won ? "Their wire went dead and stayed dead. A walkover." : "Your wire was down too long. The glade goes to them." : X.reason === "time" ? "The clock decided it: " + X.a + " of yours standing to " + X.b + " of theirs." : X.won ? "Their squad is gone. " + X.a + " of yours are still standing." : "Your squad is gone. The glade is theirs.", Y.appendChild(a7);
@@ -1188,7 +1188,7 @@ async function runNetRound(j, q, y) {
         X.t === "gone" ? R() : I?.handleMsg(X);
     });
     let V = await waitForValue(() => I?.exitRequested || L && I?.over?.last ? "left" : L && K || K && !I?.over ? K : L && performance.now() - M > (Fa + d_) * 1000 ? "left" : null);
-    return I = null, j.set(null), E.edgeScrollBlocked = false, $.onGameMsg = null, $.onStart = null, stopAmbience(), F.setLink(null), F.hideClock(), zW(), destroyComms(), E.onPause = null, F.onExit = null, F.setTools({
+    return I = null, j.set(null), E.edgeScrollBlocked = false, $.onGameMsg = null, $.onStart = null, stopAmbience(), F.setLink(null), F.hideClock(), closeSheet(), destroyComms(), E.onPause = null, F.onExit = null, F.setTools({
         restart: true,
         pause: true,
         exitLabel: "Leave the mission"
@@ -1323,7 +1323,7 @@ var MissionSession = class {
             if (this.fresh(c), this.said >= d.nudgeMax || this.order > d.nudgeUntilOrder || c.time < this.nextAt || isCommsBusy()) return null;
             this.said++, this.nextAt = c.time + d.nudgeEvery;
             let g = p_.has(c.map.objective) ? Math.max(0, c.enemyTotal - c.kills) : null;
-            return Im(_t(c.map), g, c.jitter());
+            return buildDispatchLine(_t(c.map), g, c.jitter());
         } step(c) {
             const NV = cX;
             let d = this.due(c);
@@ -1357,7 +1357,7 @@ async function enterCampaignLevel(K) {
         };
     fadeOutMusic();
     let aA = parseMapDef(aT[a7.id], a7.id),
-        aB = Ha(aT[a7.id]);
+        aB = hashObject(aT[a7.id]);
     await prepareWithLoading(P, aA, ak);
     let aC = getZone(Ut[a7.id]).roster === "fresh",
         aD = [],
@@ -1478,7 +1478,7 @@ async function enterCampaignLevel(K) {
     };
     let aQ = async () => {
         const OB = NX;
-        mm(a7.id, ak, aB), await Om(f.banner.fade), aq && settleCallInUse(a8, aq.world), aq?.restart(), U.hideOverlay(), zW(), aX();
+        mm(a7.id, ak, aB), await fadeToBlack(f.banner.fade), aq && settleCallInUse(a8, aq.world), aq?.restart(), U.hideOverlay(), closeSheet(), aX();
     };
     U.onRestart = () => {
         const OC = NX;
@@ -1522,7 +1522,7 @@ async function enterCampaignLevel(K) {
         const OH = NX;
         if (aq) {
             if (aq.world.callInsLeft <= 0) {
-                CW(b4, "no call-ins left");
+                showToastHint(b4, "no call-ins left");
                 return;
             }
             Q.callInArmed ? Q.disarmCallIn() : Q.armCallIn(), U.setCallInArmed(Q.callInArmed);
@@ -1530,7 +1530,7 @@ async function enterCampaignLevel(K) {
     }, aq.onArmCallIn = () => {
         const OI = NX;
         let b4 = EW.trumper;
-        b4 && speakLine(b4, Am(), {
+        b4 && speakLine(b4, callInHintLine(), {
             sticky: true
         });
     };
@@ -1597,7 +1597,7 @@ async function enterCampaignLevel(K) {
     return waitForValue(() => {
         const ON = NX;
         let b4 = aq?.exitRequested ? "menu" : aq?.nextRequested ? "next" : null;
-        return b4 ? (aq && settleCallInUse(a8, aq.world), aq = null, K.set(null), stopAmbience(), U.hideOverlay(), U.hideClock(), zW(), aZ(), destroyComms(), aw?.(), aw = null, Q.onPause = null, U.onExit = U.onRestart = U.onPause = null, ax?.release().catch(() => {}), ax = null, b4) : null;
+        return b4 ? (aq && settleCallInUse(a8, aq.world), aq = null, K.set(null), stopAmbience(), U.hideOverlay(), U.hideClock(), closeSheet(), aZ(), destroyComms(), aw?.(), aw = null, Q.onPause = null, U.onExit = U.onRestart = U.onPause = null, ax?.release().catch(() => {}), ax = null, b4) : null;
     });
 }
 async function loadMissionsData() {
@@ -1654,7 +1654,7 @@ async function loadMissionsData() {
                 C = R;
             }
         });
-    assignExperiment(oi().userId), setDispatchSuppressed;
+    assignExperiment(getUserIdentity().userId), setDispatchSuppressed;
     let N = readStoredDifficulty(DIFFICULTY_KEY),
         P = null,
         Q;

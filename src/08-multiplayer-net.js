@@ -1,8 +1,8 @@
     if (c) return c;
-    let d = Da(Fe[Math.floor(Math.random() * Fe.length)]) || "SOLDIER";
+    let d = sanitizeName(Fe[Math.floor(Math.random() * Fe.length)]) || "SOLDIER";
     return ni(Va, d), d;
 }
-var setPlayerName = c => ni(Va, Da(c)),
+var setPlayerName = c => ni(Va, sanitizeName(c)),
     wy = () => (location.protocol === "https:" ? "wss" : 'ws') + "://" + location.host + "/ws",
     Sy = () => null,
     ii = class {
@@ -36,14 +36,14 @@ var setPlayerName = c => ni(Va, Da(c)),
             let {
                 userId: c,
                 secret: d
-            } = oi();
+            } = getUserIdentity();
             this.ws.send(JSON.stringify({
                 t: "hello",
                 userId: c,
                 secret: d,
                 name: this.name() || "SOLDIER",
                 v: Ba,
-                content: Ga
+                content: CONTENT_HASH
             }));
         } send(c) {
             const rx = cX;
@@ -66,14 +66,14 @@ var setPlayerName = c => ni(Va, Da(c)),
                 let {
                     userId: d,
                     secret: g
-                } = oi();
+                } = getUserIdentity();
                 c.send(JSON.stringify({
                     t: "hello",
                     userId: d,
                     secret: g,
                     name: this.name() || "SOLDIER",
                     v: Ba,
-                    content: Ga
+                    content: CONTENT_HASH
                 }));
             }, c.onmessage = d => {
                 const rB = rz;
@@ -201,7 +201,7 @@ var buildJoinUrl = c => location.origin + "/join/" + c,
                 this.conn.open();
                 return;
             }
-            this.conn = new ii(vn), this.conn.onMsg = c => this.receive(c), this.conn.onWelcome = () => {
+            this.conn = new ii(getPlayerName), this.conn.onMsg = c => this.receive(c), this.conn.onWelcome = () => {
                 const rO = rN;
                 this.wantedCode && this.conn.send({
                     t: "join",
@@ -425,7 +425,7 @@ var buildJoinUrl = c => location.origin + "/join/" + c,
             }));
         } say(c) {
             const sz = cX;
-            let d = c.trim().slice(0, ei);
+            let d = c.trim().slice(0, MAX_CHAT_LENGTH);
             if (!d || !this.room) return;
             let g = crypto.randomUUID(),
                 i = this.room.seats[this.room.you];
@@ -649,28 +649,28 @@ var CALLIN_NAMES = {
 
 function $f(c) {
     const sR = cX;
-    if (!Yp(c)) return getItemIcon(c);
+    if (!hasItemPortrait(c)) return getItemIcon(c);
     let d = Uf.get(c);
-    return d || (d = zp(c), Uf.set(c, d)), d;
+    return d || (d = getItemPortrait(c), Uf.set(c, d)), d;
 }
 var noteSoundChannel = null,
     Ry = null;
 
 function getItemIcon(c, d = false) {
     const sS = cX;
-    let g = (Cy ??= zo(Ko(0)))[c];
+    let g = (Cy ??= buildPortraitAtlas(buildPlaneFrame(0)))[c];
     if (!g || !d) return g;
     let i = qf.get(c);
     return i || (i = dimImage(g), qf.set(c, i)), i;
 }
-var ui = () => noteSoundChannel ??= m1("note"),
-    xn = () => Ry ??= m1("icon"),
+var ui = () => noteSoundChannel ??= buildIconSprite("note"),
+    xn = () => Ry ??= buildIconSprite("icon"),
     Ja = (c, d, g) => makeFxButton(c, d, g),
     jy = 2;
 
 function openArmouryPanel(c, d) {
     let g = armoryTab;
-    Ho(i => {
+    openSheet(i => {
         const sT = b;
         let j = w("div", "ar-head"),
             l = w("div", "ar-list panel-body");
@@ -705,7 +705,7 @@ function renderArmouryCard(c, d, g) {
             const sV = sU;
             if (c.ready) {
                 if (d.bonds < q) {
-                    CW(v, "not enough war bonds");
+                    showToastHint(v, "not enough war bonds");
                     return;
                 }
                 buyStockItem(d, c.id) && (la(c.id, q, d.bonds), g());
@@ -725,7 +725,7 @@ function renderArmouryCard(c, d, g) {
             let E = Ja("UNLOCK", "ar-buy", () => {
                 const sX = sU;
                 if (d.bonds < A) {
-                    CW(E, "not enough war bonds");
+                    showToastHint(E, "not enough war bonds");
                     return;
                 }
                 unlockItem(d, c.id) && (la(c.id, A, d.bonds), g());
@@ -750,7 +750,7 @@ function mi(c) {
     q.appendChild(scaleCanvas(ui(), 2));
     let s = w("div", "ar-bonds-text");
     s.appendChild(w("span", "ar-bonds-k", "WAR BONDS")), s.appendChild(w("span", "ar-bonds-n", String(j.bonds))), q.appendChild(s), d.appendChild(q), g.textContent = '';
-    let u = Fo([
+    let u = buildTabbedPanel([
         ["weapon", "WEAPONS", "smg"],
         ["throwable", "THROWABLES", "frag"],
         ["callin", "CALL-INS", "airstrike"]

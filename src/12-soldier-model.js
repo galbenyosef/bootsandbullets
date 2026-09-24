@@ -1333,7 +1333,7 @@ var silhouetteShadowOffset = {
             return this.lastWorld?.viewSide ?? null;
         } spritesFor(c, d) {
             const CC = cX;
-            let g = Ef(this.atlas, ct(c, d ?? this.lastWorld));
+            let g = getCharacterSheet(this.atlas, figureLookKey(c, d ?? this.lastWorld));
             return g[c.id % g.length];
         } drawActor(c, d) {
             const CD = cX;
@@ -1342,7 +1342,7 @@ var silhouetteShadowOffset = {
                 l = this.cheerTime >= 0 && c.alive && c.faction === this.viewSide,
                 m = Math.hypot(c.vel.x, c.vel.y) > 4,
                 p = l ? Math.floor(this.cheerTime * 9) % u1 : m ? Math.floor(c.walkPhase / 3.2) % u1 : 0,
-                q = this.spritesFor(c)[pn(c.angle)][p];
+                q = this.spritesFor(c)[spriteSectorForAngle(c.angle)][p];
             if (!c.alive) {
                 this.drawCollapse(c, q, g, j);
                 return;
@@ -1396,7 +1396,7 @@ var silhouetteShadowOffset = {
                 q.drawImage(this.silhouette(j), H + silhouetteShadowOffset.x, I + silhouetteShadowOffset.y), q.drawImage(j, H, I);
                 return;
             }
-            let y = Wi(this.atlas, ct(g, this.lastWorld)),
+            let y = getCorpseSet(this.atlas, figureLookKey(g, this.lastWorld)),
                 A = y[hashBucket(g.id, y.length)],
                 C = Math.round(m - A.width / 2),
                 E = Math.round(p - A.height + 4);
@@ -1418,7 +1418,7 @@ var silhouetteShadowOffset = {
             return Math.sin(d * 7 + c.id * 1.3) > 0.4 ? 1 : 0;
         } drawWounded(c, d, g) {
             const CJ = cX;
-            let i = Mf(this.atlas, ct(c, this.lastWorld)),
+            let i = getWoundedPortrait(this.atlas, figureLookKey(c, this.lastWorld)),
                 j = Math.sin(this.time * 3.1 + c.id * 1.7) > 0.72 ? 1 : 0;
             this.ctx.drawImage(i, Math.round(d - i.width / 2) + j, Math.round(g - i.height + 4));
         } wadeAt(c) {
@@ -1431,7 +1431,7 @@ var silhouetteShadowOffset = {
             let g = lerp(c.prev.x, c.pos.x, d),
                 j = lerp(c.prev.y, c.pos.y, d),
                 l = Math.hypot(c.vel.x, c.vel.y) > 4 ? Math.floor(c.walkPhase / 3.2) % u1 : 0;
-            if (this.drawFigure(this.atlas.hostage[c.id % this.atlas.hostage.length][pn(c.angle)][l], g, j, this.wadeAt(c)), !c.freed) {
+            if (this.drawFigure(this.atlas.hostage[c.id % this.atlas.hostage.length][spriteSectorForAngle(c.angle)][l], g, j, this.wadeAt(c)), !c.freed) {
                 let m = this.ctx,
                     o = Math.sin(this.time * 3) * 1.5;
                 m.fillStyle = JW.paper, m.fillRect(Math.round(g), Math.round(j - 19 + o), 1, 4), m.fillRect(Math.round(g), Math.round(j - 14 + o), 1, 1);
@@ -1447,7 +1447,7 @@ var silhouetteShadowOffset = {
                 return;
             }
             let l = Math.hypot(c.vel.x, c.vel.y) > 3 ? Math.floor(c.walkPhase / 2.5) % 4 : c.state === 1 && Math.floor(c.stateTime / 0.35) % 2 === 0 ? Ma : 0;
-            this.drawFigure(j[pn(c.angle)][l], g, i, "none", Ea);
+            this.drawFigure(j[spriteSectorForAngle(c.angle)][l], g, i, "none", Ea);
         } drawFigure(j, q, A, C, F = d1) {
             const CN = cX;
             let H = this.ctx,
@@ -1662,7 +1662,7 @@ var ShadowRenderer = class W {
         this.ctx.drawImage(m, Math.round(d.x - q / 2), Math.round(d.y - u / 2), q, u);
     } drawCloud(c) {
         const D7 = cX;
-        this.drawEffect(this.atlas.smokeAnim, c.pos, c.radius, 1 - c.life / c.maxLife, nf);
+        this.drawEffect(this.atlas.smokeAnim, c.pos, c.radius, 1 - c.life / c.maxLife, SMOKE_TIMELINE);
     } drawBangs(c) {
         const D8 = cX;
         for (let d of c.fx.bangs) this.drawEffect(this.atlas.flashAnim, d.pos, d.radius, 1 - d.life / d.maxLife, sf);
@@ -1748,7 +1748,7 @@ var ShadowRenderer = class W {
         if (!q) return;
         let A = this.ctx,
             C = callinPlanePos(q),
-            F = Math.floor(performance.now() / 45) % un,
+            F = Math.floor(performance.now() / 45) % PLANE_FRAME_COUNT,
             H = this.atlas.plane[F],
             I = f.callin.altitude,
             K = tintedCanvas(H, this.shadows, gT.night);
@@ -1833,7 +1833,7 @@ var AimRenderer = class {
             const DC = cX;
             if (!c.orderGoal || c.orderMarker <= 0) return;
             let d = 1 - c.orderMarker / f.soldier.orderMarkerTime,
-                g = c.squadTarget || c.targetBuilding ? Ca.attack : Ca.move,
+                g = c.squadTarget || c.targetBuilding ? CURSOR_COLORS.attack : CURSOR_COLORS.move,
                 i = d < 0.4 ? 0 : d < 0.75 ? 1 : 2,
                 j = i === 0 ? [gT.bark, g[0]] : [g[i]];
             drawRadialBurst(this.ctx, c.orderGoal.x, c.orderGoal.y, Math.round(3 + d * 11), {
@@ -1881,7 +1881,7 @@ var AimRenderer = class {
             let g = this.guideArrows.get(c);
             if (!g) {
                 g = [];
-                for (let i = 0; i < 16; i++) g.push(jp(c, i * Math.PI * 2 / 16));
+                for (let i = 0; i < 16; i++) g.push(buildTriangleSprite(c, i * Math.PI * 2 / 16));
                 this.guideArrows.set(c, g);
             }
             return g[d];
@@ -1953,7 +1953,7 @@ var AimRenderer = class {
         } drawMine(c, d = false) {
             const DM = cX;
             if (d) {
-                this.ctx.fillStyle = va, this.ctx.fillRect(Math.round(c.pos.x) - 1, Math.round(c.pos.y) - 3, 1, 1);
+                this.ctx.fillStyle = ACCENT_COLOR, this.ctx.fillRect(Math.round(c.pos.x) - 1, Math.round(c.pos.y) - 3, 1, 1);
                 return;
             }
             let g = this.atlas.mine;
@@ -2133,7 +2133,7 @@ var tr = class {
                         a7 = (U + 1) * H,
                         a8 = createRngFromSeed(V * 131 + U * 977),
                         a9 = pp[X];
-                    if (X === 22 && (a9 = fp(z(j, V, U - 1) === X, z(j, V, U + 1) === X, z(j, V + 1, U) === X, z(j, V - 1, U) === X)), a9) {
+                    if (X === 22 && (a9 = sandbagVariantKey(z(j, V, U - 1) === X, z(j, V, U + 1) === X, z(j, V + 1, U) === X, z(j, V - 1, U) === X)), a9) {
                         let aj = !!PROP_2X2_NAMES[X];
                         if (aj && (z(j, V - 1, U) === X || z(j, V, U - 1) === X)) continue;
                         let ak = this.atlas.mapObjects[j.theme][a9],
@@ -3489,7 +3489,7 @@ async function openMapFeedback(d) {
             }),
             E = document.querySelectorAll(".confirm-layer");
         if (y = E[E.length - 1]?.querySelector(".confirm-btn.primary") ?? null, A(), await C !== "send") return false;
-        if (await rt({
+        if (await submitFeedback({
                 kind: "mission",
                 mission: d.mission,
                 comment: u.value,
@@ -3638,7 +3638,7 @@ var RoundEndOverlay = class {
                     tone: "good",
                     key: "Enter",
                     onClick: () => q.onNext?.()
-                })), P.appendChild(Q), F.append(H, P), jo()) {
+                })), P.appendChild(Q), F.append(H, P), isFeedbackAvailable()) {
                 let ak = makeFxButton("Feedback", "result-rate dark", () => {
                     const HC = Hx;
                     this.stopCallout?.(), this.stopCallout = null, openMapFeedback({
@@ -3832,7 +3832,7 @@ function renderStepper(d) {
             return C.type = "button", C.textContent = A < 0 ? '‹' : '›', C.setAttribute("aria-label", A < 0 ? "Previous " + d.label : "Next " + d.label), p && C.setAttribute("aria-disabled", "true"), C.addEventListener("click", () => {
                 const HK = HJ;
                 if (p) {
-                    CW(C, d.emptyHint);
+                    showToastHint(C, d.emptyHint);
                     return;
                 }
                 let E = d.options.length;
@@ -3860,7 +3860,7 @@ function renderStepper(d) {
                 return L && K.setAttribute("aria-disabled", "true"), K.addEventListener("click", () => {
                     const HM = HL;
                     if (L) {
-                        CW(K, I < 0 ? E.hint.none : E.hint.all);
+                        showToastHint(K, I < 0 ? E.hint.none : E.hint.all);
                         return;
                     }
                     E.onSet(E.value + I);
