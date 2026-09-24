@@ -12,7 +12,7 @@
                 let C = document.createElement("span");
                 C.className = "hud-kit-icon";
                 let E = $f(p ?? '');
-                E && C.appendChild(eT(E, 1)), A.appendChild(C);
+                E && C.appendChild(scaleCanvas(E, 1)), A.appendChild(C);
                 let F = document.createElement("span");
                 F.className = "hud-kit-text";
                 let H = document.createElement('b');
@@ -20,7 +20,7 @@
                 let I = document.createElement("span");
                 return I.className = "hud-kit-value", I.textContent = v, A.append(F, I), A;
             };
-            if (De(this.loadout, j(c.squadWeapon, ci[c.squadWeapon] ?? c.squadWeapon, ''), j(d === "flash" ? "flashbang" : d, S6[d] ?? d, 'x' + c.grenadesHeld)), c.squadCallIn !== "none") {
+            if (setChildren(this.loadout, j(c.squadWeapon, ci[c.squadWeapon] ?? c.squadWeapon, ''), j(d === "flash" ? "flashbang" : d, S6[d] ?? d, 'x' + c.grenadesHeld)), c.squadCallIn !== "none") {
                 let l = c.callInsLeft <= 0,
                     m = j(c.squadCallIn, di[c.squadCallIn] ?? c.squadCallIn, 'x' + c.callInsLeft, "hud-kit-callin" + (this.armed ? " on" : '') + (l ? " off" : ''));
                 m instanceof HTMLButtonElement && (l && m.setAttribute("aria-disabled", "true"), m.addEventListener("click", () => this.onCallInPress?.(m))), this.loadout.appendChild(m);
@@ -35,7 +35,7 @@
                 setBlackout(Math.max(0, Math.min(1, (c.phaseTime - (m - p)) / p)));
             }
             let d = c.map.name + '/' + c.difficulty;
-            d !== this.lastMission && (this.lastMission = d, De(this.mission, Object.assign(document.createElement('b'), {
+            d !== this.lastMission && (this.lastMission = d, setChildren(this.mission, Object.assign(document.createElement('b'), {
                 textContent: c.map.name
             })), c.skirmish || this.mission.appendChild(Object.assign(document.createElement("span"), {
                 className: "hud-diff diff-" + c.difficulty,
@@ -66,7 +66,7 @@
                 let y = this.timer.root.querySelector(".ui-meter-label");
                 y && (y.textContent = c.skirmish || c.map.timeLimit > 0 ? "time left" : "hold");
                 let A = Math.max(0, l - c.time);
-                this.timer.set(1 - A / l, KW(Math.ceil(A))), this.timer.root.classList.toggle("big", !!c.skirmish);
+                this.timer.set(1 - A / l, formatClock(Math.ceil(A))), this.timer.root.classList.toggle("big", !!c.skirmish);
             } else this.timer.root.hidden = true;
             if (!(this.ov.briefingUp && c.phase === 0) && c.phase !== this.lastPhase && !(c.phase !== 0 && c.phaseTime < f.banner.hold)) {
                 if (this.lastPhase = c.phase, c.phase === 0) {
@@ -433,14 +433,14 @@ function installOverlayObserver() {
 }
 async function q3() {
     const JG = cX;
-    Yl(), await embedFonts(), Xl(), loadSettings(), zs(), Jl(), await V1("boot"), wo(), installClickRouter(), installOverlayObserver(), Zu();
+    startBootTimer(), await embedFonts(), revealBootFace(), loadSettings(), applyTitleArtVars(), revealBootLogo(), await setLoadPhase("boot"), startMusic(), installClickRouter(), installOverlayObserver(), preloadMusicTrack();
     let c = document.getElementById("screen"),
         d = c.getContext('2d', {
             alpha: false
         }),
         g = new fi(),
         j = new tr(d);
-    j.setBlood(G().blood), onSettingsChange(u => j.setBlood(u.blood)), Ne(), await V1("sprites");
+    j.setBlood(G().blood), onSettingsChange(u => j.setBlood(u.blood)), buildSpriteVars(), await setLoadPhase("sprites");
     let l = new nr(c, d),
         m = new rr(c, l),
         p = new Ln(),
@@ -1074,7 +1074,7 @@ function rankWeaponModifiers(c) {
         spread: d.spread,
         fireInterval: d.fireInterval
     };
-    let g = ne(c.rank) / (Tt.length - 1);
+    let g = rankIndexForMissions(c.rank) / (Tt.length - 1);
     return {
         spread: d.spread * (1 + (f.veteran.spread - 1) * g),
         fireInterval: d.fireInterval * (1 + (f.veteran.fireInterval - 1) * g)
@@ -1249,8 +1249,8 @@ function Y3(c) {
                 },
                 draw: (H, I) => g.draw(C.world, d, H, I)
             });
-            let E = () => setWorldDuck(sn() ? "ducked" : "silent");
-            E(), y = tt(E);
+            let E = () => setWorldDuck(isMusicEnabled() ? "ducked" : "silent");
+            E(), y = onMusicStateChange(E);
         },
         stop: () => {
             const Lw = Lk;

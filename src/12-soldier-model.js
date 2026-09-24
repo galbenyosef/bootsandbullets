@@ -1337,8 +1337,8 @@ var silhouetteShadowOffset = {
             return g[c.id % g.length];
         } drawActor(c, d) {
             const CD = cX;
-            let g = YT(c.prev.x, c.pos.x, d),
-                j = YT(c.prev.y, c.pos.y, d),
+            let g = lerp(c.prev.x, c.pos.x, d),
+                j = lerp(c.prev.y, c.pos.y, d),
                 l = this.cheerTime >= 0 && c.alive && c.faction === this.viewSide,
                 m = Math.hypot(c.vel.x, c.vel.y) > 4,
                 p = l ? Math.floor(this.cheerTime * 9) % u1 : m ? Math.floor(c.walkPhase / 3.2) % u1 : 0,
@@ -1374,7 +1374,7 @@ var silhouetteShadowOffset = {
         } rankPips(c, d, g) {
             const CG = cX;
             if (c.faction !== this.viewSide) return;
-            let j = ne(c.rank ?? 0);
+            let j = rankIndexForMissions(c.rank ?? 0);
             if (j < 1) return;
             let m = this.ctx,
                 p = Math.min(3, j),
@@ -1428,8 +1428,8 @@ var silhouetteShadowOffset = {
             return z(this.map, d, g) === 41 ? "grass" : c.wading ? c.swimming ? "deep" : z(this.map, Math.floor(c.pos.x / this.map.tile), Math.floor(c.pos.y / this.map.tile)) === 9 ? "mud" : "water" : "none";
         } drawHostage(c, d) {
             const CL = cX;
-            let g = YT(c.prev.x, c.pos.x, d),
-                j = YT(c.prev.y, c.pos.y, d),
+            let g = lerp(c.prev.x, c.pos.x, d),
+                j = lerp(c.prev.y, c.pos.y, d),
                 l = Math.hypot(c.vel.x, c.vel.y) > 4 ? Math.floor(c.walkPhase / 3.2) % u1 : 0;
             if (this.drawFigure(this.atlas.hostage[c.id % this.atlas.hostage.length][pn(c.angle)][l], g, j, this.wadeAt(c)), !c.freed) {
                 let m = this.ctx,
@@ -1438,8 +1438,8 @@ var silhouetteShadowOffset = {
             }
         } drawCritter(c, d) {
             const CM = cX;
-            let g = YT(c.prev.x, c.pos.x, d),
-                i = YT(c.prev.y, c.pos.y, d),
+            let g = lerp(c.prev.x, c.pos.x, d),
+                i = lerp(c.prev.y, c.pos.y, d),
                 j = this.atlas.chicken[c.id % this.atlas.chicken.length];
             if (!c.alive) {
                 let m = this.atlas.chickenCorpse[c.id % this.atlas.chickenCorpse.length];
@@ -1724,8 +1724,8 @@ var ShadowRenderer = class W {
         const Dr = cX;
         let g = this.ctx;
         for (let j of c.grenades) {
-            let l = YT(j.prev.x, j.pos.x, d),
-                m = YT(j.prev.y, j.pos.y, d),
+            let l = lerp(j.prev.x, j.pos.x, d),
+                m = lerp(j.prev.y, j.pos.y, d),
                 p = arcLift(j.t);
             drawNoiseDisc(g, l, m, 2.5, 1.4, gT.night), g.fillStyle = gT.stone, g.fillRect(Math.round(l - 1), Math.round(m - p - 2), 3, 3), g.fillStyle = TW.starDim, g.fillRect(Math.round(l), Math.round(m - p - 3), 1, 1);
         }
@@ -1855,7 +1855,7 @@ var AimRenderer = class {
                 j = c.squadTarget;
             if (j?.alive) {
                 let m = (this.time * 6 | 0) % 4 === 0 ? 1 : 0;
-                g(YT(j.prev.x, j.pos.x, d), YT(j.prev.y, j.pos.y, d) - 6, 11 + m, XW.body);
+                g(lerp(j.prev.x, j.pos.x, d), lerp(j.prev.y, j.pos.y, d) - 6, 11 + m, XW.body);
             }
             let l = c.targetBuilding;
             l?.standing && g(l.centre.x, l.centre.y, l.w * 8 + 3, XW.flame);
@@ -2226,8 +2226,8 @@ var tr = class {
             }
             for (let a9 of j.actors) {
                 if (I1(a9) || !a9.alive && !(a9.deathTime >= 0 && a9.deathTime < f.fx.deathTime)) continue;
-                let aj = YT(a9.prev.x, a9.pos.x, A),
-                    ak = YT(a9.prev.y, a9.pos.y, A);
+                let aj = lerp(a9.prev.x, a9.pos.x, A),
+                    ak = lerp(a9.prev.y, a9.pos.y, A);
                 aj < L - 20 || aj > N + 20 || ak < M - 24 || ak > P + 24 || a9.faction !== j.viewSide && (!a9.visible || !j.fog.isVisible(aj, ak) || !j.map.arena && (j.map.conceals || j.clouds.length > 0) && n2(j.map, j.soldiers, a9.pos, f.enemy.aggroRadius, j.levers.concealment, j.clouds)) || this.drawList.push({
                     sortY: ak,
                     actor: a9
@@ -3213,7 +3213,7 @@ var nr = class {
     sr = class {
         constructor(c, d) {
             const GK = cX;
-            this.input = c, this.layout = d, this.pause = Eu({
+            this.input = c, this.layout = d, this.pause = makeActionButton({
                 glyph: '‖',
                 label: "Pause",
                 hint: "Esc"
@@ -3411,7 +3411,7 @@ var lr = class {
         ["briefingUp"] = false;
         raise(c, d) {
             const GX = cX;
-            De(this.card, c), this.root.hidden = false, this.root.classList.toggle("interactive", d.interactive), this.unbind?.(), this.unbind = d.keys ? Q1(this.root) : null;
+            setChildren(this.card, c), this.root.hidden = false, this.root.classList.toggle("interactive", d.interactive), this.unbind?.(), this.unbind = d.keys ? bindKeyboardButtons(this.root) : null;
         } hide() {
             const GY = cX;
             this.briefingUp = false, this.root.hidden = true, this.root.classList.remove("interactive"), this.unbind?.(), this.unbind = null;
@@ -3477,7 +3477,7 @@ async function openMapFeedback(d) {
             y && (y.disabled = !j.value() && !m.value() && !u.value.trim());
         };
     for (u.addEventListener("input", A);;) {
-        let C = ST({
+        let C = showConfirmDialog({
                 title: "Rate this map",
                 body: g,
                 buttons: [{
@@ -3587,12 +3587,12 @@ var RoundEndOverlay = class {
                 K("shots", U === 0 ? "none fired" : String(U));
             }
             let L = E?.time ?? j.time;
-            K("time", KW(L)), I.childElementCount > 0 && H.appendChild(I);
-            let M = oe(q.record ?? void 0),
-                N = A ? Fu(q.record ?? void 0, j.difficulty, E?.newClear ?? false) : -1;
+            K("time", formatClock(L)), I.childElementCount > 0 && H.appendChild(I);
+            let M = highestClearedRung(q.record ?? void 0),
+                N = A ? newClearDifficultyIndex(q.record ?? void 0, j.difficulty, E?.newClear ?? false) : -1;
             if (A) {
                 let V = document.createElement("div");
-                V.className = "result-rating", V.appendChild(wu(M, {
+                V.className = "result-rating", V.appendChild(buildStarRow(M, {
                     rungs: qT,
                     nameOf: Y => DIFFICULTIES[Y].name,
                     justLit: N
@@ -3607,7 +3607,7 @@ var RoundEndOverlay = class {
                 let Y = document.createElement("div");
                 Y.className = "result-bonds";
                 let a7 = document.createElement("div");
-                a7.className = "result-purse", a7.appendChild(eT(ui(), 2));
+                a7.className = "result-purse", a7.appendChild(scaleCanvas(ui(), 2));
                 let a8 = Object.assign(document.createElement('b'), {
                     className: "result-purse-n",
                     textContent: '0'
@@ -3639,7 +3639,7 @@ var RoundEndOverlay = class {
                     key: "Enter",
                     onClick: () => q.onNext?.()
                 })), P.appendChild(Q), F.append(H, P), jo()) {
-                let ak = IT("Feedback", "result-rate dark", () => {
+                let ak = makeFxButton("Feedback", "result-rate dark", () => {
                     const HC = Hx;
                     this.stopCallout?.(), this.stopCallout = null, openMapFeedback({
                         mission: j.map.id,
@@ -3657,7 +3657,7 @@ var RoundEndOverlay = class {
             this.ov.raise(F, {
                 interactive: true,
                 keys: true
-            }), this.stopCallout?.(), this.stopCallout = A && qu(q.record, j.difficulty, q.difficulties, q.missionNumber) ? showCallout(R, "Fancy something harder?") : null;
+            }), this.stopCallout?.(), this.stopCallout = A && shouldOfferHarderWar(q.record, j.difficulty, q.difficulties, q.missionNumber) ? showCallout(R, "Fancy something harder?") : null;
         }
     },
     E3 = "cf.challenge",
@@ -3783,12 +3783,12 @@ var ScoreOverlay = class {
                     textContent: L.label
                 })), N.appendChild(Object.assign(document.createElement('b'), {
                     className: "score-stat-v",
-                    textContent: L.clock ? KW(M) : String(M)
+                    textContent: L.clock ? formatClock(M) : String(M)
                 })), C.appendChild(N);
             }
             y.appendChild(C);
             let E = pr[q.stat],
-                F = P => E.clock ? KW(P) : String(P);
+                F = P => E.clock ? formatClock(P) : String(P);
             if (y.appendChild(Object.assign(document.createElement("div"), {
                     className: "score-best",
                     textContent: q.newBest ? q.previous > 0 ? "best " + E.label + " — " + F(q.best) + ", was " + F(q.previous) : "best " + E.label + " — " + F(q.best) + ", first run" : "best " + E.label + " — " + F(q.best)
@@ -3842,7 +3842,7 @@ function renderStepper(d) {
     j.appendChild(q(-1));
     let u = w("div", "bl-art"),
         v = m?.id ? Ke(m.id, !!m.locked) : void 0;
-    v && u.appendChild(eT(v, d.icon ?? x6)), j.appendChild(u), j.appendChild(q(1)), g.appendChild(j), g.appendChild(w("span", "bl-name", (m?.name ?? '').toUpperCase())), m?.locked && (g.classList.add("locked"), g.appendChild(w("div", "bl-locked", "NOT PURCHASED")));
+    v && u.appendChild(scaleCanvas(v, d.icon ?? x6)), j.appendChild(u), j.appendChild(q(1)), g.appendChild(j), g.appendChild(w("span", "bl-name", (m?.name ?? '').toUpperCase())), m?.locked && (g.classList.add("locked"), g.appendChild(w("div", "bl-locked", "NOT PURCHASED")));
     let y = w("div", "bl-meta");
     if (!p) {
         let A = w("div", "bl-dots");
@@ -3928,7 +3928,7 @@ function buildLoadoutChoices(j, q, A) {
         emptyHint: V,
         onPick: a7 => {
             const HP = HN;
-            X("WEAPON", E, a7) || (Wt(j, "weapon", C[a7]), q());
+            X("WEAPON", E, a7) || (setLoadoutSlot(j, "weapon", C[a7]), q());
         }
     })], renderStepper({
         icon: 1,
@@ -3939,9 +3939,9 @@ function buildLoadoutChoices(j, q, A) {
         onPick: a7 => {
             const HQ = HN;
             if (X("THROWABLE", K, a7)) return;
-            Wt(j, "throwable", a7 === 0 ? "none" : H[a7 - 1]);
+            setLoadoutSlot(j, "throwable", a7 === 0 ? "none" : H[a7 - 1]);
             let a8 = a7 === 0 ? 0 : gW(j, ge[H[a7 - 1]]);
-            Wt(j, "take", a8), q();
+            setLoadoutSlot(j, "take", a8), q();
         },
         rocker: R ? {
             value: U,
@@ -3952,7 +3952,7 @@ function buildLoadoutChoices(j, q, A) {
             },
             onSet: a7 => {
                 const HR = HN;
-                Wt(j, "take", a7), q();
+                setLoadoutSlot(j, "take", a7), q();
             }
         } : void 0
     }), renderStepper({
@@ -3963,7 +3963,7 @@ function buildLoadoutChoices(j, q, A) {
         emptyHint: V,
         onPick: a7 => {
             const HS = HN;
-            X("CALL-IN", N, a7) || (Wt(j, "callin", a7 === 0 ? "none" : M[a7 - 1]), q());
+            X("CALL-IN", N, a7) || (setLoadoutSlot(j, "callin", a7 === 0 ? "none" : M[a7 - 1]), q());
         }
     })];
 }
@@ -3982,7 +3982,7 @@ var BriefingOverlay = class {
             let E = w("div", "briefing-box");
             y("briefing-obj", _t(g.map), E), g.map.brief && y("briefing-line", g.map.brief, E);
             let F = w("div", "briefing-chips");
-            if (g.map.nokill && F.appendChild(w("span", "mi-chip warn", "NO KILLING")), g.map.timeLimit > 0 && F.appendChild(w("span", "mi-chip warn", KW(g.map.timeLimit) + " LIMIT")), F.childElementCount > 0 && E.appendChild(F), q.appendChild(E), !(g.map.challenge !== null)) {
+            if (g.map.nokill && F.appendChild(w("span", "mi-chip warn", "NO KILLING")), g.map.timeLimit > 0 && F.appendChild(w("span", "mi-chip warn", formatClock(g.map.timeLimit) + " LIMIT")), F.childElementCount > 0 && E.appendChild(F), q.appendChild(E), !(g.map.challenge !== null)) {
                 let I = w("div", "briefing-diff"),
                     K = j.difficulties.length === 1;
                 for (let L of j.difficulties) {
@@ -3995,7 +3995,7 @@ var BriefingOverlay = class {
                         L !== g.difficulty && j.onDifficulty?.(L);
                     }), I.appendChild(M);
                 }
-                q.appendChild(I), j.campaign && Vu(j.campaign, g.difficulty, j.difficulties) && (q.appendChild(w('p', "briefing-rung-note", jm())), $u(j.campaign));
+                q.appendChild(I), j.campaign && shouldOfferVeteran(j.campaign, g.difficulty, j.difficulties) && (q.appendChild(w('p', "briefing-rung-note", jm())), $u(j.campaign));
             }
             if (j.campaign && j.onLoadout) {
                 let Q = w("div", "briefing-kit");
@@ -4054,7 +4054,7 @@ var BriefingOverlay = class {
         } update(c) {
             const Ib = cX;
             let d = Math.floor(c.time);
-            d !== this.shown && (this.shown = d, this.root.textContent = KW(d), this.root.hidden = false);
+            d !== this.shown && (this.shown = d, this.root.textContent = formatClock(d), this.root.hidden = false);
         } hide() {
             const Ij = cX;
             this.root.hidden = true, this.shown = -1;
@@ -4078,9 +4078,9 @@ var BriefingOverlay = class {
         constructor(c, d, g, i, j) {
             const Ik = cX;
             this.group = c, this.head = d, this.orders = g, this.timer = i, this.home = j, this.comms.insertBefore(this.lamp, this.commsValue);
-        } ["standing"] = tn("standing", '');
+        } ["standing"] = makePlate("standing", '');
         ["value"] = this.standing.querySelector(".ui-plate-value");
-        ["comms"] = tn("comms", '');
+        ["comms"] = makePlate("comms", '');
         ["commsValue"] = this.comms.querySelector(".ui-plate-value");
         ["lamp"] = w("span", "hud-lamp");
         ["link"] = null;
@@ -4118,7 +4118,7 @@ var BriefingOverlay = class {
             const Ix = cX;
             this.armed = c;
         } ["objective"] = document.createElement("div");
-        ["timer"] = Su("hold");
+        ["timer"] = makeMeter("hold");
         ["goal"] = document.createElement("div");
         ["onExit"] = null;
         ["onRestart"] = null;
@@ -4181,7 +4181,7 @@ var BriefingOverlay = class {
             };
             this.goal.className = "hud-goal";
             let d = document.createElement("div");
-            d.className = "hud-body", d.append(this.mission, c("hud-orders", nn("orders"), this.goal, this.objective), c("hud-squad", nn("squad"), this.roster), c("hud-loadout", nn("loadout"), this.loadout), c("hud-time", nn("time"), this.timer.root));
+            d.className = "hud-body", d.append(this.mission, c("hud-orders", makeHeading("orders"), this.goal, this.objective), c("hud-squad", makeHeading("squad"), this.roster), c("hud-loadout", makeHeading("loadout"), this.loadout), c("hud-time", makeHeading("time"), this.timer.root));
             let g = d.querySelector(".hud-time");
             this.clock = new yr(g);
             let j = d.querySelector(".hud-orders");
@@ -4197,7 +4197,7 @@ var BriefingOverlay = class {
                 exit: m("t-exit", "Leave the mission", () => this.onExit?.()),
                 restart: m("t-restart", "Restart the mission", () => this.onRestart?.()),
                 pause: m("t-pause", "Pause", () => this.onPause?.())
-            }, l.append(this.toolButtons.exit, this.toolButtons.restart, this.toolButtons.pause), De(this.root, d, l), this.timer.root.hidden = true;
+            }, l.append(this.toolButtons.exit, this.toolButtons.restart, this.toolButtons.pause), setChildren(this.root, d, l), this.timer.root.hidden = true;
         } setTools(c) {
             const IF = cX;
             if (!this.toolButtons) return;
@@ -4218,8 +4218,8 @@ var BriefingOverlay = class {
             let d = this.mine(c);
             this.plates.length === d.length && this.plates.every((g, i) => g.name === d[i].name) || (this.roster.textContent = '', this.plates = d.map(g => {
                 const IJ = II;
-                let i = tn(g.name, Du(g.rank));
-                return ne(g.rank) >= 3 && i.classList.add("vet"), g.own && i.classList.add("own"), i.title = Nu(g.rank) + " — " + g.rank + " mission" + (g.rank === 1 ? '' : 's') + " survived", this.roster.appendChild(i), {
+                let i = makePlate(g.name, Du(g.rank));
+                return rankIndexForMissions(g.rank) >= 3 && i.classList.add("vet"), g.own && i.classList.add("own"), i.title = rankName(g.rank) + " — " + g.rank + " mission" + (g.rank === 1 ? '' : 's') + " survived", this.roster.appendChild(i), {
                     root: i,
                     alive: true,
                     name: g.name

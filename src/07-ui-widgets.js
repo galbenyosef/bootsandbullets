@@ -442,10 +442,10 @@ var TINY_PLATE_STYLE = {
     ug = c => {
         const hY = cX;
         let [d, g, i] = hexToRgb(c);
-        return '#' + Ms(d, g, i).map(j => j.toString(16).padStart(2, '0')).join('');
+        return '#' + dimRgb(d, g, i).map(j => j.toString(16).padStart(2, '0')).join('');
     };
 
-function Ie(c = true, d = false) {
+function drawStarIcon(c = true, d = false) {
     let {
         c: g,
         g: i
@@ -500,7 +500,7 @@ var sortByLuminance = [...Cs].sort((c, d) => {
         runs: Md
     };
 
-function Pe(c = false) {
+function drawLockIcon(c = false) {
     let {
         c: d,
         g: g
@@ -533,7 +533,7 @@ function buildPillGrid(g, j, m = {}) {
         g: E
     } = O(p, q);
     if (drawBevel(E, y, 0, 0, BRASS_THEME), m.stars !== false && q >= 14 && p >= 60) {
-        let L = Ie(true),
+        let L = drawStarIcon(true),
             M = Math.round((q - L.height) / 2),
             N = v + Math.round(q * 0.35);
         E.drawImage(L, N, M), E.drawImage(L, p - N - L.width, M);
@@ -546,7 +546,7 @@ var NOTCH_MASK = ((() => {
             g = 44 * Math.PI / 180,
             j = 2.9,
             l = 0.35;
-        return wd(13, 13, (n, q) => {
+        return sampleGridToAscii(13, 13, (n, q) => {
             const i9 = b;
             let t = n - 6.5,
                 y = q - 6.5,
@@ -636,7 +636,7 @@ var NOTCH_MASK = ((() => {
         }
     };
 
-function Zt(c, d = "normal") {
+function drawIconTile(c, d = "normal") {
     const ij = cX;
     if (c in Ls) {
         let {
@@ -1313,7 +1313,7 @@ function applyTimingVars(c) {
     for (let [d, g] of Object.entries(f.timing)) c.style.setProperty("--t-" + d, g + 'ms');
 }
 
-function zs() {
+function applyTitleArtVars() {
     const j5 = cX;
     if (vu) return;
     vu = true;
@@ -1322,7 +1322,7 @@ function zs() {
     applyTimingVars(d), d.style.setProperty("--sk-logo", nT(c)), d.style.setProperty("--sk-logo-w", '' + c.width), d.style.setProperty("--sk-logo-h", '' + c.height);
 }
 
-function Ne() {
+function buildSpriteVars() {
     const j7 = cX;
     if (yu) return;
     yu = true;
@@ -1365,14 +1365,14 @@ function Ne() {
             stars: false
         })),
         '--sk-comms': nT(drawNotchedPlate(bu.w, bu.h)),
-        ...Object.fromEntries(tu.flatMap(g => ["normal", "hot", "down", "off"].map(i => [i === "normal" ? "--sk-ic-" + g : "--sk-ic-" + g + '-' + i, nT(Zt(g, i))]))),
-        '--sk-star-on': nT(Ie(true)),
-        '--sk-star-off': nT(Ie(false)),
-        '--sk-star-glint': nT(Ie(true, true)),
+        ...Object.fromEntries(tu.flatMap(g => ["normal", "hot", "down", "off"].map(i => [i === "normal" ? "--sk-ic-" + g : "--sk-ic-" + g + '-' + i, nT(drawIconTile(g, i))]))),
+        '--sk-star-on': nT(drawStarIcon(true)),
+        '--sk-star-off': nT(drawStarIcon(false)),
+        '--sk-star-glint': nT(drawStarIcon(true, true)),
         '--sk-star-sparks': nT(buildSparkleFrames()),
         '--sk-star-sparks-frames': String(po.frames),
         '--sk-star-sparks-size': po.size + 'px',
-        '--sk-lock': nT(Pe(false)),
+        '--sk-lock': nT(drawLockIcon(false)),
         ...Object.fromEntries(Object.entries(SCENE_BUILDERS).map(([g, i]) => ["--sk-theatre-" + g, nT(i())])),
         '--sk-slice-btn': String(Wn.btn),
         '--sk-slice-plate': String(Wn.plate),
@@ -1384,7 +1384,7 @@ function Ne() {
     c["--sk-face-cell"] = getSheetMeta(F1[0]).cell + 'px', c["--sk-bezel"] = nT(drawRoundBadge(getSheetMeta(F1[0]).cell));
     let d = document.documentElement;
     for (let [i, j] of Object.entries(c)) d.style.setProperty(i, j);
-    zs();
+    applyTitleArtVars();
 }
 var ESCAPE_STACK = [],
     _u = false,
@@ -1407,14 +1407,14 @@ function pushEscapeHandler(c, d) {
         i !== -1 && ESCAPE_STACK.splice(i, 1);
     };
 }
-var JT = () => ESCAPE_STACK.length > 0,
+var isDialogOpen = () => ESCAPE_STACK.length > 0,
     w = (c, d, g) => {
         const jj = cX;
         let i = document.createElement(c);
         return d && (i.className = d), g !== void 0 && (i.textContent = g), i;
     };
 
-function xu() {
+function isTextInputFocused() {
     const jk = cX;
     let c = document.activeElement;
     return c instanceof HTMLInputElement || c instanceof HTMLTextAreaElement || c instanceof HTMLSelectElement || c instanceof HTMLElement && c.isContentEditable;
@@ -1443,19 +1443,19 @@ function $W(c, d = {}) {
     return i.appendChild(w("span", "ui-btn-label", c)), d.hint && i.appendChild(w("span", "ui-btn-hint", d.hint)), g.appendChild(i), d.arrow === "forward" && g.appendChild(w("span", "ui-btn-arrow fwd", '▶')), d.key && (g.dataset.key = d.key), d.onClick && g.addEventListener("click", d.onClick), g;
 }
 
-function IT(c, d = '', g) {
+function makeFxButton(c, d = '', g) {
     const jz = cX;
     let i = w("button", d ? "fx-btn " + d : "fx-btn");
     return i.type = "button", i.appendChild(w("span", "fx-btn-label", c)), g && i.addEventListener("click", g), i;
 }
 
-function tn(c, d) {
+function makePlate(c, d) {
     const jA = cX;
     let g = w("div", "ui-plate");
     return g.appendChild(w("span", "ui-plate-label", c)), d !== void 0 && g.appendChild(w("span", "ui-plate-value", d)), g;
 }
 
-function wu(c, d) {
+function buildStarRow(c, d) {
     const jB = cX;
     let g = w("div", "ui-stars");
     for (let j = 0; j < d.rungs.length; j++) {
@@ -1467,7 +1467,7 @@ function wu(c, d) {
     return g;
 }
 
-function Su(c) {
+function makeMeter(c) {
     const jC = cX;
     let d = w("div", "ui-meter"),
         g = w("div", "ui-meter-head"),
@@ -1484,15 +1484,15 @@ function Su(c) {
         }
     };
 }
-var nn = c => w("div", "ui-heading", c);
+var makeHeading = c => w("div", "ui-heading", c);
 
-function De(c, ...d) {
+function setChildren(c, ...d) {
     const jE = cX;
     c.textContent = '';
     for (let g of d) c.appendChild(g);
 }
 
-function Eu(c) {
+function makeActionButton(c) {
     const jF = cX;
     let d = w("button", "ui-action tone-" + (c.tone ?? "default"));
     d.type = "button", c.primary && d.classList.add("primary");
@@ -1582,7 +1582,7 @@ function renderSlider(c) {
     };
 }
 
-function Q1(c) {
+function bindKeyboardButtons(c) {
     const jW = cX;
     let d = g => {
         const jV = b;
@@ -1598,7 +1598,7 @@ function Q1(c) {
     return window.addEventListener("keydown", d, true), () => window.removeEventListener("keydown", d, true);
 }
 
-function eT(c, d, g = '') {
+function scaleCanvas(c, d, g = '') {
     const jX = cX;
     let i = document.createElement("canvas");
     i.width = c.width * d, i.height = c.height * d, g && (i.className = g);
@@ -1620,7 +1620,7 @@ function buildConfirmField(c) {
         if (l.key !== "Enter") return;
         l.preventDefault(), document.querySelector(".confirm-btn.primary")?.click();
     });
-    let i = ST({
+    let i = showConfirmDialog({
         title: c.title,
         body: d,
         buttons: [{
@@ -1636,8 +1636,8 @@ function buildConfirmField(c) {
     }, 0), i.then(l => l === 'ok' && g.value.trim() || null);
 }
 
-function ST(c) {
-    return Ne(), new Promise(j => {
+function showConfirmDialog(c) {
+    return buildSpriteVars(), new Promise(j => {
         const k7 = b;
         openConfirmLayerCount++;
         let q = document.createElement("div");
@@ -1663,7 +1663,7 @@ function ST(c) {
             I = null,
             K = new Map();
         for (let R of c.buttons) {
-            let S = IT(R.label, R.variant === "good" ? "confirm-btn primary good" : R.variant === "primary" ? "confirm-btn primary" : "confirm-btn", () => C(R.value));
+            let S = makeFxButton(R.label, R.variant === "good" ? "confirm-btn primary good" : R.variant === "primary" ? "confirm-btn primary" : "confirm-btn", () => C(R.value));
             H ??= S, K.set(R.value, S), (R.variant === "primary" || R.variant === "good") && (I ??= S), F.appendChild(S);
         }
         let L = 0;
@@ -1700,7 +1700,7 @@ var updatePromptShown = false,
     Vg = c => c.replace(/-/g, ' ').toUpperCase();
 async function promptAppUpdate(c) {
     const kq = cX;
-    updatePromptShown = true, await ST({
+    updatePromptShown = true, await showConfirmDialog({
         title: "OUT OF DATE",
         body: "This game is on " + Vg(c) + ", which this page has never heard of. Reload to pick up the newest version.",
         buttons: [{
@@ -1711,7 +1711,7 @@ async function promptAppUpdate(c) {
     }), window.location.reload();
 }
 
-function Iu(c) {
+function promptAppUpdateOnce(c) {
     updatePromptShown || promptAppUpdate(c);
 }
 var SQUAD_NAME_POOL = [] = ["JOOLS", "JOPS", "STOO", 'RJ', "GARY", "ANDY", "BUZZ", "TEDDY", "HAWK", "MAC", "FRANK", "WILL", "CHRIS", "DAVE", "ROB", "JIM", "KEV", "PAUL", "NOBBY", "TAFF", "SCOUSE", "SMUDGE", "DUSTY", "BROCK", "HAGGIS", "PIKE", "WALKER", "JONES", "FRAZER", "BILKO", "DOYLE", "HUDSON", "DRAKE", "APONE", "CHALKY", "DUTCH", "GINGE", "JOCK", "LOFTY", "BLONDY", "PADDY", "RAMBO", "RATTY", "SHORTY", "SPUD", "STICKY", "TINY", "TOMBO", "WIGGY", "BUNNY", "CHIEF", "CURLY", "DODGER", "FLASH", "GRUMPY", "HAPPY", "LURCH", "MOOSE", "NUTTY", "PIGGY", "PORKY", "RUSTY", "SHARKY", "SLIM", "SNOWY", "SPARKY", "STUMPY", "TANK", "TITCH", "WHEELS", "BADGER", "BEANS", "BONES", "BRICK", "CHOPS", "CRUMBS", "DINGER", "FLAPS", "GIZMO", "HOOTER", "JAFFA", "KIPPER", "MUFFIN", "NIPPER", "ODDBOD", "PICKLE", "RHUBRB", "SCRAPS", "SHUNT", "SPANNR", "TICKER", "WOBBLE", "ZIPPO", "BUNGLE", "ABBOT", "ADAMS", "ALLEN", "ARCHER", "ASHBY", "ATKINS", "BAKER", "BANKS", "BARLOW", "BARNES", "BATES", "BAXTER", "BEALE", "BELL", "BENNET", "BERRY", "BEST", "BIRCH", "BISHOP", "BLAKE", "BOLTON", "BOND", "BOOTH", "BOWEN", "BOYCE", "BOYD", "BRADY", "BRIGGS", "BROOKS", "BROWN", "BRYANT", "BUCK", "BURKE", "BURNS", "BUTLER", "BYRNE", "CAIN", "CARR", "CARTER", "CASEY", "CHAPEL", "CLARK", "CLARKE", "CLAY", "CLEGG", "COBB", "COLE", "COLLIN", "COOK", "COOPER", "COX", "CRAIG", "CRANE", "CROSS", "CROWE", "CURTIS", "DALE", "DALTON", "DAVIES", "DAWSON", "DAY", "DEAN", "DENNIS", "DIXON", "DODD", "DOWNS", "DRURY", "DUNN", "DYER", "EATON", "EDGAR", "ELLIS", "ELTON", "EVANS", "FAIRLY", "FARR", "FIELD", "FINCH", "FISHER", "FLYNN", "FORD", "FOSTER", "FOWLER", "FOX", "FRENCH", "FROST", "FULLER", "GALE", "GARNER", "GIBBS", "GILL", "GLOVER", "GODDEN", "GOULD", "GRAHAM", "GRANT", "GRAVES", "GRAY", "GREEN", "GREGG", "GRIMES", "HALL", "HAMER", "HANLEY", "HARDY", "HARPER", "HARRIS", "HART", "HAYES", "HEATH", "HENRY", "HERON", "HICKS", "HILL", "HOBBS", "HODGE", "HOLDEN", "HOLT", "HOOPER", "HOPE", "HORNE", "HOWARD", "HOWE", "HUGHES", "HUNT", "HUNTER", "HURST", "HYDE", "INGRAM", "IRVINE", "JACKS", "JARVIS", "JEFFS", "JENNER", "JOYCE", "JUDD", "KANE", "KEANE", "KEATS", "KEELER", "KELLY", "KEMP", "KENT", "KERR", "KIDD", "KING", "KIRK", "KNIGHT", "LAMB", "LANE", "LANG", "LARK", "LAWSON", "LEACH", "LEE", "LEIGH", "LEWIS", "LLOYD", "LOCK", "LOCKE", "LOGAN", "LONG", "LOWE", "LUCAS", "LYNCH", "LYONS", "MADDOX", "MALONE", "MANN", "MARSH", "MASON", "MAY", "MAYES", "MCBAIN", "MCCOY", "MCLEAN", "MEAD", "MERCER", "MILES", "MILLER", "MILLS", "MOODY", "MOON", "MOORE", "MORAN", "MORGAN", "MORRIS", "MOSS", "MOULD", "MUNRO", "MURPHY", "MURRAY", "NASH", "NEAL", "NELSON", "NEWMAN", "NOBLE", "NOLAN", "NORRIS", "NORTON", "NUNN", "OAKES", "ODELL", "OGDEN", "OLIVER", "ORTON", "OSMAN", "OWEN", "PAGE", "PALMER", "PARKER", "PARR", "PATON", "PAYNE", "PEARCE", "PECK", "PERRY", "PETERS", "PHILIP", "PILE", "PITT", "POOLE", "POPE", "PORTER", "POTTER", "POWELL", "PRATT", "PRICE", "PRIOR", "PUGH", "QUINN", "RAINE", "RAMSEY", "RAND", "RANKIN", "READ", "REEVES", "REID", "REYNER", "RHODES", "RICE", "RIDLEY", "RILEY", "RIVERS", "ROACH", "ROBSON", "ROGERS", "ROOKE", "ROSE", "ROSS", "ROWE", "RUSSEL", "RYAN", "SANDS", "SAVAGE", "SAYER", "SCOTT", "SEARLE", "SHARP", "SHAW", "SHEEHY", "SHIELD", "SHORT", "SIMS", "SLADE", "SLOAN", "SMART", "SMITH", "SNOW", "SPEARS", "SPICER", "STACEY", "STARK", "STEELE", "STOKES", "STONE", "STOTT", "STRONG", "SUMNER", "SUTTON", "SWAIN", "SWIFT", "TALBOT", "TATE", "TAYLOR", "TERRY", "THORN", "TILLEY", "TODD", "TOMLIN", "TOWNS", "TRAVIS", "TUCKER", "TURNER", "TWIGG", "TYSON", "UNWIN", "VANCE", "VAUGHN", "VERNON", "VICKER", "VINCE", "WADE", "WAGNER", "WALSH", "WARD", "WARNER", "WARREN", "WATSON", "WATTS", "WEAVER", "WEBB", "WEBLEY", "WELCH", "WELLS", "WEST", "WHEELR", "WHITE", "WILDE", "WILKES", "WINTER", "WOLFE", "WOOD", "WOODS", "WRAY", "WREN", "WRIGHT", "WYATT", "YATES", "YOUNG"],
@@ -1772,16 +1772,16 @@ var CAMPAIGN_KEY = "cf.campaign",
         short: "GEN"
     }];
 
-function ne(c) {
+function rankIndexForMissions(c) {
     const kx = cX;
     let d = 0;
     for (let g = 0; g < Tt.length; g++) c >= Tt[g].at && (d = g);
     return d;
 }
-var Nu = c => Tt[ne(c)].name,
-    Du = c => Tt[ne(c)].short;
+var rankName = c => Tt[rankIndexForMissions(c)].name,
+    Du = c => Tt[rankIndexForMissions(c)].short;
 
-function oe(c) {
+function highestClearedRung(c) {
     const kz = cX;
     if (!c) return 0;
     let d = 0;
@@ -1789,11 +1789,11 @@ function oe(c) {
     return d;
 }
 
-function Fu(c, d, g) {
+function newClearDifficultyIndex(c, d, g) {
     const kA = cX;
     if (!g) return -1;
     let i = qT.indexOf(d);
-    return i >= 0 && i + 1 === oe(c) ? i : -1;
+    return i >= 0 && i + 1 === highestClearedRung(c) ? i : -1;
 }
 var $g = ["frag", "smoke", "flashbang", "supplyDrop", "airstrike", "reinforcements"],
     Kg = 5,
@@ -1852,7 +1852,7 @@ var DIFFICULTY_ALIAS = {
     },
     Ys = c => typeof c != "string" ? null : P1(c) ? c : DIFFICULTY_ALIAS[c] ?? null;
 
-function Bu() {
+function loadCampaign() {
     const kD = cX;
     let c = null;
     try {
@@ -1930,7 +1930,7 @@ function Bu() {
     }
 }
 
-function pe(c) {
+function saveCampaign(c) {
     const kG = cX;
     try {
         localStorage.setItem(CAMPAIGN_KEY, JSON.stringify(c));
@@ -1946,7 +1946,7 @@ function uniqueSoldierName(c) {
     }
 }
 
-function Hu(c, d) {
+function fillSquadToCapacity(c, d) {
     const kI = cX;
     let g = new Set();
     for (; c.squad.length < d;) {
@@ -1956,7 +1956,7 @@ function Hu(c, d) {
             missions: 0
         });
     }
-    return c.squad.sort((j, l) => l.missions - j.missions), pe(c), c.squad.slice(0, d).map(j => ({
+    return c.squad.sort((j, l) => l.missions - j.missions), saveCampaign(c), c.squad.slice(0, d).map(j => ({
         name: j.name,
         missions: j.missions,
         own: !!j.own,
@@ -1964,12 +1964,12 @@ function Hu(c, d) {
     }));
 }
 
-function Wt(c, d, g) {
+function setLoadoutSlot(c, d, g) {
     const kJ = cX;
-    c.loadout[d] = g, pe(c);
+    c.loadout[d] = g, saveCampaign(c);
 }
 
-function Gu(j, q) {
+function applyMissionResult(j, q) {
     const kK = cX;
     let {
         won: A,
@@ -1984,7 +1984,7 @@ function Gu(j, q) {
         return {
             name: aA,
             missions: A ? aC + 1 : aC,
-            promoted: A && ne(aC + 1) > ne(aC),
+            promoted: A && rankIndexForMissions(aC + 1) > rankIndexForMissions(aC),
             own: !!aB?.own
         };
     }), Q = q.died.map(aA => {
@@ -2016,7 +2016,7 @@ function Gu(j, q) {
             aB = aA.taken ?? (aA.taken = {});
         aB[K] = [...new Set([...aB[K] ?? [], ...Y])], j.records[F] = aA;
     }
-    if (!A) return pe(j), {
+    if (!A) return saveCampaign(j), {
         won: A,
         bonds: a7,
         survivors: P,
@@ -2045,7 +2045,7 @@ function Gu(j, q) {
         aw = !aj || ak > aq.bestHome,
         ax = !aj || L < aq.bestTime,
         az = !aq.clears.includes(K);
-    return aq.bestHome = Math.max(aq.bestHome, ak), aq.bestTime = Math.min(aq.bestTime, L), aq.packages = Math.max(aq.packages, Y.length), az && aq.clears.push(K), j.records[F] = aq, pe(j), {
+    return aq.bestHome = Math.max(aq.bestHome, ak), aq.bestTime = Math.min(aq.bestTime, L), aq.packages = Math.max(aq.packages, Y.length), az && aq.clears.push(K), j.records[F] = aq, saveCampaign(j), {
         won: A,
         bonds: a7,
         survivors: P,
@@ -2059,12 +2059,12 @@ function Gu(j, q) {
     };
 }
 
-function Vu(c, d, g) {
+function shouldOfferVeteran(c, d, g) {
     const kN = cX;
     return c.veteranAsked || d !== "rookie" || g.length < 2 ? false : Object.values(c.records).filter(i => i.clears.includes("rookie")).length >= f.onboarding.veteranAfterClears;
 }
 
-function qu(c, d, g, i) {
+function shouldOfferHarderWar(c, d, g, i) {
     const kO = cX;
     if (!c || d !== "rookie" || !g.includes("veteran")) return false;
     let {
@@ -2074,7 +2074,7 @@ function qu(c, d, g, i) {
     return i < j || i > l ? false : !c.clears.includes("veteran") && !c.clears.includes("elite");
 }
 
-function Uu(c, d) {
+function nextHarderDifficulty(c, d) {
     const kP = cX;
     for (let g of qT.slice(qT.indexOf(c) + 1))
         if (d.includes(g)) return g;
@@ -2083,10 +2083,10 @@ function Uu(c, d) {
 
 function $u(c) {
     const kQ = cX;
-    c.veteranAsked || (c.veteranAsked = true, pe(c));
+    c.veteranAsked || (c.veteranAsked = true, saveCampaign(c));
 }
 
-function KW(c) {
+function formatClock(c) {
     const kR = cX;
     if (!Number.isFinite(c)) return '--';
     let d = Math.max(0, Math.round(c));
@@ -2232,7 +2232,7 @@ var MUSIC_BPM = 132,
     Ta = null,
     Wa = new Set();
 
-function tt(c) {
+function onMusicStateChange(c) {
     const lq = cX;
     return Wa.add(c), () => Wa.delete(c);
 }
@@ -2242,7 +2242,7 @@ var on = () => {
     Xu = () => Ju() ? ko : "none",
     Ju = () => ET !== null && !ET.paused || (rn?.running ?? false);
 
-function Zu(c = 20000) {
+function preloadMusicTrack(c = 20000) {
     let d = Ta ??= probeMirror();
     return new Promise(g => {
         const lw = b;
@@ -2313,7 +2313,7 @@ async function updateMusic() {
     rn ??= new MusicEngine(d), ko = "synth", rn.start(), d.state === "suspended" && armMusicUnlock(), on();
 }
 
-function wo() {
+function startMusic() {
     et = true, updateMusic();
 }
 var musicFadeToken = 0;
@@ -2343,7 +2343,7 @@ function fadeOutMusic() {
         };
     window.setTimeout(p, l / g);
 }
-var sn = () => G().music,
+var isMusicEnabled = () => G().music,
     ot = () => et && G().music && !Ju();
 
 function startMusicOnGesture() {
@@ -2367,22 +2367,22 @@ function toggleMusic() {
         return;
     }
     updateSettings({
-        music: !sn()
+        music: !isMusicEnabled()
     }), Tm();
 }
 
-function Wm(c) {
+function createMusicToggle(c) {
     const lH = cX;
     let d = document.createElement("button");
     d.type = "button", d.id = "music-toggle", d.className = "corner-tool";
     let g = () => {
         const lI = lH;
-        let j = sn(),
+        let j = isMusicEnabled(),
             l = ot();
         d.classList.toggle('on', j && !l), d.classList.toggle("blocked", l), d.setAttribute("aria-pressed", String(j)), d.title = j ? l ? "Start the music  (M)" : Xu() === "synth" ? "Music on — house march  (M)" : "Music on  (M)" : "Music off  (M)", d.setAttribute("aria-label", d.title), d.innerHTML = j ? SOUND_ICON_ON : eb;
     };
     d.addEventListener("click", toggleMusic);
-    let i = tt(g);
+    let i = onMusicStateChange(g);
     return g(), c.appendChild(d), () => {
         const lJ = lH;
         i(), d.remove();
@@ -2452,7 +2452,7 @@ function saveDispatchState(c) {
         }));
     } catch {}
 }
-var na = {
+var dispatchStore = {
         load: () => Promise.resolve(loadDispatchState()),
         save: c => (saveDispatchState(c), Promise.resolve())
     },
@@ -2489,17 +2489,17 @@ function dispatchSuppressReason(c, d) {
     return null;
 }
 
-function im(c) {
+function pickDispatchKind(c) {
     for (let d of DISPATCH_KINDS)
         if (dispatchSuppressReason(d, c) === null) return d;
     return null;
 }
-async function rm(c, d, g) {
+async function markDispatchShown(c, d, g) {
     const lN = cX;
     let i = await c.load();
     i.shown[d] = g.now, i.lastAtCleared = g.missionsCleared, await c.save(i);
 }
-async function sm(c, d, g) {
+async function markDispatchSkipped(c, d, g) {
     const lO = cX;
     let i = await c.load();
     i.skips[d] = (i.skips[d] ?? 0) + 1, i.skippedAtCleared[d] = g.missionsCleared, await c.save(i);
@@ -2529,7 +2529,7 @@ var globalWindow = window,
         }
     })());
 
-function hW(c, d) {
+function trackEvent(c, d) {
     const lS = cX;
     try {
         cm && (d = {
@@ -2552,9 +2552,9 @@ function hW(c, d) {
         i.push([c, d]);
     } catch {}
 }
-var dm = c => {
+var trackScreen = c => {
         const lU = cX;
-        tc(c), hW("screen", {
+        tc(c), trackEvent("screen", {
             name: c
         });
     },
@@ -2572,19 +2572,19 @@ var dm = c => {
             };
         }
     })()),
-    um = (c, d, g) => hW("mission_start", {
+    um = (c, d, g) => trackEvent("mission_start", {
         id: c,
         difficulty: d,
         map: g,
         ...sa
     }),
-    mm = (c, d, g) => hW("mission_restart", {
+    mm = (c, d, g) => trackEvent("mission_restart", {
         id: c,
         difficulty: d,
         map: g,
         ...sa
     }),
-    aa = (c, d, g, i, j) => hW("mission_end", {
+    aa = (c, d, g, i, j) => trackEvent("mission_end", {
         id: c,
         difficulty: d,
         map: g,
@@ -2604,21 +2604,21 @@ var dm = c => {
     }),
     la = (c, d, g) => {
         const lX = cX;
-        hW("armoury_buy", {
+        trackEvent("armoury_buy", {
             id: c,
             price: d,
             balance: g ?? null
         }), markArmouryPurchase();
     },
-    pm = () => hW("room_create"),
-    fm = c => hW("room_join", {
+    pm = () => trackEvent("room_create"),
+    fm = c => trackEvent("room_join", {
         via: c
     }),
-    hm = (c, d) => hW(d > 1 ? "rematch" : "match_start", {
+    hm = (c, d) => trackEvent(d > 1 ? "rematch" : "match_start", {
         map: c,
         round: d
     }),
-    gm = (c, d) => hW("match_end", {
+    gm = (c, d) => trackEvent("match_end", {
         won: c,
         reason: d
     }),
@@ -2659,13 +2659,13 @@ function saveEventQueue() {
     }
 }
 
-function vm(c) {
+function addPlaySeconds(c) {
     const m7 = cX;
     let d = it();
     d.playSeconds += c, da += c, da >= ob && saveEventQueue();
 }
 
-function ua(c) {
+function recordMissionOutcome(c) {
     const m8 = cX;
     let d = it();
     c ? d.missionsCompleted++ : d.missionsFailed++, saveEventQueue();
@@ -2676,8 +2676,8 @@ function Co(d, g) {
     const m9 = cX;
     let j = new Set(),
         m = new Map(),
-        p = Object.values(g.records).reduce((q, u) => q + oe(u), 0);
-    for (let q of q1(d)) {
+        p = Object.values(g.records).reduce((q, u) => q + highestClearedRung(u), 0);
+    for (let q of groupMissionsByZone(d)) {
         if (q.zone.unlock === "all") {
             for (let C of q.levels) j.add(C.id);
             m.set(q.zone.id, {
@@ -2716,7 +2716,7 @@ function Co(d, g) {
         stars: p
     };
 }
-var Ao = {
+var LOCKED_ZONE_CLASSES = {
         city: "locked_city",
         swamp: "locked_swamp",
         coast: "locked_coast"
@@ -2781,7 +2781,7 @@ function assignExperiment(c) {
     assignedExperiment = ab(c);
     let d = f.demand.current,
         g = cn();
-    return g.assigned[d] !== assignedExperiment.id && (g.assigned[d] = assignedExperiment.id, ma(g), hW("experiment_assigned", wm({}))), assignedExperiment;
+    return g.assigned[d] !== assignedExperiment.id && (g.assigned[d] = assignedExperiment.id, ma(g), trackEvent("experiment_assigned", wm({}))), assignedExperiment;
 }
 var getAssignedExperiment = () => assignedExperiment,
     wm = c => ({
@@ -2798,7 +2798,7 @@ function Ro(c, d) {
         j = Co(d, c),
         l = d.filter(u => c.records[u.id]).length,
         m = Object.values(c.records).filter(u => u.clears.length > 0).length,
-        p = Object.values(c.records).reduce((u, v) => u + oe(v), 0),
+        p = Object.values(c.records).reduce((u, v) => u + highestClearedRung(v), 0),
         q = [...j.byZone.values()].filter(u => u.open > 0).length;
     return {
         play_seconds: Math.round(g.playSeconds),
@@ -2815,7 +2815,7 @@ function Ro(c, d) {
 
 function ZT(c, d = {}) {
     const mB = cX;
-    if (hW(c, wm(d)), c === "purchase_intent_declined" || c === "dialog_closed") {
+    if (trackEvent(c, wm(d)), c === "purchase_intent_declined" || c === "dialog_closed") {
         let g = cn();
         g.declinedAt = Date.now(), ma(g);
     }
@@ -2919,7 +2919,7 @@ function playTypewriterLine({
     raised: d,
     build: g
 }) {
-    return Ne(), new Promise(j => {
+    return buildSpriteVars(), new Promise(j => {
         const mH = b;
         let q = false,
             A = EW.trumper,
@@ -2940,7 +2940,7 @@ function playTypewriterLine({
             R = g(P, Q);
         R.classList.add("dsp-body"), H.append(R, P);
         let S = pushEscapeHandler("dispatch", () => Q("skipped")),
-            U = Q1(F),
+            U = bindKeyboardButtons(F),
             V = getSheetMeta(A.portrait ?? '').talk.frames,
             X = 0,
             Y = 0,
@@ -3008,13 +3008,13 @@ function renderOfferPanel({
             for (let U of E.bullets) S.appendChild(w('li', '', U));
             return R.appendChild(S), F && R.appendChild(w('p', "dsp-price", "Full game -- " + F)), {
                 content: R,
-                buttons: [IT(E.cta.replace("{price}", F), "dsp-go primary", () => {
+                buttons: [makeFxButton(E.cta.replace("{price}", F), "dsp-go primary", () => {
                     const mP = mO;
                     ZT("purchase_intent_clicked", {
                         ...I,
                         ...H
                     }), M(P);
-                }), IT(E.decline, "dsp-go dark", () => {
+                }), makeFxButton(E.decline, "dsp-go dark", () => {
                     const mQ = mO;
                     ZT("purchase_intent_declined", {
                         ...I,
@@ -3039,7 +3039,7 @@ function renderOfferPanel({
             X.rows = 3, X.maxLength = 2000, X.placeholder = "Optional.", X.setAttribute("aria-label", E.reveal.comment), R.append(w('p', "dsp-plain dsp-question", E.reveal.comment), X);
             let Y = w('p', "dsp-note");
             R.appendChild(Y);
-            let a7 = IT("Keep me posted", "dsp-go primary", () => {
+            let a7 = makeFxButton("Keep me posted", "dsp-go primary", () => {
                 const mU = mR;
                 let a8 = S ? U.value.trim() : '',
                     a9 = X.value.trim();
@@ -3062,7 +3062,7 @@ function renderOfferPanel({
             });
             return {
                 content: R,
-                buttons: [a7, IT(E.reveal.back, "dsp-go dark", () => {
+                buttons: [a7, makeFxButton(E.reveal.back, "dsp-go dark", () => {
                     const mX = mR;
                     ZT("dialog_closed", I), q("closed");
                 })]
@@ -3070,7 +3070,7 @@ function renderOfferPanel({
         },
         Q = () => ({
             content: w('p', "dsp-headline", E.reveal.thanks),
-            buttons: [IT(E.reveal.back, "dsp-go primary", () => {
+            buttons: [makeFxButton(E.reveal.back, "dsp-go primary", () => {
                 const mY = mM;
                 ZT("returned_to_game", I), q("sent");
             })]
@@ -3138,7 +3138,7 @@ function renderMusicCta(c) {
     d.addEventListener("click", () => {
         startMusicOnGesture(), i(true);
     });
-    let j = tt(() => {
+    let j = onMusicStateChange(() => {
         ot() || i(false);
     });
     return ot() ? (c.appendChild(d), () => {
@@ -3270,7 +3270,7 @@ function Fo(c, {
         p = c.map(u => {
             const nG = nF;
             let v = w("button", "ui-tab");
-            return v.type = "button", v.dataset.id = u.id, u.icon && v.appendChild(eT(u.icon, 1)), v.appendChild(w("span", "ui-tab-label", u.label)), v.addEventListener("click", () => q(u.id)), g.appendChild(v), v;
+            return v.type = "button", v.dataset.id = u.id, u.icon && v.appendChild(scaleCanvas(u.icon, 1)), v.appendChild(w("span", "ui-tab-label", u.label)), v.addEventListener("click", () => q(u.id)), g.appendChild(v), v;
         });
 
     function q(u) {
@@ -3321,13 +3321,13 @@ function Ho(d, g, j = {}) {
     };
     q.append(...d(u)), p.appendChild(q);
     let v = document.createElement("button");
-    v.type = "button", v.className = "hud-tool t-close frame-door", v.title = "Close", v.setAttribute("aria-label", "Close"), v.addEventListener("click", u), p.appendChild(v), De(m, p), m.hidden = false;
+    v.type = "button", v.className = "hud-tool t-close frame-door", v.title = "Close", v.setAttribute("aria-label", "Close"), v.addEventListener("click", u), p.appendChild(v), setChildren(m, p), m.hidden = false;
     let y = F => {
         const nK = nI;
         F.target === m && u();
     };
     m.addEventListener("pointerdown", y);
-    let A = Q1(m),
+    let A = bindKeyboardButtons(m),
         C = pushEscapeHandler("sheet", u),
         E = () => {
             const nL = nI;
@@ -3367,7 +3367,7 @@ function Go(c, d, g, i = false) {
 }
 async function confirmWipeData() {
     const nO = cX;
-    await ST({
+    await showConfirmDialog({
         title: "CLEAR MY DATA",
         body: "This wipes your squad and their graves, every star and best time, your War Bonds and everything bought with them, and your settings. The game restarts as though you had never played it. There is no way back.",
         buttons: [{
@@ -3592,7 +3592,7 @@ var PRIVACY_DATE = "7 September 2026",
 function Bm() {
     const o7 = cX;
     let c = document.createElement("div");
-    return c.className = "privacy", c.innerHTML = "<p class=\"privacy-updated\">Last updated " + PRIVACY_DATE + "</p>" + Eb.map(([d, g]) => "<h3>" + d + "</h3>" + g).join(''), ST({
+    return c.className = "privacy", c.innerHTML = "<p class=\"privacy-updated\">Last updated " + PRIVACY_DATE + "</p>" + Eb.map(([d, g]) => "<h3>" + d + "</h3>" + g).join(''), showConfirmDialog({
         title: "Privacy",
         body: c,
         buttons: [{
@@ -3638,7 +3638,7 @@ function renderChangelog() {
                 return m ? "<li class=\"changelog-entry " + m.cls + "\"><span class=\"changelog-tag\">" + m.label + "</span><span>" + l.html + "</span></li>" : "<li class=\"changelog-entry is-note\"><span>" + l.html + "</span></li>";
             }).join('');
         return "<section class=\"changelog-release\"><h3><span class=\"changelog-version\">v" + d.version + "</span>" + i + g + "</h3><ul>" + j + "</ul></section>";
-    }).join(''), ST({
+    }).join(''), showConfirmDialog({
         title: "What has changed",
         body: c,
         buttons: [{
@@ -4190,7 +4190,7 @@ function hp() {
     const p8 = cX;
     return Object.fromEntries(["jungle", "desert", "arctic"].map(c => [c, Object.fromEntries(Object.entries(mp).map(([d, g]) => [d, [0, 1, 2].map(i => g(c, i))]))]));
 }
-var THATCH_PALETTE = mo.thatch;
+var THATCH_PALETTE = RAMP_PALETTES.thatch;
 
 function buildRockIsland(j) {
     const p9 = cX;
@@ -5676,7 +5676,7 @@ function buildSpriteAtlas() {
             }, (j, l) => drawGrassTuft(l + 9, "#5c6b62", "#8fa096"))
         },
         hut: g,
-        hutAllied: g.map(j => kd(j, {
+        hutAllied: g.map(j => remapRampPalettes(j, {
             thatch: "moss"
         })),
         cabin: [0, 1, 2, 3].map(buildMetalRidge),

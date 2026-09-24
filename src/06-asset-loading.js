@@ -4,22 +4,22 @@ var LOAD_PHASES = ["boot", "sprites", "missions", "ready"],
     zl = 0,
     ao = 0;
 
-function Yl() {
+function startBootTimer() {
     const gC = cX;
     zl = performance.now();
 }
 
-function Xl() {
+function revealBootFace() {
     const gD = cX;
     ee("boot")?.classList.add("has-face");
 }
 
-function Jl() {
+function revealBootLogo() {
     const gE = cX;
     ee("boot")?.classList.add("has-logo");
 }
 
-function V1(c) {
+function setLoadPhase(c) {
     const gF = cX;
     let d = LOAD_PHASES.indexOf(c);
     if (d < 0 || d + 1 <= ao) return Promise.resolve();
@@ -43,7 +43,7 @@ var randomOf = c => c[Math.floor(Math.random() * c.length)] ?? '',
     P4 = () => new Promise(c => {
         requestAnimationFrame(() => requestAnimationFrame(() => c()));
     });
-async function Es() {
+async function hideBootOverlay() {
     const gG = cX;
     await waitForStylesheet();
     let c = Math.max(0, j4 - (performance.now() - zl));
@@ -82,7 +82,7 @@ function waitForStylesheet(c = 2000) {
     });
 }
 
-function Zl(c) {
+function showBootError(c) {
     const gN = cX;
     let d = ee("boot");
     if (!d) return;
@@ -151,7 +151,7 @@ function reportError(c, d, g) {
     } catch {}
 }
 
-function oc() {
+function installGlobalErrorHandlers() {
     const gR = cX;
     try {
         window.addEventListener("error", c => {
@@ -184,7 +184,7 @@ function ic(c, d) {
         m = false;
     };
 }
-var YT = (c, d, g) => c + (d - c) * g,
+var lerp = (c, d, g) => c + (d - c) * g,
     rc = {
         name: "The Clearing",
         theme: "jungle",
@@ -1606,32 +1606,32 @@ var YT = (c, d, g) => c + (d - c) * g,
         dev: true
     }];
 
-function Kt(c) {
+function getZone(c) {
     const gY = cX;
     let d = $t.find(g => g.id === c);
     if (!d) throw new Error("no zone \"" + c + "\" in ZONES -- every directory under data/maps/ needs a row");
     return d;
 }
 
-function hd() {
+function getFutureZones() {
     const gZ = cX;
     return $t.filter(c => c.future);
 }
 
-function gd(c, d) {
+function resolveZoneDifficulties(c, d) {
     const h7 = cX;
-    let g = Kt(c).difficulties ?? qT;
+    let g = getZone(c).difficulties ?? qT;
     if (!d.difficulties) return g;
     let i = qT.filter(j => g.includes(j) && d.difficulties.includes(j));
     return i.length > 0 ? i : g;
 }
 
-function bd(c, d) {
+function pickDifficulty(c, d) {
     const h8 = cX;
     return c.includes(d) ? d : c[0];
 }
 
-function q1(c) {
+function groupMissionsByZone(c) {
     const h9 = cX;
     let d = $t.map(g => ({
         zone: g,
@@ -1645,17 +1645,17 @@ function q1(c) {
     return d.filter(j => j.levels.length > 0);
 }
 
-function co(c) {
+function filterCampaignMissions(c) {
     const hj = cX;
     return c.filter(d => {
         const hk = hj;
-        let g = Kt(d.zone);
+        let g = getZone(d.zone);
         return g.roster === "campaign" && !g.dev;
     });
 }
-async function yd() {
+async function loadCampaignMissions() {
     const hq = cX;
-    return lo.map(c => normalizeMission(c, aT[c])).filter(c => c.objective !== "skirmish").filter(c => !Kt(c.zone).dev);
+    return lo.map(c => normalizeMission(c, aT[c])).filter(c => c.objective !== "skirmish").filter(c => !getZone(c.zone).dev);
 }
 
 function normalizeMission(c, d) {
@@ -1679,10 +1679,10 @@ function normalizeMission(c, d) {
         height: i
     };
 }
-var U1 = "cf.difficulty",
+var DIFFICULTY_KEY = "cf.difficulty",
     uo = "cf.lastPlayed";
 
-function vd(c) {
+function readStoredDifficulty(c) {
     const hx = cX;
     try {
         let d = localStorage.getItem(c);
@@ -1691,13 +1691,13 @@ function vd(c) {
     return "rookie";
 }
 
-function zt(c, d) {
+function setStoredValue(c, d) {
     const hz = cX;
     try {
         localStorage.setItem(c, d);
     } catch {}
 }
-var mo = {
+var RAMP_PALETTES = {
         thatch: ["#ffbd5a", "#e79034", "#c4631f", "#a03d12", "#7b1c07", "#511003", "#3a0c02"],
         moss: ["#d8ea78", "#96c23a", "#5f9126", "#3f6a1a", "#294a10", "#17300a", "#0f2206"]
     },
@@ -1728,14 +1728,14 @@ function remapImageColors(c, d) {
     }
     return j.putImageData(m, 0, 0), g;
 }
-var Ms = (c, d, g) => {
+var dimRgb = (c, d, g) => {
     const hB = cX;
     let i = 0.299 * c + 0.587 * d + 0.114 * g,
         j = l => Math.round(Math.min(255, i * 0.34 + l * 0.06));
     return [j(c), j(d + 12), j(g)];
 };
 
-function xd(c) {
+function dimImage(c) {
     const hC = cX;
     let {
         c: d,
@@ -1744,23 +1744,23 @@ function xd(c) {
     g.drawImage(c, 0, 0);
     let i = g.getImageData(0, 0, c.width, c.height),
         j = i.data;
-    for (let l = 0; l < j.length; l += 4) j[l + 3] !== 0 && ([j[l], j[l + 1], j[l + 2]] = Ms(j[l], j[l + 1], j[l + 2]));
+    for (let l = 0; l < j.length; l += 4) j[l + 3] !== 0 && ([j[l], j[l + 1], j[l + 2]] = dimRgb(j[l], j[l + 1], j[l + 2]));
     return g.putImageData(i, 0, 0), d;
 }
 
-function kd(c, d) {
+function remapRampPalettes(c, d) {
     const hD = cX;
     let g = {};
     for (let [j, l] of Object.entries(d)) {
-        let m = mo[j],
-            p = mo[l];
+        let m = RAMP_PALETTES[j],
+            p = RAMP_PALETTES[l];
         if (m.length !== p.length) throw new Error("ramp \"" + j + "\" (" + m.length + ") and \"" + l + "\" (" + p.length + ") differ in length");
         for (let q = 0; q < m.length; q++) g[m[q]] = p[q];
     }
     return remapImageColors(c, g);
 }
 
-function wd(d, g, j, m = 8) {
+function sampleGridToAscii(d, g, j, m = 8) {
     const hE = cX;
     let p = [],
         q = m * m / 2;

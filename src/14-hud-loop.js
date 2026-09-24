@@ -700,7 +700,7 @@ async function enterSkirmish(g, j) {
         step: I => {
             const MO = MN;
             v.update(E.world);
-            let K = JT();
+            let K = isDialogOpen();
             K ? pauseComms() : resumeComms(), !K && (E.step(I), u.update(E.world));
         },
         draw: (I, K) => {
@@ -716,18 +716,18 @@ async function enterSkirmish(g, j) {
         },
         H = () => {
             const MR = MN;
-            JT() || openPauseDialog("The Glade", "Resume", {
+            isDialogOpen() || openPauseDialog("The Glade", "Resume", {
                 label: "Leave the match",
                 onPick: F
             });
         };
-    q.onPause = H, q.modalOpen = JT, u.setTools({
+    q.onPause = H, q.modalOpen = isDialogOpen, u.setTools({
         restart: false,
         pause: true,
         exitLabel: "Leave the match"
     }), u.onRestart = null, u.onPause = H, u.onExit = () => {
         const MU = MN;
-        JT() || ST({
+        isDialogOpen() || showConfirmDialog({
             title: "Leave the match?",
             body: "Your squad walks off. The glade goes to the machine.",
             buttons: [{
@@ -749,7 +749,7 @@ async function enterSkirmish(g, j) {
             L = y.standing(),
             M = K.winner === I.viewSide ? "VICTORY" : K.winner === null ? "A DRAW" : "DEFEAT",
             N = document.createElement('p');
-        N.textContent = K.reason === "time" ? "The clock decided it: " + L.a + " of yours standing to " + L.b + " of theirs." : K.winner === I.viewSide ? "Their squad is gone. " + L.a + " of yours are still standing." : "Your squad is gone. The glade is theirs.", ST({
+        N.textContent = K.reason === "time" ? "The clock decided it: " + L.a + " of yours standing to " + L.b + " of theirs." : K.winner === I.viewSide ? "Their squad is gone. " + L.a + " of yours are still standing." : "Your squad is gone. The glade is theirs.", showConfirmDialog({
             title: M,
             body: N,
             buttons: [{
@@ -1088,7 +1088,7 @@ async function runNetRound(j, q, y) {
         world: Q.world,
         step: X => {
             const Nz = Nx;
-            H.update(Q.world), JT() ? pauseComms() : resumeComms(), Q.step(X), F.update(Q.world), F.setLink(Q.pausedBy ? {
+            H.update(Q.world), isDialogOpen() ? pauseComms() : resumeComms(), Q.step(X), F.update(Q.world), F.setLink(Q.pausedBy ? {
                 kind: "away",
                 who: Q.pausedBy
             } : !$.connected || Q.sinceSnap > u_ ? {
@@ -1112,18 +1112,18 @@ async function runNetRound(j, q, y) {
         },
         U = () => {
             const ND = Nx;
-            JT() || openPauseDialog("The Glade", "Back to it", {
+            isDialogOpen() || openPauseDialog("The Glade", "Back to it", {
                 label: "Leave the match",
                 onPick: S
             });
         };
-    E.onPause = U, E.modalOpen = JT, F.setTools({
+    E.onPause = U, E.modalOpen = isDialogOpen, F.setTools({
         restart: false,
         pause: false,
         exitLabel: "Leave the match"
     }), F.onRestart = null, F.onPause = null, F.onExit = () => {
         const NE = Nx;
-        JT() || ST({
+        isDialogOpen() || showConfirmDialog({
             title: "Leave the match?",
             body: "Your squad walks off. The other player keeps the glade.",
             buttons: [{
@@ -1164,7 +1164,7 @@ async function runNetRound(j, q, y) {
             aw.className = "mp-stats", aw.textContent = "ROUND " + X.round + " OF " + X.rounds, Y.insertBefore(aw, Y.firstChild);
         }
         let aq = ak && !X.last;
-        ST({
+        showConfirmDialog({
             title: X.won === true ? "VICTORY" : X.won === null ? "A DRAW" : "DEFEAT",
             body: Y,
             buttons: aq ? [] : [{
@@ -1344,7 +1344,7 @@ async function enterCampaignLevel(K) {
         info: a7,
         campaign: a8,
         campaignLevels: a9
-    } = K, aj = gd(Ut[a7.id], aT[a7.id]), ak = bd(aj, K.difficulty);
+    } = K, aj = resolveZoneDifficulties(Ut[a7.id], aT[a7.id]), ak = pickDifficulty(aj, K.difficulty);
     K.setDifficulty(ak);
     let aq = null,
         aw = null,
@@ -1359,13 +1359,13 @@ async function enterCampaignLevel(K) {
     let aA = parseMapDef(aT[a7.id], a7.id),
         aB = Ha(aT[a7.id]);
     await prepareWithLoading(P, aA, ak);
-    let aC = Kt(Ut[a7.id]).roster === "fresh",
+    let aC = getZone(Ut[a7.id]).roster === "fresh",
         aD = [],
         aE = !aC && _n(a8) === "reinforcements",
         aF = () => {
             const NZ = NX;
             if (aC) return aD = [], A3(aA.squadSize);
-            let b4 = Hu(a8, aA.squadSize + (aE ? f.callin.reserves : 0));
+            let b4 = fillSquadToCapacity(a8, aA.squadSize + (aE ? f.callin.reserves : 0));
             return aD = b4.slice(aA.squadSize), b4.slice(0, aA.squadSize);
         },
         aG = () => {
@@ -1410,8 +1410,8 @@ async function enterCampaignLevel(K) {
         },
         step: b4 => {
             const O9 = NX;
-            Y.update(aJ.world), aJ.world.phase === 0 && !JT() && vm(b4), U.setCallInArmed(Q.callInArmed);
-            let b7 = JT();
+            Y.update(aJ.world), aJ.world.phase === 0 && !isDialogOpen() && addPlaySeconds(b4), U.setCallInArmed(Q.callInArmed);
+            let b7 = isDialogOpen();
             b7 ? pauseComms() : resumeComms(), !(b7 || U.briefingUp) && (aJ.step(b4), aK.step(aJ.world), U.update(aJ.world));
         },
         draw: (b4, b7) => {
@@ -1420,16 +1420,16 @@ async function enterCampaignLevel(K) {
         }
     }), startAmbience(aA), um(a7.id, ak, aB);
     let aL = a9.findIndex(b4 => b4.id === a7.id),
-        aM = q1(a9).find(b4 => b4.levels.some(b7 => b7.id === a7.id)),
+        aM = groupMissionsByZone(a9).find(b4 => b4.levels.some(b7 => b7.id === a7.id)),
         aN = () => {
             const Ok = NX;
             if (!aq) return;
-            let b4 = aq.world.phase === 1 ? Uu(ak, aj) : null;
-            b4 ? (ak = b4, zt(U1, b4), aq.setDifficulty(b4)) : aq.restart(), U.hideOverlay(), aX();
+            let b4 = aq.world.phase === 1 ? nextHarderDifficulty(ak, aj) : null;
+            b4 ? (ak = b4, setStoredValue(DIFFICULTY_KEY, b4), aq.setDifficulty(b4)) : aq.restart(), U.hideOverlay(), aX();
         },
         aO = b4 => {
             const Oq = NX;
-            (!aq || aq.world.phase !== 0) && !aq || aj.includes(b4) && (ak = b4, zt(U1, b4), aq.setDifficulty(b4), U.showBriefing(aq.world));
+            (!aq || aq.world.phase !== 0) && !aq || aj.includes(b4) && (ak = b4, setStoredValue(DIFFICULTY_KEY, b4), aq.setDifficulty(b4), U.showBriefing(aq.world));
         },
         aP = aM ? aM.levels.findIndex(b4 => b4.id === a7.id) + 1 : 0;
     U.open({
@@ -1459,7 +1459,7 @@ async function enterCampaignLevel(K) {
         exitLabel: "Leave the mission"
     }), U.onExit = () => {
         const Oz = NX;
-        ST({
+        showConfirmDialog({
             title: "Leave the mission?",
             body: "The squad walks away. Progress on this attempt is lost.",
             buttons: [{
@@ -1482,7 +1482,7 @@ async function enterCampaignLevel(K) {
     };
     U.onRestart = () => {
         const OC = NX;
-        ST({
+        showConfirmDialog({
             title: "Restart the mission?",
             body: "Back to the drop, everyone on their feet. This attempt is lost.",
             buttons: [{
@@ -1498,7 +1498,7 @@ async function enterCampaignLevel(K) {
     };
     let aR = () => {
         const OE = NX;
-        !aq || JT() || U.briefingUp || aq.world.phase !== 0 || openPauseDialog(!aC && aP ? aP + '. ' + aA.name : aA.name, "Resume", {
+        !aq || isDialogOpen() || U.briefingUp || aq.world.phase !== 0 || openPauseDialog(!aC && aP ? aP + '. ' + aA.name : aA.name, "Resume", {
             label: "Restart",
             tone: "warn",
             key: 'R',
@@ -1507,7 +1507,7 @@ async function enterCampaignLevel(K) {
             }
         });
     };
-    Q.onPause = aR, Q.modalOpen = JT, U.onPause = aR;
+    Q.onPause = aR, Q.modalOpen = isDialogOpen, U.onPause = aR;
     let aS = () => {
         const OF = NX;
         document.hidden && aR();
@@ -1548,12 +1548,12 @@ async function enterCampaignLevel(K) {
     aq.onResolved = b4 => {
         const OJ = NX;
         if (aC) {
-            U.close(null, null, aA.challenge ? C3(a7.id, b4, aA.challenge.score) : null), aa(a7.id, ak, aB, b4.phase === 1, aU(b4)), ua(b4.phase === 1);
+            U.close(null, null, aA.challenge ? C3(a7.id, b4, aA.challenge.score) : null), aa(a7.id, ak, aB, b4.phase === 1, aU(b4)), recordMissionOutcome(b4.phase === 1);
             return;
         }
         ai(a8, b4);
         let b7 = a8.records[a7.id]?.taken?.[ak] ?? [],
-            b8 = Gu(a8, {
+            b8 = applyMissionResult(a8, {
                 won: b4.phase === 1,
                 missionId: a7.id,
                 missionName: aA.name,
@@ -1569,7 +1569,7 @@ async function enterCampaignLevel(K) {
             ...aU(b4),
             bonds: b8.bonds.total,
             balance: a8.bonds
-        }), ua(b4.phase === 1);
+        }), recordMissionOutcome(b4.phase === 1);
     }, ambienceStatus, WW, ve, IW, nW;
     let aV = hT(aq.world);
     aV && L.centreOn(aV, aA);
@@ -1579,7 +1579,7 @@ async function enterCampaignLevel(K) {
         },
         aY = b4 => {
             const OL = NX;
-            if (!aq || aq.world.phase !== 0 || JT()) return;
+            if (!aq || aq.world.phase !== 0 || isDialogOpen()) return;
             let b7 = b4.target;
             if (b7 instanceof Element && b7.closest(".briefing-diff, .briefing-kit, .briefing-shop")) return;
             b4.preventDefault(), b4.stopPropagation(), aI(), U.hideOverlay(), He(f.banner.fade), aZ();
@@ -1602,12 +1602,12 @@ async function enterCampaignLevel(K) {
 }
 async function loadMissionsData() {
     const OO = cX;
-    oc();
+    installGlobalErrorHandlers();
     let j = await q3(),
-        q = await yd();
-    if (await V1("missions"), q.length === 0) throw new Error("no missions found in data/");
-    let y = co(q),
-        A = Bu(),
+        q = await loadCampaignMissions();
+    if (await setLoadPhase("missions"), q.length === 0) throw new Error("no missions found in data/");
+    let y = filterCampaignMissions(q),
+        A = loadCampaign(),
         C = null,
         E = null,
         F = performance.now();
@@ -1655,14 +1655,14 @@ async function loadMissionsData() {
             }
         });
     assignExperiment(oi().userId), t0;
-    let N = vd(U1),
+    let N = readStoredDifficulty(DIFFICULTY_KEY),
         P = null,
         Q;
     for (;;) {
         let R = P;
         if (P = null, !R) {
             if (window.location.hash === "#arena") {
-                history.replaceState(null, '', window.location.pathname), await Es(), H.stop(), await M();
+                history.replaceState(null, '', window.location.pathname), await hideBootOverlay(), H.stop(), await M();
                 continue;
             }
             let S = null;
@@ -1671,9 +1671,9 @@ async function loadMissionsData() {
             } catch {
                 S = null;
             }
-            wo(), await V1("ready"), Es().then(() => H.start());
+            startMusic(), await setLoadPhase("ready"), hideBootOverlay().then(() => H.start());
             let U = await Jf(q, S, N, V => {
-                N = V, zt(U1, V);
+                N = V, setStoredValue(DIFFICULTY_KEY, V);
             }, A, Q);
             if (Q = void 0, H.stop(), "skirmish" in U) {
                 await K(U.skirmish);
@@ -1697,7 +1697,7 @@ async function loadMissionsData() {
 }
 loadMissionsData().catch(c => {
     const OQ = cX;
-    console.error(c), Zl(c);
+    console.error(c), showBootError(c);
     let d = document.getElementById("overlay"),
         g = document.getElementById("overlay-title"),
         i = document.getElementById("overlay-sub");

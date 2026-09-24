@@ -20,7 +20,7 @@
                 const tB = b;
                 N.classList.toggle("on-select", bU !== "intro");
                 for (let [bV, bX] of Object.entries(aK)) bX.hidden = bV !== bU;
-                bU === "armoury" && bC(), bU === "select" && aM(), bU !== "intro" && dm(bU), aK[bU].querySelector("button")?.focus();
+                bU === "armoury" && bC(), bU === "select" && aM(), bU !== "intro" && trackScreen(bU), aK[bU].querySelector("button")?.focus();
             };
         aC.onclick = () => {
             const tD = tC;
@@ -36,7 +36,7 @@
         aP && (aP.textContent = "v0.3.0", aP.hidden = false, aQ && (aQ.hidden = false), Gm() && (aP.disabled = false, aP.title = "What has changed", aP.onclick = () => {
             renderChangelog();
         }));
-        let aR = co(q),
+        let aR = filterCampaignMissions(q),
             aS = A && aR.some(bU => bU.id === A && aE.open.has(bU.id)) ? A : null,
             aU = aR.find(bU => aE.open.has(bU.id) && !K.records[bU.id]);
         aA.textContent = '';
@@ -57,7 +57,7 @@
             const tH = tC;
             aN("lobby"), $.room || $.list();
         });
-        b4.prepend(eT(Ie(true), 2, "intro-star")), b4.appendChild(eT(Ie(true), 2, "intro-star")), aZ.appendChild(b4);
+        b4.prepend(scaleCanvas(drawStarIcon(true), 2, "intro-star")), b4.appendChild(scaleCanvas(drawStarIcon(true), 2, "intro-star")), aZ.appendChild(b4);
         let b7 = false,
             b8 = () => {
                 const tI = tC;
@@ -71,7 +71,7 @@
                 let bV = w("div", "lb-settings"),
                     bX = (c8, c9, cj, ck) => {
                         const tK = tJ;
-                        ST({
+                        showConfirmDialog({
                             title: c8,
                             body: c9,
                             buttons: cj.map(([cq, cw]) => ({
@@ -121,14 +121,14 @@
                         }))]
                     ],
                     c7 = {
-                        MAP: eT(Ue("map"), 1),
-                        DURATION: eT(Ue("clock"), 1),
-                        MODE: eT(Ue("flag"), 1),
-                        VISIBILITY: eT(Pe(false), 1),
-                        'FOG\x20OF\x20WAR': eT(Ue("cloud"), 1),
-                        'EDGE\x20MOVEMENT': eT(Ue("arrows"), 1),
-                        ROUNDS: eT(Ue("clock"), 1),
-                        'MEN\x20PER\x20SIDE': eT(Ue("flag"), 1)
+                        MAP: scaleCanvas(Ue("map"), 1),
+                        DURATION: scaleCanvas(Ue("clock"), 1),
+                        MODE: scaleCanvas(Ue("flag"), 1),
+                        VISIBILITY: scaleCanvas(drawLockIcon(false), 1),
+                        'FOG\x20OF\x20WAR': scaleCanvas(Ue("cloud"), 1),
+                        'EDGE\x20MOVEMENT': scaleCanvas(Ue("arrows"), 1),
+                        ROUNDS: scaleCanvas(Ue("clock"), 1),
+                        'MEN\x20PER\x20SIDE': scaleCanvas(Ue("flag"), 1)
                     };
                 for (let [c8, c9, cj] of bZ) {
                     let ck = w("button", "lb-set");
@@ -149,7 +149,7 @@
                 let bU = w("div", "lb-games-head");
                 bU.appendChild(w("span", void 0, "PUBLIC GAMES"));
                 let bV = w("button", b7 ? "lb-refresh busy" : "lb-refresh");
-                bV.type = "button", bV.title = "Refresh", bV.appendChild(eT(Zt("restart"), 2)), bV.onclick = b8, bU.appendChild(bV), ak.appendChild(bU);
+                bV.type = "button", bV.title = "Refresh", bV.appendChild(scaleCanvas(drawIconTile("restart"), 2)), bV.onclick = b8, bU.appendChild(bV), ak.appendChild(bU);
                 let bX = w("div", "lb-games-list");
                 b7 && bX.classList.add("busy");
                 for (let bZ of $.games) {
@@ -177,16 +177,16 @@
                         $.leave(), bx();
                     })), bU) {
                     let cq = w("span", "ar-bonds");
-                    cq.appendChild(eT(bU.visibility === "private" ? Pe(false) : Na(), 1)), cq.appendChild(w("span", void 0, bU.visibility.toUpperCase() + " GAME · " + bU.code)), a9.appendChild(cq), a9.appendChild(w("span", "lb-sub", bU.mode.toUpperCase() + " · " + pi(bU.mapId)));
+                    cq.appendChild(scaleCanvas(bU.visibility === "private" ? drawLockIcon(false) : Na(), 1)), cq.appendChild(w("span", void 0, bU.visibility.toUpperCase() + " GAME · " + bU.code)), a9.appendChild(cq), a9.appendChild(w("span", "lb-sub", bU.mode.toUpperCase() + " · " + pi(bU.mapId)));
                 }
                 if (aq.classList.toggle("in-room", !!bU), ak.hidden = !!bU, ak.textContent = '', !bU) {
                     bq();
                     let cw = w("div", "lb-box");
                     cw.appendChild(w("span", "lb-box-label", "PLAYING AS:"));
                     let cx = w("div", "lb-box-row");
-                    cx.appendChild(eT(Ve(true), 1, "lb-avatar-plate")), cx.appendChild(w("span", "lb-who", vn()));
+                    cx.appendChild(scaleCanvas(Ve(true), 1, "lb-avatar-plate")), cx.appendChild(w("span", "lb-who", vn()));
                     let cz = w("button", "lb-pencil");
-                    cz.type = "button", cz.title = "Change your name", cz.appendChild(eT(Zt("pencil"), 2)), cx.appendChild(cz), cz.onclick = () => {
+                    cz.type = "button", cz.title = "Change your name", cz.appendChild(scaleCanvas(drawIconTile("pencil"), 2)), cx.appendChild(cz), cz.onclick = () => {
                         const tQ = tO;
                         buildConfirmField({
                             title: "YOUR NAME",
@@ -206,7 +206,7 @@
                         let cK = w("div", "lb-card-text");
                         return cK.appendChild(w("span", "fx-btn-label", cF)), cK.appendChild(w("span", "lb-box-sub", cG)), cJ.appendChild(cK), cJ;
                     };
-                    aj.appendChild(cA("CREATE PUBLIC GAME", "Anyone can join", eT(Na(), 2, "lb-card-icon"), bk("public"))), aj.appendChild(cA("CREATE PRIVATE GAME", "Invite your friends", eT(Pe(true), 2, "lb-card-icon"), bk("private")));
+                    aj.appendChild(cA("CREATE PUBLIC GAME", "Anyone can join", scaleCanvas(Na(), 2, "lb-card-icon"), bk("public"))), aj.appendChild(cA("CREATE PRIVATE GAME", "Invite your friends", scaleCanvas(drawLockIcon(true), 2, "lb-card-icon"), bk("private")));
                     let cB = w("div", "lb-box");
                     cB.appendChild(w("span", "lb-box-title", "JOIN WITH CODE")), cB.appendChild(w("span", "lb-box-sub", "Enter a join code"));
                     let cC = w("div", "lb-join"),
@@ -226,7 +226,7 @@
                 for (let cF = 0; cF < 2; cF++) {
                     let cG = bU.seats[cF],
                         cH = w("div", "lb-slot");
-                    cG?.ready && cH.classList.add("ready"), cG && !cG.connected && cH.classList.add("away"), cH.appendChild(w("span", "lb-box-label lb-slot-label", cF === bU.you ? "YOUR SQUAD" : "SLOT " + (cF + 1))), cH.appendChild(eT(cG ? Ve(true) : buildTintedBackdrop(), 1, "lb-avatar"));
+                    cG?.ready && cH.classList.add("ready"), cG && !cG.connected && cH.classList.add("away"), cH.appendChild(w("span", "lb-box-label lb-slot-label", cF === bU.you ? "YOUR SQUAD" : "SLOT " + (cF + 1))), cH.appendChild(scaleCanvas(cG ? Ve(true) : buildTintedBackdrop(), 1, "lb-avatar"));
                     let cI = w("div", "lb-slot-body");
                     if (cG) {
                         let cJ = w("div", "lb-slot-name");
@@ -262,7 +262,7 @@
                 }
                 aj.appendChild(bX);
                 let bY = w("div", "lb-lower");
-                bU.mapId in aT || Iu(bU.mapId);
+                bU.mapId in aT || promptAppUpdateOnce(bU.mapId);
                 let bZ = bj(bU);
                 bY.appendChild(bZ);
                 let c7 = w("div", "lb-feedbox"),
@@ -339,7 +339,7 @@
             };
         aB.hidden = false, aB.textContent = '', aB.appendChild(w("span", "ar-title", "MAP SELECT"));
         let bF = q.filter(bU => K.records[bU.id]).length,
-            bG = q.reduce((bU, bV) => bU + oe(K.records[bV.id]), 0);
+            bG = q.reduce((bU, bV) => bU + highestClearedRung(K.records[bV.id]), 0);
         aB.appendChild(w("span", "ar-bonds", "MISSIONS " + bF + '/' + q.length + " · STARS " + bG)), aB.appendChild(aL(() => aN("intro")));
         let bH = bU => aF.some(bV => bV.zone.id === bU) && (aE.byZone.get(bU)?.starsNeeded ?? 0) === 0,
             bI = Py() ?? aF[0]?.zone.id ?? '';
@@ -365,7 +365,7 @@
                     let cj = Ny(bX);
                     cj && c9.appendChild(w("span", "fx-card-desc", cj)), c7.appendChild(c9);
                     let ck = w("span", "fx-card-tail");
-                    bY ? ck.appendChild(Oy(oe(bZ))) : ck.appendChild(w('i', "fx-lock")), c7.appendChild(ck), c7.addEventListener("click", () => {
+                    bY ? ck.appendChild(Oy(highestClearedRung(bZ))) : ck.appendChild(w('i', "fx-lock")), c7.appendChild(ck), c7.addEventListener("click", () => {
                         const uk = uj;
                         bY ? bE(bX) : CW(c7, bV > 0 ? bV + " stars needed" : "clear another mission first");
                     }), az.appendChild(c7);
@@ -378,7 +378,7 @@
             },
             bM = bU => {
                 const uw = tC;
-                let bV = Ao[bU.id];
+                let bV = LOCKED_ZONE_CLASSES[bU.id];
                 if (!bV) return;
                 let bX = RW('', "fx-group future", () => {
                     const ux = uw;
@@ -418,8 +418,8 @@
             const uA = tC;
             if (!bN) {
                 bN = true;
-                for (let cj of hd()) {
-                    let ck = Ao[cj.id];
+                for (let cj of getFutureZones()) {
+                    let ck = LOCKED_ZONE_CLASSES[cj.id];
                     ck && ZT("future_zone_impression", {
                         source: ck,
                         zone: cj.id
@@ -427,14 +427,14 @@
                 }
             }
         }, document.getElementById("select-foot").textContent = '', bJ(), bK();
-        let bO = Wm(N),
+        let bO = createMusicToggle(N),
             bP = w("button", "corner-tool front-gear");
         bP.type = "button", bP.title = "Settings", bP.setAttribute("aria-label", "Settings"), bP.addEventListener("click", () => Vo()), N.appendChild(bP);
         let bQ = Pm(N, K, q);
         L && aN(L), N.hidden = false, requestAnimationFrame(() => N.classList.add('in')), window.setTimeout(() => setBlackout(0), 340), aN(L ?? ($.room || bB ? "lobby" : "intro"));
         let bR = cj => {
             const uB = tC;
-            if (!aH && !xu()) {
+            if (!aH && !isTextInputFocused()) {
                 if (cj.key === 'm' || cj.key === 'M') {
                     toggleMusic();
                     return;
@@ -472,15 +472,15 @@ function renderShopPanel({
     const uE = cX;
     let m = w("div", "dsp-shop"),
         p = w('p', "dsp-balance");
-    p.append(eT(xn(), 2, "dsp-coin"), w("span", '', c.bonds + " War Bonds, unspent")), m.appendChild(p);
+    p.append(scaleCanvas(xn(), 2, "dsp-coin"), w("span", '', c.bonds + " War Bonds, unspent")), m.appendChild(p);
     let q = w("div", "dsp-shelf");
     for (let u of getAffordableOffers(d, c.bonds)) {
         let v = w("div", "dsp-good"),
             y = Ke(u.id),
             A = w("div", "dsp-good-stand");
-        y && A.appendChild(eT(y, 2, "dsp-good-art")), v.appendChild(A), v.appendChild(w("span", "dsp-good-name", u.name)), q.appendChild(v);
+        y && A.appendChild(scaleCanvas(y, 2, "dsp-good-art")), v.appendChild(A), v.appendChild(w("span", "dsp-good-name", u.name)), q.appendChild(v);
     }
-    return m.appendChild(q), j.append(IT("The Armoury", "dsp-go primary", () => g("armoury", "went")), IT("Get on with it", "dsp-go dark", () => g("continue", "skipped"))), m.classList.add("dsp-centred"), j.classList.add("dsp-centred-row"), m;
+    return m.appendChild(q), j.append(makeFxButton("The Armoury", "dsp-go primary", () => g("armoury", "went")), makeFxButton("Get on with it", "dsp-go dark", () => g("continue", "skipped"))), m.classList.add("dsp-centred"), j.classList.add("dsp-centred-row"), m;
 }
 var MAX_STARS = 5;
 
@@ -556,7 +556,7 @@ function renderReviewPanel({
     v.rows = 3, v.maxLength = 2000, v.placeholder = "Optional.", u.htmlFor = v.id = "dsp-comment", p.append(u, v);
     let y = w('p', "dsp-note");
     p.appendChild(y);
-    let A = IT("Send", "dsp-go primary", () => {
+    let A = makeFxButton("Send", "dsp-go primary", () => {
         const uM = uK;
         let C = q.value();
         C !== 0 && (A.disabled = true, y.textContent = "Sending...", rt({
@@ -575,9 +575,9 @@ function renderReviewPanel({
             A.disabled = false, y.textContent = "That did not get through. Your words are still here if you want to try again.";
         }));
     });
-    return A.disabled = true, m.append(A, IT("Not now", "dsp-go dark", () => {
+    return A.disabled = true, m.append(A, makeFxButton("Not now", "dsp-go dark", () => {
         const uO = uK;
-        hW("feedback_skipped", {
+        trackEvent("feedback_skipped", {
             stars: q.value() || null
         }), j("continue", "skipped");
     })), jo() || (y.textContent = "The line is down, so this would not reach anybody. No harm done.", A.disabled = true, q.disable()), p;
@@ -645,7 +645,7 @@ function getCheapestOffer(c) {
     let d = bW.filter(g => g.ready && g.category !== "squad" && !$e(c, g.id)).map(g => ZW(g.id));
     return d.length ? Math.min(...d) : null;
 }
-async function buildDispatchStats(c, d = na, g = Date.now()) {
+async function buildDispatchStats(c, d = dispatchStore, g = Date.now()) {
     const uR = cX;
     let i = it();
     return {
@@ -660,14 +660,14 @@ async function buildDispatchStats(c, d = na, g = Date.now()) {
         shownThisSession: W0
     };
 }
-async function n0(c, d, g = na) {
+async function n0(c, d, g = dispatchStore) {
     const uS = cX;
     if (e0) return "continue";
     try {
         let j = await buildDispatchStats(c, g),
-            l = im(j);
+            l = pickDispatchKind(j);
         if (!l) return "continue";
-        W0 = true, await rm(g, l, j);
+        W0 = true, await markDispatchShown(g, l, j);
         let {
             outcome: m,
             answer: p
@@ -676,7 +676,7 @@ async function n0(c, d, g = na) {
             campaign: c,
             levels: d
         });
-        return p !== "skipped" ? await am(g, l, p) : await sm(g, l, j), m;
+        return p !== "skipped" ? await am(g, l, p) : await markDispatchSkipped(g, l, j), m;
     } catch {
         return "continue";
     }

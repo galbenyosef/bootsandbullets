@@ -565,13 +565,13 @@ function buyStockItem(c, d) {
     let g = $a.get(d);
     if (!g || !g.ready || !si(d)) return false;
     let i = ZW(d);
-    return c.bonds < i ? false : (c.bonds -= i, c.stock[d] = gW(c, d) + 1, pe(c), true);
+    return c.bonds < i ? false : (c.bonds -= i, c.stock[d] = gW(c, d) + 1, saveCampaign(c), true);
 }
 
 function Ka(c, d, g) {
     const sH = cX;
     let i = Math.max(0, Math.min(Math.floor(g), gW(c, d)));
-    return i === 0 ? 0 : (c.stock[d] = gW(c, d) - i, pe(c), i);
+    return i === 0 ? 0 : (c.stock[d] = gW(c, d) - i, saveCampaign(c), i);
 }
 
 function ai(c, d) {
@@ -585,7 +585,7 @@ function unlockItem(c, d) {
     let g = $a.get(d);
     if (!g || !g.ready || si(d) || $e(c, d) || g.requires && !c.unlocked.includes(g.requires)) return false;
     let i = ZW(d);
-    return c.bonds < i ? false : (c.bonds -= i, c.unlocked.push(d), c.squadCapacity = My(c.unlocked), pe(c), true);
+    return c.bonds < i ? false : (c.bonds -= i, c.unlocked.push(d), c.squadCapacity = My(c.unlocked), saveCampaign(c), true);
 }
 
 function za(c) {
@@ -661,11 +661,11 @@ function Ke(c, d = false) {
     let g = (Cy ??= zo(Ko(0)))[c];
     if (!g || !d) return g;
     let i = qf.get(c);
-    return i || (i = xd(g), qf.set(c, i)), i;
+    return i || (i = dimImage(g), qf.set(c, i)), i;
 }
 var ui = () => noteSoundChannel ??= m1("note"),
     xn = () => Ry ??= m1("icon"),
-    Ja = (c, d, g) => IT(c, d, g),
+    Ja = (c, d, g) => makeFxButton(c, d, g),
     jy = 2;
 
 function zf(c, d) {
@@ -694,13 +694,13 @@ function renderArmouryCard(c, d, g) {
     let j = w("div", "ar-card" + (c.ready ? '' : " pending")),
         l = w("div", "ar-art"),
         m = Ke(c.id);
-    m && l.appendChild(eT(m, jy)), j.appendChild(l), j.appendChild(w("span", "ar-name", c.name.toUpperCase())), j.appendChild(w("span", "ar-blurb", c.blurb));
+    m && l.appendChild(scaleCanvas(m, jy)), j.appendChild(l), j.appendChild(w("span", "ar-name", c.name.toUpperCase())), j.appendChild(w("span", "ar-blurb", c.blurb));
     let p = w("div", "ar-foot");
     if (si(c.id)) {
         let q = ZW(c.id);
         p.appendChild(w("span", "ar-have", "HAVE " + gW(d, c.id)));
         let u = w("div", "ar-price");
-        u.appendChild(eT(xn(), 2)), u.appendChild(w("span", "ar-price-n", String(q))), p.appendChild(u);
+        u.appendChild(scaleCanvas(xn(), 2)), u.appendChild(w("span", "ar-price-n", String(q))), p.appendChild(u);
         let v = Ja("BUY +1", "ar-buy", () => {
             const sV = sU;
             if (c.ready) {
@@ -721,7 +721,7 @@ function renderArmouryCard(c, d, g) {
         else {
             let A = ZW(c.id),
                 C = w("div", "ar-price");
-            C.appendChild(eT(Pe(true), 2, "ar-lock")), C.appendChild(eT(xn(), 2)), C.appendChild(w("span", "ar-price-n", String(A))), p.appendChild(C);
+            C.appendChild(scaleCanvas(drawLockIcon(true), 2, "ar-lock")), C.appendChild(scaleCanvas(xn(), 2)), C.appendChild(w("span", "ar-price-n", String(A))), p.appendChild(C);
             let E = Ja("UNLOCK", "ar-buy", () => {
                 const sX = sU;
                 if (d.bonds < A) {
@@ -747,7 +747,7 @@ function mi(c) {
     let p = w("div", "ar-titles");
     p.appendChild(w("span", "ar-title", "THE ARMOURY")), p.appendChild(w("span", "ar-sub", "BETTER GEAR. HIGHER SURVIVAL RATE.")), d.appendChild(p);
     let q = w("div", "ar-bonds");
-    q.appendChild(eT(ui(), 2));
+    q.appendChild(scaleCanvas(ui(), 2));
     let s = w("div", "ar-bonds-text");
     s.appendChild(w("span", "ar-bonds-k", "WAR BONDS")), s.appendChild(w("span", "ar-bonds-n", String(j.bonds))), q.appendChild(s), d.appendChild(q), g.textContent = '';
     let u = Fo([
@@ -798,7 +798,7 @@ var LAST_GROUP_KEY = "cf.lastGroup",
             g = i => d.split(i).length - 1;
         return Math.max(1, Math.min(g('P'), g('Q')));
     },
-    RW = (c, d, g) => IT(c, d, g);
+    RW = (c, d, g) => makeFxButton(c, d, g);
 
 function Oy(c) {
     const tk = cX;
@@ -817,7 +817,7 @@ function Ny(c) {
 
 function Jf(q, A, F, H, K, L) {
     const tw = cX;
-    Ne();
+    buildSpriteVars();
     let N = document.getElementById("front"),
         P = document.getElementById("intro"),
         Q = document.getElementById("select"),
@@ -839,7 +839,7 @@ function Jf(q, A, F, H, K, L) {
         aC = document.getElementById("front-logo"),
         aD = F,
         aE = Co(q, K),
-        aF = q1(q);
+        aF = groupMissionsByZone(q);
     return new Promise(aG => {
         const tC = tw;
         let aH = false,
